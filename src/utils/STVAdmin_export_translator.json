@@ -1,0 +1,11 @@
+{
+    "gender": "GESCHLECHT",
+    "first_name":"VORNAME",
+    "last_name": "NACHNAME",
+    "street": "STRASSE",
+    "plz": "PLZ",
+    "city": "ORT",
+    "birthday": "GEBURTSDATUM",
+    "emails": ["EMAIL", "EMAIL ALTERNATIV", "EMAILVEREIN"],
+    "category": "KATEGORIE"
+}
