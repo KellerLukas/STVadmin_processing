@@ -1,20 +1,21 @@
 import pytest
 from unittest import TestCase
-from src.utils.database import Database
+from src.utils.databases import Database
+
 
 class TestDatabase(TestCase):
     def test_load_database_excel(self):
         file = "tests/data/test_database.xlsx"
-        
+
         db = Database(file)
-        self.assertTrue(len(db.people)==2)
-    
+        self.assertTrue(len(db.people) == 3)
+
     def test_load_database_csv(self):
         file = "tests/data/test_database.csv"
-        
+
         db = Database(file)
-        self.assertTrue(len(db.people)==2)
-        
+        self.assertTrue(len(db.people) == 2)
+
     def test_lookup_by_property(self):
         file = "tests/data/test_database.xlsx"
         db = Database(file)
