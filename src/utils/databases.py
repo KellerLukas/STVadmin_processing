@@ -1,6 +1,5 @@
 import pandas as pd
 import json
-import datetime
 
 
 class Person:
@@ -44,7 +43,7 @@ class Person:
     def age(self):
         if not isinstance(self.birthday, pd.Timestamp):
             return None
-        now = datetime.datetime.now()
+        now = pd.Timestamp.now()
         return self.calculate_age_at_ts(now)
 
     def calculate_age_at_ts(self, ts: pd.Timestamp) -> int:
@@ -135,7 +134,7 @@ class MailBasedDatabase:
     def add_from_database(self, db: Database):
         for person in db.people:
             self.add_person(person)
-
+    
     
     def add_mail_based_family(self, new_mbfamily: MailBasedFamily):
         for mbfamily in self.mail_based_families:
@@ -147,3 +146,10 @@ class MailBasedDatabase:
     
     def add_person(self, new_person: Person):
         self.add_mail_based_family(MailBasedFamily([new_person]))
+    
+    def lookup_by_property(self, property: str, search_input) -> list[MailBasedFamily]:
+        mbfamilies_found = []
+        for mbfamily in self.mail_based_families:
+            if search_input in mbfamily.get_property_list(property):
+                mbfamilies_found.append(mbfamily)
+        return mbfamilies_found

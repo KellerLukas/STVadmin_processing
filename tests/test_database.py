@@ -8,13 +8,13 @@ class TestDatabase(TestCase):
         file = "tests/data/test_database.xlsx"
 
         db = Database(file)
-        self.assertTrue(len(db.people) == 3)
+        self.assertTrue(len(db.people) == 4)
 
     def test_load_database_csv(self):
         file = "tests/data/test_database.csv"
 
         db = Database(file)
-        self.assertTrue(len(db.people) == 2)
+        self.assertTrue(len(db.people) == 4)
 
     def test_lookup_by_property(self):
         file = "tests/data/test_database.xlsx"
