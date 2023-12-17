@@ -7,5 +7,6 @@
     "city": "ORT",
     "birthday": "GEBURTSDATUM",
     "emails": ["EMAIL", "EMAIL ALTERNATIV", "EMAILVEREIN"],
-    "category": "KATEGORIE"
+    "category": "KATEGORIE",
+    "date_added": "EINTRITT"
 }

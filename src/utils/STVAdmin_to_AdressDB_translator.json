@@ -7,5 +7,6 @@
     "Geburtsdatum": "birthday",
     "Kategorie": "category",
     "Geschlecht": "gender",
-    "Email": "email"
+    "Email": "email",
+    "Beitrittsdatum": "date_added"
 }

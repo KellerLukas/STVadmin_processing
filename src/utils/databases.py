@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import json
 
 
@@ -14,6 +15,7 @@ class Person:
         birthday: str = None,
         emails: list[str] = None,
         category: str = None,
+        date_added: str = None,
     ):
         self.gender = gender
         self.first_name = first_name
@@ -25,6 +27,7 @@ class Person:
         self._email = None
         self.emails = [email for email in emails if isinstance(email, str)] if emails else None
         self.category = category
+        self._date_added = date_added
 
     @property
     def email(self):
@@ -54,6 +57,16 @@ class Person:
         self._birthday = value
 
     @property
+    def date_added(self):
+        if isinstance(self._date_added, str):
+            self._date_added = pd.Timestamp(self._date_added)
+        return self._date_added
+    
+    @date_added.setter
+    def date_added(self, value):
+        self._date_added = value
+
+    @property
     def age(self):
         if not isinstance(self.birthday, pd.Timestamp):
             return None
@@ -77,10 +90,13 @@ class Database:
         if input_file is not None:
             self.people = self._load_people_from_input_file(input_file)
 
-    def lookup_by_property(self, property: str, search_input) -> list[Person]:
+    def lookup_by_property(self, property: str, search_input, comparator=np.equal) -> list[Person]:
         people_found = []
         for person in self.people:
-            if getattr(person, property, None) == search_input:
+            attr = getattr(person, property, None)
+            if attr is None:
+                continue
+            if comparator(attr, search_input):
                 people_found.append(person)
         return people_found
     

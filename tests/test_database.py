@@ -1,4 +1,6 @@
 import pytest
+import pandas as pd
+import numpy as np
 from unittest import TestCase
 from src.utils.databases import Database, Person
 
@@ -19,6 +21,12 @@ class TestDatabase(TestCase):
         db = Database(file)
         people_found = db.lookup_by_property("first_name", "vorname1")
         self.assertEqual(len(people_found), 1)
+        
+        people_found = db.lookup_by_property("birthday", pd.Timestamp('1999-01-01'), comparator=np.greater)
+        self.assertEqual(len(people_found), 1)
+        
+        people_found = db.lookup_by_property("birthday", pd.Timestamp('1999-01-01'), comparator=np.greater_equal)
+        self.assertEqual(len(people_found), 2)
         
     def test_remove_property_for_person(self):
         file = "tests/data/test_database.xlsx"

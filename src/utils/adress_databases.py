@@ -14,7 +14,8 @@ class AdressDatabase:
             "Geburtsdatum",
             "Kategorie",
             "Geschlecht",
-            "Email"
+            "Email",
+            "Beitrittsdatum"
         ]
         self._df = None
         self._database = input_db
@@ -56,6 +57,9 @@ class AdressDatabase:
 
     def to_csv(self, filename: str):
         self.df.to_csv(filename,index=False)
+        
+    def to_excel(self, filename: str):
+        self.df.to_excel(filename, index=False)
         
         
         
