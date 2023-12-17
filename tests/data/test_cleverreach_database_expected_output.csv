@@ -1,4 +1,3 @@
 Vorname,Nachname,Email,Männlich,Weiblich,updated,Aktive Turner,Aktive Turnerin,Passivmitglied,Kitu,Mädchen,Knaben,Freimitglied turnend,Freimitglied nicht turnend,Ehrenmitglied nicht turnend,Ehrenmitglied turnend
 vorname1,nachname1,email1,True,False,2023-12-16,True,False,False,False,False,False,False,False,False,False
 vorname2 & vorname3,nachname2 & nachname3,email3,True,True,2023-12-16,True,False,False,True,False,False,False,False,False,False
-vorname4,nachname4,,False,True,2023-12-16,True,False,False,False,False,False,False,False,False,False

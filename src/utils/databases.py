@@ -9,35 +9,49 @@ class Person:
         first_name: str = None,
         last_name: str = None,
         street: str = None,
-        plz=None,
+        plz = None,
         city: str = None,
         birthday: str = None,
-        emails: list[str] = [],
+        emails: list[str] = None,
         category: str = None,
     ):
         self.gender = gender
         self.first_name = first_name
         self.last_name = last_name
         self.street = street
-        self.plz = str(plz)
+        self.plz = str(plz) if plz else None
         self.city = city
         self._birthday = birthday
         self._email = None
-        self.emails = [email for email in emails if isinstance(email, str)]
+        self.emails = [email for email in emails if isinstance(email, str)] if emails else None
         self.category = category
 
     @property
     def email(self):
-        if self._email == None:
+        if self._email is None:
+            if self.emails is None:
+                return self._email
             if len(self.emails) > 0:
                 self._email = self.emails[0]
         return self._email
+    
+    @email.setter
+    def email(self, value):
+        self._email = value
+        if value is None:
+            self.emails = None
+        else:
+            self.emails = [value]
 
     @property
     def birthday(self):
         if isinstance(self._birthday, str):
             self._birthday = pd.Timestamp(self._birthday)
         return self._birthday
+    
+    @birthday.setter
+    def birthday(self, value):
+        self._birthday = value
 
     @property
     def age(self):
@@ -45,6 +59,10 @@ class Person:
             return None
         now = pd.Timestamp.now()
         return self.calculate_age_at_ts(now)
+    
+    @age.setter
+    def age(self, value):
+        pass
 
     def calculate_age_at_ts(self, ts: pd.Timestamp) -> int:
         assert isinstance(self.birthday, pd.Timestamp)
@@ -65,6 +83,9 @@ class Database:
             if getattr(person, property, None) == search_input:
                 people_found.append(person)
         return people_found
+    
+    def add_people(self, people_list: list[Person]):
+        self.people += people_list
 
     def _load_people_from_input_file(self, input_file: str) -> list[Person]:
         input_df = self.__load_input_file(input_file)
@@ -78,10 +99,10 @@ class Database:
             person_constructor_dict = {}
             for key in translator:
                 if isinstance(translator[key], str):
-                    person_constructor_dict[key] = row[translator[key]]
+                    person_constructor_dict[key] = getattr(row, translator[key], None)
                 if isinstance(translator[key], list):
                     person_constructor_dict[key] = [
-                        row[sub_key] for sub_key in translator[key]
+                        getattr(row, sub_key, None) for sub_key in translator[key]
                     ]
 
             people_list.append(Person(**person_constructor_dict))
@@ -102,6 +123,41 @@ class Database:
 
     def __load_excel(self, input_file: str) -> pd.DataFrame:
         return pd.read_excel(input_file)
+    
+    def copy_value_of_property_from_reference_if_empty_and_all_other_properties_match(self, property: str, reference: Person):
+        for person in self.people:
+            if self._person_matches_all_properties_present_in_reference_except_property_list(person, reference, [property]):
+                if getattr(person, property, None) is None:
+                    setattr(person, property, getattr(reference, property))
+                
+    def copy_value_of_property_from_referencelist_if_empty_and_all_other_properties_match(self, property: str, referencelist: list[Person]):
+        for reference in referencelist:
+            self.copy_value_of_property_from_reference_if_empty_and_all_other_properties_match(property, reference)
+    
+    def remove_property_for_people_matching_removelist(self, property: str, removelist: list[Person]):
+        for person_to_remove in removelist:
+            self.remove_property_for_people_matching_reference(property, person_to_remove)
+    
+    def remove_property_for_people_matching_reference(self, property: str, reference: Person):
+        for person in self.people:
+            if self._person_matches_all_properties_present_in_reference(person, reference):
+                setattr(person, property, None)
+            
+    
+    def _person_matches_all_properties_present_in_reference(self, person: Person, reference: Person):
+        return self._person_matches_all_properties_present_in_reference_except_property_list(person, reference, [])
+    
+    def _person_matches_all_properties_present_in_reference_except_property_list(self, person: Person, reference: Person, property_list: list[str]):
+        for key, value in vars(reference).items():
+            if "email" in property_list:
+                property_list.append("emails")
+            if key in property_list:
+                continue
+            if value is None:
+                continue
+            if getattr(person, key) != getattr(reference, key):
+                return False
+        return True
 
 class MailBasedFamily:
     def __init__(self, people: list[Person]):
@@ -126,10 +182,13 @@ class MailBasedFamily:
 
 
 class MailBasedDatabase:
-    def __init__(self, input_file: str = None):
+    def __init__(self, input_file: str = None, input_db: Database = None):
         self.mail_based_families = []
+        self.input_db = input_db
         if input_file is not None:
-            self.add_from_database(Database(input_file))
+            self.input_db = Database(input_file)
+        if self.input_db is not None:
+            self.add_from_database(self.input_db)
         
     def add_from_database(self, db: Database):
         for person in db.people:

@@ -1,0 +1,11 @@
+{
+    "Vorname": "first_name",
+    "Nachname": "last_name",
+    "Strasse": "street",
+    "PLZ": "plz",
+    "Ort": "city",
+    "Geburtsdatum": "birthday",
+    "Kategorie": "category",
+    "Geschlecht": "gender",
+    "Email": "email"
+}
