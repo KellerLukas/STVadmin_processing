@@ -14,6 +14,7 @@ class AdressDatabase:
             "Geburtsdatum",
             "Kategorie",
             "Geschlecht",
+            "Anrede",
             "Email",
             "Beitrittsdatum"
         ]
@@ -45,6 +46,9 @@ class AdressDatabase:
         with open("src/utils/STVAdmin_to_AdressDB_translator.json", "r") as f:
             translator = json.load(f) 
         for col in self.columns:
+            if col == "Anrede":
+                entry_constructor_dict[col] = "Liebe" if getattr(person, translator["Geschlecht"])=="Weiblich" else "Lieber"
+                continue
             entry_constructor_dict[col] = getattr(person, translator[col])
 
         assert set(entry_constructor_dict.keys()) == set(self.columns)

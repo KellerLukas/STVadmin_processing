@@ -94,7 +94,7 @@ class Database:
         people_found = []
         for person in self.people:
             attr = getattr(person, property, None)
-            if attr is None:
+            if attr is None and search_input is not None:
                 continue
             if comparator(attr, search_input):
                 people_found.append(person)
@@ -161,9 +161,10 @@ class Database:
             
     
     def _person_matches_all_properties_present_in_reference(self, person: Person, reference: Person):
-        return self._person_matches_all_properties_present_in_reference_except_property_list(person, reference, [])
+        return Database._person_matches_all_properties_present_in_reference_except_property_list(person, reference, [])
     
-    def _person_matches_all_properties_present_in_reference_except_property_list(self, person: Person, reference: Person, property_list: list[str]):
+    @staticmethod
+    def _person_matches_all_properties_present_in_reference_except_property_list(person: Person, reference: Person, property_list: list[str]):
         for key, value in vars(reference).items():
             if "email" in property_list:
                 property_list.append("emails")

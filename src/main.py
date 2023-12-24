@@ -6,14 +6,14 @@ from src.utils.cleverreach_database import CleverreachDatabase
 from src.utils.adress_databases import AdressDatabase
 
 
-def export_no_mail_people_csv(mb_db: MailBasedDatabase, output_file: str):
+def export_no_mail_people_excel(mb_db: MailBasedDatabase, output_file: str):
     no_mail_families = mb_db.lookup_by_property("email", None)
     assert len(no_mail_families) == 1
     no_mail_family = no_mail_families[0]
     no_mail_db = Database()
     no_mail_db.add_people(no_mail_family.people)
     ad_db = AdressDatabase(input_db=no_mail_db)
-    ad_db.to_csv(output_file)
+    ad_db.to_excel(output_file)
 
 def load_main_db(input_file: str) -> Database:
     main_db = Database(input_file)
@@ -80,26 +80,32 @@ def export_jugend_born_in_year(main_db: Database, year: int, output_file: str):
     
     
 path = "/Users/Lukas/Library/CloudStorage/OneDrive-FreigegebeneBibliotheken–TurnvereinWürenlos/Kommunikation - Dokumente/Interne Kommunikation/CleverReach/Adressen/"
-patht = path.replace(" ", "\ ")
+#path = path.replace(" ", "\ ")
 
-fin = "Kontaktliste/Mitglieder12-3_23.xlsx"
+fin = "Kontaktliste/Mitglieder12-4_23.xlsx"
 fadditional = "Newsletter_Zusaetzlich.xlsx"
 fremove = "Newsletter_abmeldungen.xlsx"
 
 fbackup = "Kontaktliste/Mitglieder10_23.xlsx"
 
 fout = "TVW_List_OUT.csv"
-fout_nomail = "TVW_List_OUT_nomail.csv"
+fout_nomail = "TVW_List_OUT_nomail.xlsx"
 fout_neumitglieder = "TVW_List_OUT_neumitglieder.xlsx"
 fout_jugenduebertritt = "TVW_List_OUT_jugenduebertritte.xlsx"
 
 main_db = load_main_db(path + fin)
+
+
 main_db = add_from_additional_list(main_db, path + fadditional)
 main_db = add_mail_from_backup_db(main_db, path + fbackup)
 main_db = remove_mail_from_removelist(main_db, path + fremove)
 
 mb_db = load_mail_based_db(main_db)
 export_as_cleverreach_csv(mb_db, path + fout)
-export_no_mail_people_csv(mb_db, path + fout_nomail)
-export_adult_people_joined_at_or_after_date_excel(main_db, pd.Timestamp('2023-01-15'), path+fout_neumitglieder)
-export_jugend_born_in_year(main_db, 2007, path+fout_jugenduebertritt)
+export_no_mail_people_excel(mb_db, path + fout_nomail)
+
+#GV
+#export_adult_people_joined_at_or_after_date_excel(main_db, pd.Timestamp('2023-01-15'), path+fout_neumitglieder)
+#export_jugend_born_in_year(main_db, 2007, path+fout_jugenduebertritt)
+
+
