@@ -21,7 +21,8 @@ class DynamicsClient:
         
     def __del__(self):
         shutil.rmtree(self.download_location)
-        self.client.close()
+        self.client.quit()
+            
 
     @property
     def client(self):

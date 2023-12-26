@@ -108,6 +108,11 @@ def export_jugend_born_in_year(main_db: Database, year: int, output_file: str):
 
     ad_db = AdressDatabase(input_db=born_before_date_db)
     ad_db.to_excel(output_file)
+    
+def get_file_from_dynamics(path):
+    dc = DynamicsClient()
+    fin = dc.download_list_to_folder(path)
+    return fin
 
 
 path = "/Users/Lukas/Library/CloudStorage/OneDrive-FreigegebeneBibliotheken–TurnvereinWürenlos/Kommunikation - Dokumente/Interne Kommunikation/CleverReach/Adressen/"
@@ -124,8 +129,7 @@ fout_nomail = "TVW_List_OUT_nomail.xlsx"
 fout_neumitglieder = "TVW_List_OUT_neumitglieder.xlsx"
 fout_jugenduebertritt = "TVW_List_OUT_jugenduebertritte.xlsx"
 
-dc = DynamicsClient()
-fin = dc.download_list_to_folder(path)
+fin = get_file_from_dynamics(path)
 
 main_db = load_main_db(path + fin)
 
