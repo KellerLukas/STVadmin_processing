@@ -35,13 +35,26 @@ class DynamicsClient:
             self._client = webdriver.Firefox(options=options)
         return self._client
     
-    def download_list_to_folder(self,folder):
+    def download_userlist_to_folder(self, folder):
         self._login()
         time.sleep(1)
-        self._initiate_download()
+        self._accept_prompt_if_exists()
+        time.sleep(1)
+        self._initiate_userlist_download()
         while not self.temp_folder_contains_xlsx():
             pass
-        return self.move_file_to_folder(folder)
+        return self.move_excel_to_folder(folder)
+    
+    def download_riegenlist_to_folder(self, folder):
+        self._login()
+        time.sleep(1)
+        self._accept_prompt_if_exists()
+        time.sleep(1)
+        self._initiate_riegenlist_download()
+        while not self.temp_folder_contains_csv():
+            pass
+        return self.move_csv_to_folder(folder)
+        
         
 
     def _login(self):
@@ -56,7 +69,14 @@ class DynamicsClient:
         pwd.send_keys(self.creds.client_secret)
         self.client.find_element(By.NAME, login_submit_name).click()
         
-    def _initiate_download(self):
+    def _accept_prompt_if_exists(self):
+        try:
+            self.client.find_element(By.XPATH, "//button[@title='Ja']").click()
+        except:
+            pass
+        
+    def _initiate_userlist_download(self):
+        time.sleep(2)
         self.client.find_element(By.XPATH, "//li[contains(@class, 'ms-cui-tt')]/a[contains(@title, 'Bericht')]").click() #Bericht
         self.client.find_element(By.XPATH, "//span[@class='ms-cui-ctl-largelabel' and text()='Mitgliederverwaltung']/ancestor::a[@class='ms-cui-ctl-large']").click() #Mitgliederverwaltung
         time.sleep(3)
@@ -67,23 +87,43 @@ class DynamicsClient:
         self.client.find_elements(By.XPATH, "//span[@class='ms-cui-tt-span' and text()='Start']/ancestor::a[@class='ms-cui-tt-a']/ancestor::li[@class='ms-cui-tt ']")[0].click() #Start
         self.client.find_elements(By.XPATH, "//span[@class='ms-cui-ctl-largelabel' and text()='Exportieren']/ancestor::a[@class='ms-cui-ctl-large']")[1].click() #Exportieren
 
+
+    def _initiate_riegenlist_download(self):
+        time.sleep(2)
+        self.client.find_element(By.XPATH, "//li[contains(@class, 'ms-cui-tt')]/a[contains(@title, 'Bericht')]").click() #Bericht
+        self.client.find_element(By.XPATH, "//span[@class='ms-cui-ctl-largelabel' and text()='Organverwaltung']/ancestor::a[@class='ms-cui-ctl-large']").click()
+        time.sleep(3)
+        self.client.find_element(By.XPATH, "//span[@class='ms-cui-ctl-largelabel' and contains(normalize-space(), 'Organ') and contains(normalize-space(), 'Export')]/ancestor::a[@class='ms-cui-ctl-large']").click()
+
+        
     def create_temporary_download_folder(self):
         if os.path.isdir(self.download_location):
             shutil.rmtree(self.download_location)
         os.mkdir(self.download_location)
         
     def temp_folder_contains_xlsx(self):
+        return self.temp_folder_contains_filetype('xlsx')
+    
+    def temp_folder_contains_csv(self):
+        return self.temp_folder_contains_filetype('csv')
+    
+    def temp_folder_contains_filetype(self, filetype:str):
         files = os.listdir(self.download_location)
         for file in files:
-            if file[-4:]=="xlsx":
+            if file[-len(filetype):]==filetype:
                 time.sleep(1)
                 return True
         return False
 
+    def move_excel_to_folder(self, folder):
+        return self.move_file_with_type_to_folder('xlsx', folder)
     
-    def move_file_to_folder(self, folder):
+    def move_csv_to_folder(self, folder):
+        return self.move_file_with_type_to_folder('csv', folder)
+    
+    def move_file_with_type_to_folder(self, filetype, folder):
         files = os.listdir(self.download_location)
-        files = [file for file in files if "xlsx" in file]
+        files = [file for file in files if filetype in file]
         assert len(files)==1
         filename = files[0]
         os.rename(os.path.join(self.download_location,filename),os.path.join(folder,filename))

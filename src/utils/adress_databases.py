@@ -64,6 +64,22 @@ class AdressDatabase:
         
     def to_excel(self, filename: str):
         self.df.to_excel(filename, index=False)
+
+class RiegenAdressDatabase:
+    def __init__(self, member_ad_db: AdressDatabase, coach_ad_db: AdressDatabase):
+        member_df = member_ad_db.df
+        member_df["Funktion"] = "Mitglied"
+        coach_df = coach_ad_db.df
+        coach_df["Funktion"] = "Leiter*in"
+        self.df = pd.concat([member_df, coach_df])
+    
+    def to_excel(self, filename: str):
+        self.df.to_excel(filename, index=False)
+        
+    
+    
+        
+    
         
         
         

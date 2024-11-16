@@ -1,0 +1,1496 @@
+[
+    {
+        "label": "print_function",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
+        "label": "pandas",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pandas",
+        "description": "pandas",
+        "detail": "pandas",
+        "documentation": {}
+    },
+    {
+        "label": "MailBasedFamily",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "MailBasedDatabase",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "Database",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "Person",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "MailBasedFamily",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "MailBasedDatabase",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "MailBasedDatabase",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "Database",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "MailBasedDatabase",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "Database",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "Person",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "Database",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "Person",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "MailBasedDatabase",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "MailBasedFamily",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "Person",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "Person",
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "isExtraImport": true,
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "webdriver",
+        "importPath": "selenium",
+        "description": "selenium",
+        "isExtraImport": true,
+        "detail": "selenium",
+        "documentation": {}
+    },
+    {
+        "label": "By",
+        "importPath": "selenium.webdriver.common.by",
+        "description": "selenium.webdriver.common.by",
+        "isExtraImport": true,
+        "detail": "selenium.webdriver.common.by",
+        "documentation": {}
+    },
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "Options",
+        "importPath": "selenium.webdriver.firefox.options",
+        "description": "selenium.webdriver.firefox.options",
+        "isExtraImport": true,
+        "detail": "selenium.webdriver.firefox.options",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "shutil",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "shutil",
+        "description": "shutil",
+        "detail": "shutil",
+        "documentation": {}
+    },
+    {
+        "label": "OnePassword",
+        "importPath": "onepassword",
+        "description": "onepassword",
+        "isExtraImport": true,
+        "detail": "onepassword",
+        "documentation": {}
+    },
+    {
+        "label": "copy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "copy",
+        "description": "copy",
+        "detail": "copy",
+        "documentation": {}
+    },
+    {
+        "label": "logging",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "logging",
+        "description": "logging",
+        "detail": "logging",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "ADULT_CAT",
+        "importPath": "src",
+        "description": "src",
+        "isExtraImport": true,
+        "detail": "src",
+        "documentation": {}
+    },
+    {
+        "label": "EHRENMITGLIEDER_CAT",
+        "importPath": "src",
+        "description": "src",
+        "isExtraImport": true,
+        "detail": "src",
+        "documentation": {}
+    },
+    {
+        "label": "NOT_ACTIVE_ERW_CAT",
+        "importPath": "src",
+        "description": "src",
+        "isExtraImport": true,
+        "detail": "src",
+        "documentation": {}
+    },
+    {
+        "label": "MALE",
+        "importPath": "src",
+        "description": "src",
+        "isExtraImport": true,
+        "detail": "src",
+        "documentation": {}
+    },
+    {
+        "label": "JUGEND_CAT",
+        "importPath": "src",
+        "description": "src",
+        "isExtraImport": true,
+        "detail": "src",
+        "documentation": {}
+    },
+    {
+        "label": "is_jugend_riege",
+        "importPath": "src",
+        "description": "src",
+        "isExtraImport": true,
+        "detail": "src",
+        "documentation": {}
+    },
+    {
+        "label": "DynamicsClient",
+        "importPath": "src.utils.dynamics_client",
+        "description": "src.utils.dynamics_client",
+        "isExtraImport": true,
+        "detail": "src.utils.dynamics_client",
+        "documentation": {}
+    },
+    {
+        "label": "DynamicsClient",
+        "importPath": "src.utils.dynamics_client",
+        "description": "src.utils.dynamics_client",
+        "isExtraImport": true,
+        "detail": "src.utils.dynamics_client",
+        "documentation": {}
+    },
+    {
+        "label": "CleverreachDatabase",
+        "importPath": "src.utils.cleverreach_database",
+        "description": "src.utils.cleverreach_database",
+        "isExtraImport": true,
+        "detail": "src.utils.cleverreach_database",
+        "documentation": {}
+    },
+    {
+        "label": "CleverreachDatabase",
+        "importPath": "src.utils.cleverreach_database",
+        "description": "src.utils.cleverreach_database",
+        "isExtraImport": true,
+        "detail": "src.utils.cleverreach_database",
+        "documentation": {}
+    },
+    {
+        "label": "CleverreachDatabase",
+        "importPath": "src.utils.cleverreach_database",
+        "description": "src.utils.cleverreach_database",
+        "isExtraImport": true,
+        "detail": "src.utils.cleverreach_database",
+        "documentation": {}
+    },
+    {
+        "label": "AdressDatabase",
+        "importPath": "src.utils.adress_databases",
+        "description": "src.utils.adress_databases",
+        "isExtraImport": true,
+        "detail": "src.utils.adress_databases",
+        "documentation": {}
+    },
+    {
+        "label": "RiegenAdressDatabase",
+        "importPath": "src.utils.adress_databases",
+        "description": "src.utils.adress_databases",
+        "isExtraImport": true,
+        "detail": "src.utils.adress_databases",
+        "documentation": {}
+    },
+    {
+        "label": "AdressDatabase",
+        "importPath": "src.utils.adress_databases",
+        "description": "src.utils.adress_databases",
+        "isExtraImport": true,
+        "detail": "src.utils.adress_databases",
+        "documentation": {}
+    },
+    {
+        "label": "RiegenAdressDatabase",
+        "importPath": "src.utils.adress_databases",
+        "description": "src.utils.adress_databases",
+        "isExtraImport": true,
+        "detail": "src.utils.adress_databases",
+        "documentation": {}
+    },
+    {
+        "label": "streamlit",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "streamlit",
+        "description": "streamlit",
+        "detail": "streamlit",
+        "documentation": {}
+    },
+    {
+        "label": "STVAdminExportClient",
+        "importPath": "src.STVAdmin_export_client",
+        "description": "src.STVAdmin_export_client",
+        "isExtraImport": true,
+        "detail": "src.STVAdmin_export_client",
+        "documentation": {}
+    },
+    {
+        "label": "pickle",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pickle",
+        "description": "pickle",
+        "detail": "pickle",
+        "documentation": {}
+    },
+    {
+        "label": "TestCase",
+        "importPath": "unittest",
+        "description": "unittest",
+        "isExtraImport": true,
+        "detail": "unittest",
+        "documentation": {}
+    },
+    {
+        "label": "TestCase",
+        "importPath": "unittest",
+        "description": "unittest",
+        "isExtraImport": true,
+        "detail": "unittest",
+        "documentation": {}
+    },
+    {
+        "label": "TestCase",
+        "importPath": "unittest",
+        "description": "unittest",
+        "isExtraImport": true,
+        "detail": "unittest",
+        "documentation": {}
+    },
+    {
+        "label": "TestCase",
+        "importPath": "unittest",
+        "description": "unittest",
+        "isExtraImport": true,
+        "detail": "unittest",
+        "documentation": {}
+    },
+    {
+        "label": "pytest",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pytest",
+        "description": "pytest",
+        "detail": "pytest",
+        "documentation": {}
+    },
+    {
+        "label": "sys",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sys",
+        "description": "sys",
+        "detail": "sys",
+        "documentation": {}
+    },
+    {
+        "label": "csv",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "csv",
+        "description": "csv",
+        "detail": "csv",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "datetime",
+        "description": "datetime",
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "cmd_doc",
+        "kind": 5,
+        "importPath": ".venv.bin.runxlrd",
+        "description": ".venv.bin.runxlrd",
+        "peekOfCode": "cmd_doc = \"\"\"\nCommands:\n2rows           Print the contents of first and last row in each sheet\n3rows           Print the contents of first, second and last row in each sheet\nbench           Same as \"show\", but doesn't print -- for profiling\nbiff_count[1]   Print a count of each type of BIFF record in the file\nbiff_dump[1]    Print a dump (char and hex) of the BIFF records in the file\nfonts           hdr + print a dump of all font objects\nhdr             Mini-overview of file (no per-sheet information)\nhotshot         Do a hotshot profile run e.g. ... -f1 hotshot bench bigfile*.xls",
+        "detail": ".venv.bin.runxlrd",
+        "documentation": {}
+    },
+    {
+        "label": "options",
+        "kind": 5,
+        "importPath": ".venv.bin.runxlrd",
+        "description": ".venv.bin.runxlrd",
+        "peekOfCode": "options = None\nif __name__ == \"__main__\":\n    import xlrd\n    import sys\n    import time\n    import glob\n    import traceback\n    import gc\n    from xlrd.timemachine import xrange, REPR\n    class LogHandler(object):",
+        "detail": ".venv.bin.runxlrd",
+        "documentation": {}
+    },
+    {
+        "label": "AdressDatabase",
+        "kind": 6,
+        "importPath": "src.utils.adress_databases",
+        "description": "src.utils.adress_databases",
+        "peekOfCode": "class AdressDatabase:\n    def __init__(self, input_file: str = None, input_db: Database = None):\n        self.columns = [\n            \"Vorname\",\n            \"Nachname\",\n            \"Strasse\",\n            \"PLZ\",\n            \"Ort\",\n            \"Geburtsdatum\",\n            \"Kategorie\",",
+        "detail": "src.utils.adress_databases",
+        "documentation": {}
+    },
+    {
+        "label": "RiegenAdressDatabase",
+        "kind": 6,
+        "importPath": "src.utils.adress_databases",
+        "description": "src.utils.adress_databases",
+        "peekOfCode": "class RiegenAdressDatabase:\n    def __init__(self, member_ad_db: AdressDatabase, coach_ad_db: AdressDatabase):\n        member_df = member_ad_db.df\n        member_df[\"Funktion\"] = \"Mitglied\"\n        coach_df = coach_ad_db.df\n        coach_df[\"Funktion\"] = \"Leiter*in\"\n        self.df = pd.concat([member_df, coach_df])\n    def to_excel(self, filename: str):\n        self.df.to_excel(filename, index=False)",
+        "detail": "src.utils.adress_databases",
+        "documentation": {}
+    },
+    {
+        "label": "CleverreachDatabase",
+        "kind": 6,
+        "importPath": "src.utils.cleverreach_database",
+        "description": "src.utils.cleverreach_database",
+        "peekOfCode": "class CleverreachDatabase:\n    def __init__(self, input_file: str = None, input_mb_database: MailBasedDatabase = None):\n        self.categories = [\n            \"Aktive Turner\",\n            \"Aktive Turnerin\",\n            \"Passivmitglied\",\n            \"Kitu\",\n            \"Mädchen\",\n            \"Knaben\",\n            \"Freimitglied turnend\",",
+        "detail": "src.utils.cleverreach_database",
+        "documentation": {}
+    },
+    {
+        "label": "Person",
+        "kind": 6,
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "peekOfCode": "class Person:\n    def __init__(\n        self,\n        member_number: int = None,\n        gender: str = None,\n        first_name: str = None,\n        last_name: str = None,\n        street: str = None,\n        plz = None,\n        city: str = None,",
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "Database",
+        "kind": 6,
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "peekOfCode": "class Database:\n    def __init__(self, input_file: str = None):\n        self.people = []\n        self.riegen = None\n        if input_file is not None:\n            self.people = self._load_people_from_input_file(input_file)\n    def lookup_by_property(self, property: str, search_input, comparator=None) -> list[Person]:\n        comparator = comparator or np.equal\n        people_found = []\n        for person in self.people:",
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "MailBasedFamily",
+        "kind": 6,
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "peekOfCode": "class MailBasedFamily:\n    def __init__(self, people: list[Person]):\n        assert self.__all_emails_are_equal(people)\n        assert len(people) > 0\n        self.people = people\n        self.email = self.people[0].email\n    def get_property_list(self, property: str) -> list:\n        property_list = list(set([getattr(person, property, None) for person in self.people]))\n        property_list.sort()\n        return property_list",
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "MailBasedDatabase",
+        "kind": 6,
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "peekOfCode": "class MailBasedDatabase:\n    def __init__(self, input_file: str = None, input_db: Database = None):\n        self.mail_based_families = []\n        self.input_db = input_db\n        if input_file is not None:\n            self.input_db = Database(input_file)\n        if self.input_db is not None:\n            self.add_from_database(self.input_db)\n    def add_from_database(self, db: Database):\n        for person in db.people:",
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "EXCEPTIONS_MEMBER_NUMBERS",
+        "kind": 5,
+        "importPath": "src.utils.databases",
+        "description": "src.utils.databases",
+        "peekOfCode": "EXCEPTIONS_MEMBER_NUMBERS = [317492, 871369]\nclass Person:\n    def __init__(\n        self,\n        member_number: int = None,\n        gender: str = None,\n        first_name: str = None,\n        last_name: str = None,\n        street: str = None,\n        plz = None,",
+        "detail": "src.utils.databases",
+        "documentation": {}
+    },
+    {
+        "label": "DynamicsClient",
+        "kind": 6,
+        "importPath": "src.utils.dynamics_client",
+        "description": "src.utils.dynamics_client",
+        "peekOfCode": "class DynamicsClient:\n    def __init__(self, working_dir: str = None):\n        self._client = None\n        if working_dir is None:\n            working_dir = os.getcwd()\n        self.download_location = os.path.join(working_dir, \"dynamics_client_temp_folder\")\n        self.create_temporary_download_folder()\n        self.creds = STVAdminCreds()\n    def __del__(self):\n        shutil.rmtree(self.download_location)",
+        "detail": "src.utils.dynamics_client",
+        "documentation": {}
+    },
+    {
+        "label": "STVAdminCreds",
+        "kind": 6,
+        "importPath": "src.utils.dynamics_client",
+        "description": "src.utils.dynamics_client",
+        "peekOfCode": "class STVAdminCreds:\n    def __init__(self):\n        self._client_id = None\n        self._client_secret = None\n        self.op = OnePassword()\n        self.item_uuid = \"utpuxkadynh4bnoqufqp5umzvy\"\n    @property\n    def client_id(self):\n        if self._client_id is None:\n            self._client_id = self.get_client_id()",
+        "detail": "src.utils.dynamics_client",
+        "documentation": {}
+    },
+    {
+        "label": "STVAdminExportClient",
+        "kind": 6,
+        "importPath": "src.STVAdmin_export_client",
+        "description": "src.STVAdmin_export_client",
+        "peekOfCode": "class STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False):\n        self.path = path or PATH\n        self.path = Path(self.path)\n        Path(os.path.join(self.path,OUTPUT_FOLDER)).mkdir(parents=True, exist_ok=True)\n        self._userlist_filename: Optional[Path] = None\n        self._riegenlist_filename: Optional[Path] = None\n        self._main_db = None",
+        "detail": "src.STVAdmin_export_client",
+        "documentation": {}
+    },
+    {
+        "label": "PATH",
+        "kind": 5,
+        "importPath": "src.STVAdmin_export_client",
+        "description": "src.STVAdmin_export_client",
+        "peekOfCode": "PATH = \"/Users/Lukas/Library/CloudStorage/OneDrive-FreigegebeneBibliotheken–TurnvereinWürenlos/Kommunikation - Dokumente/Interne Kommunikation/CleverReach/Adressen/\"\nOUTPUT_FOLDER = \"OUT\"\nFILENAME_ADDITIONAL_PEOPLE = \"Newsletter_Zusaetzlich.xlsx\"\nFILENAME_BACKUP_LIST = \"TVW_Mitglieder_Backup_10_23.xlsx\"\nFILENAME_REMOVE_LIST = \"Newsletter_abmeldungen.xlsx\"\nFILENAME_JUBILARE = \"TVW_List_OUT_Jubilare_{year}.xlsx\"\nFILENAME_NEUMITGLIEDER = \"TVW_List_OUT_neumitglieder.xlsx\"\nFILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:",
+        "detail": "src.STVAdmin_export_client",
+        "documentation": {}
+    },
+    {
+        "label": "OUTPUT_FOLDER",
+        "kind": 5,
+        "importPath": "src.STVAdmin_export_client",
+        "description": "src.STVAdmin_export_client",
+        "peekOfCode": "OUTPUT_FOLDER = \"OUT\"\nFILENAME_ADDITIONAL_PEOPLE = \"Newsletter_Zusaetzlich.xlsx\"\nFILENAME_BACKUP_LIST = \"TVW_Mitglieder_Backup_10_23.xlsx\"\nFILENAME_REMOVE_LIST = \"Newsletter_abmeldungen.xlsx\"\nFILENAME_JUBILARE = \"TVW_List_OUT_Jubilare_{year}.xlsx\"\nFILENAME_NEUMITGLIEDER = \"TVW_List_OUT_neumitglieder.xlsx\"\nFILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"",
+        "detail": "src.STVAdmin_export_client",
+        "documentation": {}
+    },
+    {
+        "label": "FILENAME_ADDITIONAL_PEOPLE",
+        "kind": 5,
+        "importPath": "src.STVAdmin_export_client",
+        "description": "src.STVAdmin_export_client",
+        "peekOfCode": "FILENAME_ADDITIONAL_PEOPLE = \"Newsletter_Zusaetzlich.xlsx\"\nFILENAME_BACKUP_LIST = \"TVW_Mitglieder_Backup_10_23.xlsx\"\nFILENAME_REMOVE_LIST = \"Newsletter_abmeldungen.xlsx\"\nFILENAME_JUBILARE = \"TVW_List_OUT_Jubilare_{year}.xlsx\"\nFILENAME_NEUMITGLIEDER = \"TVW_List_OUT_neumitglieder.xlsx\"\nFILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"",
+        "detail": "src.STVAdmin_export_client",
+        "documentation": {}
+    },
+    {
+        "label": "FILENAME_BACKUP_LIST",
+        "kind": 5,
+        "importPath": "src.STVAdmin_export_client",
+        "description": "src.STVAdmin_export_client",
+        "peekOfCode": "FILENAME_BACKUP_LIST = \"TVW_Mitglieder_Backup_10_23.xlsx\"\nFILENAME_REMOVE_LIST = \"Newsletter_abmeldungen.xlsx\"\nFILENAME_JUBILARE = \"TVW_List_OUT_Jubilare_{year}.xlsx\"\nFILENAME_NEUMITGLIEDER = \"TVW_List_OUT_neumitglieder.xlsx\"\nFILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False):",
+        "detail": "src.STVAdmin_export_client",
+        "documentation": {}
+    },
+    {
+        "label": "FILENAME_REMOVE_LIST",
+        "kind": 5,
+        "importPath": "src.STVAdmin_export_client",
+        "description": "src.STVAdmin_export_client",
+        "peekOfCode": "FILENAME_REMOVE_LIST = \"Newsletter_abmeldungen.xlsx\"\nFILENAME_JUBILARE = \"TVW_List_OUT_Jubilare_{year}.xlsx\"\nFILENAME_NEUMITGLIEDER = \"TVW_List_OUT_neumitglieder.xlsx\"\nFILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False):\n        self.path = path or PATH",
+        "detail": "src.STVAdmin_export_client",
+        "documentation": {}
+    },
+    {
+        "label": "FILENAME_JUBILARE",
+        "kind": 5,
+        "importPath": "src.STVAdmin_export_client",
+        "description": "src.STVAdmin_export_client",
+        "peekOfCode": "FILENAME_JUBILARE = \"TVW_List_OUT_Jubilare_{year}.xlsx\"\nFILENAME_NEUMITGLIEDER = \"TVW_List_OUT_neumitglieder.xlsx\"\nFILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False):\n        self.path = path or PATH\n        self.path = Path(self.path)",
+        "detail": "src.STVAdmin_export_client",
+        "documentation": {}
+    },
+    {
+        "label": "FILENAME_NEUMITGLIEDER",
+        "kind": 5,
+        "importPath": "src.STVAdmin_export_client",
+        "description": "src.STVAdmin_export_client",
+        "peekOfCode": "FILENAME_NEUMITGLIEDER = \"TVW_List_OUT_neumitglieder.xlsx\"\nFILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False):\n        self.path = path or PATH\n        self.path = Path(self.path)\n        Path(os.path.join(self.path,OUTPUT_FOLDER)).mkdir(parents=True, exist_ok=True)",
+        "detail": "src.STVAdmin_export_client",
+        "documentation": {}
+    },
+    {
+        "label": "FILENAME_JUGENDUEBERTRITT",
+        "kind": 5,
+        "importPath": "src.STVAdmin_export_client",
+        "description": "src.STVAdmin_export_client",
+        "peekOfCode": "FILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False):\n        self.path = path or PATH\n        self.path = Path(self.path)\n        Path(os.path.join(self.path,OUTPUT_FOLDER)).mkdir(parents=True, exist_ok=True)\n        self._userlist_filename: Optional[Path] = None",
+        "detail": "src.STVAdmin_export_client",
+        "documentation": {}
+    },
+    {
+        "label": "FILENAME_LOST_EMAIL",
+        "kind": 5,
+        "importPath": "src.STVAdmin_export_client",
+        "description": "src.STVAdmin_export_client",
+        "peekOfCode": "FILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False):\n        self.path = path or PATH\n        self.path = Path(self.path)\n        Path(os.path.join(self.path,OUTPUT_FOLDER)).mkdir(parents=True, exist_ok=True)\n        self._userlist_filename: Optional[Path] = None\n        self._riegenlist_filename: Optional[Path] = None",
+        "detail": "src.STVAdmin_export_client",
+        "documentation": {}
+    },
+    {
+        "label": "setup_page",
+        "kind": 2,
+        "importPath": "src.home",
+        "description": "src.home",
+        "peekOfCode": "def setup_page():\n    st.set_page_config(page_title=\"STVAdmin Export\")\n    st.markdown(\n        \"\"\"\n        <style>\n        body {\n            background-color: white;\n            color: #878787;\n        }\n        h1 {",
+        "detail": "src.home",
+        "documentation": {}
+    },
+    {
+        "label": "configure_title",
+        "kind": 2,
+        "importPath": "src.home",
+        "description": "src.home",
+        "peekOfCode": "def configure_title():\n    st.markdown(\"# STVAdmin Export\")\n    st.markdown(\"Exportiere diverse Listen aus STVAdmin\")\ndef configure_download_data():\n    st.markdown(\"## Setup\", unsafe_allow_html=True)\n    if not data_is_available():\n        st.markdown(\"Retrieve the data from the Microsoft Dynamics Database\")\n        if st.button(label=\"Download data\"):\n            st.session_state.client.main_db\n            st.rerun()",
+        "detail": "src.home",
+        "documentation": {}
+    },
+    {
+        "label": "configure_download_data",
+        "kind": 2,
+        "importPath": "src.home",
+        "description": "src.home",
+        "peekOfCode": "def configure_download_data():\n    st.markdown(\"## Setup\", unsafe_allow_html=True)\n    if not data_is_available():\n        st.markdown(\"Retrieve the data from the Microsoft Dynamics Database\")\n        if st.button(label=\"Download data\"):\n            st.session_state.client.main_db\n            st.rerun()\n    else:\n        st.markdown(\"Reset and retrieve new data from Microsoft Dynamics Database\")\n        if st.button(label=\"Reset\"):",
+        "detail": "src.home",
+        "documentation": {}
+    },
+    {
+        "label": "configure_basic_export",
+        "kind": 2,
+        "importPath": "src.home",
+        "description": "src.home",
+        "peekOfCode": "def configure_basic_export():\n    st.markdown(\"## Export\", unsafe_allow_html=True)\n    if not data_is_available():\n        st.markdown(\"Data is not available\")\n        return\n    # Button status trackers in session state\n    if 'success_buttons' not in st.session_state:\n        st.session_state.success_buttons = {}\n    # Button grid for other exports\n    col1, col2 = st.columns(2)",
+        "detail": "src.home",
+        "documentation": {}
+    },
+    {
+        "label": "reset_client",
+        "kind": 2,
+        "importPath": "src.home",
+        "description": "src.home",
+        "peekOfCode": "def reset_client():\n    if isinstance(st.session_state.client, STVAdminExportClient):\n        del st.session_state.client\n    st.session_state.client = STVAdminExportClient(keep_files=False)\ndef data_is_available():\n    if st.session_state.client._userlist_filename is None or st.session_state.client._riegenlist_filename is None:\n        return False\n    return True\ndef main():\n    if \"client\" not in st.session_state:",
+        "detail": "src.home",
+        "documentation": {}
+    },
+    {
+        "label": "data_is_available",
+        "kind": 2,
+        "importPath": "src.home",
+        "description": "src.home",
+        "peekOfCode": "def data_is_available():\n    if st.session_state.client._userlist_filename is None or st.session_state.client._riegenlist_filename is None:\n        return False\n    return True\ndef main():\n    if \"client\" not in st.session_state:\n        st.session_state.client = STVAdminExportClient()\n    setup_page()\n    configure_title()\n    configure_download_data()",
+        "detail": "src.home",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "src.home",
+        "description": "src.home",
+        "peekOfCode": "def main():\n    if \"client\" not in st.session_state:\n        st.session_state.client = STVAdminExportClient()\n    setup_page()\n    configure_title()\n    configure_download_data()\n    configure_basic_export()\nif __name__ == \"__main__\":\n    main()",
+        "detail": "src.home",
+        "documentation": {}
+    },
+    {
+        "label": "export_no_mail_people_excel",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def export_no_mail_people_excel(mb_db: MailBasedDatabase, output_file: str):\n    no_mail_families = mb_db.lookup_by_property(\"email\", None)\n    assert len(no_mail_families) == 1\n    no_mail_family = no_mail_families[0]\n    no_mail_db = Database()\n    no_mail_db.add_people(no_mail_family.people)\n    ad_db = AdressDatabase(input_db=no_mail_db)\n    ad_db.to_excel(output_file)\ndef export_ehrenmitglieder_no_mail_people_excel(mb_db: MailBasedDatabase, output_file: str):\n    no_mail_families = mb_db.lookup_by_property(\"email\", None)",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "export_ehrenmitglieder_no_mail_people_excel",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def export_ehrenmitglieder_no_mail_people_excel(mb_db: MailBasedDatabase, output_file: str):\n    no_mail_families = mb_db.lookup_by_property(\"email\", None)\n    assert len(no_mail_families) == 1\n    no_mail_family = no_mail_families[0]\n    no_mail_db = Database()\n    no_mail_db.add_people(no_mail_family.people)\n    ehrenmitglied_kat = [\n        \"Ehrenmitg. nturnend\",\n        \"Ehrenmitg. turnend\",\n    ]",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "load_main_db",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def load_main_db(userlist_file: str, riegenlist_file: str = None) -> Database:\n    main_db = Database(userlist_file)\n    main_db.load_riegen(riegenlist_file)\n    return main_db\ndef load_mail_based_db(main_db: Database) -> MailBasedDatabase:\n    mb_db = MailBasedDatabase(input_db=main_db)\n    return mb_db\ndef add_from_additional_list(main_db: Database, input_file: str) -> Database:\n    additional_db = Database(input_file)\n    main_db.add_people(additional_db.people)",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "load_mail_based_db",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def load_mail_based_db(main_db: Database) -> MailBasedDatabase:\n    mb_db = MailBasedDatabase(input_db=main_db)\n    return mb_db\ndef add_from_additional_list(main_db: Database, input_file: str) -> Database:\n    additional_db = Database(input_file)\n    main_db.add_people(additional_db.people)\n    return main_db\ndef add_mail_from_backup_db(main_db: Database, input_file: str) -> Database:\n    backup_db = Database(input_file)\n    main_db.copy_value_of_property_from_referencelist_if_empty_and_all_other_properties_match_except_exclusion_list(",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "add_from_additional_list",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def add_from_additional_list(main_db: Database, input_file: str) -> Database:\n    additional_db = Database(input_file)\n    main_db.add_people(additional_db.people)\n    return main_db\ndef add_mail_from_backup_db(main_db: Database, input_file: str) -> Database:\n    backup_db = Database(input_file)\n    main_db.copy_value_of_property_from_referencelist_if_empty_and_all_other_properties_match_except_exclusion_list(\n        \"email\", backup_db.people,exclusion_list=['category', 'tags', 'riegen_coach', 'riegen_member']\n    )\n    return main_db",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "add_mail_from_backup_db",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def add_mail_from_backup_db(main_db: Database, input_file: str) -> Database:\n    backup_db = Database(input_file)\n    main_db.copy_value_of_property_from_referencelist_if_empty_and_all_other_properties_match_except_exclusion_list(\n        \"email\", backup_db.people,exclusion_list=['category', 'tags', 'riegen_coach', 'riegen_member']\n    )\n    return main_db\ndef remove_mail_from_removelist(main_db: Database, input_file: str) -> Database:\n    remove_from_mailinglist_db = Database(input_file)\n    emails_to_remove = [person.email for person in remove_from_mailinglist_db.people]\n    for email in emails_to_remove:",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "remove_mail_from_removelist",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def remove_mail_from_removelist(main_db: Database, input_file: str) -> Database:\n    remove_from_mailinglist_db = Database(input_file)\n    emails_to_remove = [person.email for person in remove_from_mailinglist_db.people]\n    for email in emails_to_remove:\n        main_db.remove_value_for_property_from_people(value=email, property=\"email\")\n    return main_db\ndef export_as_cleverreach_csv(mb_db: MailBasedDatabase, output_file: str):\n    cr_db = CleverreachDatabase(input_mb_database=mb_db)\n    cr_db.to_csv(output_file)\ndef export_adult_people_joined_at_or_after_date_excel(",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "export_as_cleverreach_csv",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def export_as_cleverreach_csv(mb_db: MailBasedDatabase, output_file: str):\n    cr_db = CleverreachDatabase(input_mb_database=mb_db)\n    cr_db.to_csv(output_file)\ndef export_adult_people_joined_at_or_after_date_excel(\n    main_db: Database, date: pd.Timestamp, output_file: str\n):\n    adult_people = []\n    for cat in ADULT_CAT:\n        adult_people += main_db.lookup_by_property(\"category\", cat)\n    adult_people_db = Database()",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "export_adult_people_joined_at_or_after_date_excel",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def export_adult_people_joined_at_or_after_date_excel(\n    main_db: Database, date: pd.Timestamp, output_file: str\n):\n    adult_people = []\n    for cat in ADULT_CAT:\n        adult_people += main_db.lookup_by_property(\"category\", cat)\n    adult_people_db = Database()\n    adult_people_db.add_people(adult_people)\n    joined_after_date_people = adult_people_db.lookup_by_property(\n        \"date_added\", date, comparator=np.greater_equal",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "export_riegenlisten_excel",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def export_riegenlisten_excel(main_db: Database, path: str):\n    riegen = get_riegen(main_db=main_db)\n    for riege in riegen.keys():\n        member_db = Database()\n        member_db.add_people(riegen[riege][\"members\"])\n        member_ad_db = AdressDatabase(input_db=member_db)\n        coach_db = Database()\n        coach_db.add_people(riegen[riege][\"coaches\"])\n        coach_ad_db = AdressDatabase(input_db=coach_db)\n        today = pd.Timestamp.now()",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "get_riegen",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def get_riegen(main_db: Database) -> dict:\n    riegen = {}\n    for person in main_db.people:\n        for riege in person.riegen_member:\n            if riege not in riegen.keys():\n                riegen[riege] = {\"members\":[], \"coaches\": []}\n            riegen[riege][\"members\"].append(person)\n        for riege in person.riegen_coach:\n            if riege not in riegen.keys():\n                riegen[riege] = {\"members\":[], \"coaches\": []}",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "is_jugend_riege",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def is_jugend_riege(riege:str)-> bool:\n    jugend_strings = [\"Meitliriege\", \"Knaben\", \"Jugi\", \"Kids\", \"Jugend\", \"klein\", \"Mädchen\", \"Elki\"]\n    for string in jugend_strings:\n        if string in riege:\n            return True\n    return False\ndef create_riegenmatrix(main_db: Database, path: str):\n    riegen = get_riegen(main_db=main_db)\n    riegen = {key:value for key,value in riegen.items() if not is_jugend_riege(key)}\n    matrix = pd.DataFrame(columns=riegen.keys(), index=riegen.keys())",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "create_riegenmatrix",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def create_riegenmatrix(main_db: Database, path: str):\n    riegen = get_riegen(main_db=main_db)\n    riegen = {key:value for key,value in riegen.items() if not is_jugend_riege(key)}\n    matrix = pd.DataFrame(columns=riegen.keys(), index=riegen.keys())\n    for riege, value in riegen.items():\n        members = value[\"members\"]\n        coaches = value[\"coaches\"]\n        combined = members+coaches\n        for comparison_riege, comparison_value in riegen.items():\n            comparison_members = comparison_value[\"members\"]",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "export_jugend_born_in_year",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def export_jugend_born_in_year(main_db: Database, year: int, output_file: str):\n    jugend_cat = [\"Mädchen\", \"Knaben\"]\n    jugend_people = []\n    for cat in jugend_cat:\n        jugend_people += main_db.lookup_by_property(\"category\", cat)\n    jugend_people_db = Database()\n    jugend_people_db.add_people(jugend_people)\n    after_date = pd.Timestamp(str(year))\n    born_after_date_people = jugend_people_db.lookup_by_property(\n        \"birthday\", after_date, comparator=np.greater_equal",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "get_userlist_file_from_dynamics",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def get_userlist_file_from_dynamics(path):\n    dc = DynamicsClient()\n    fin = dc.download_userlist_to_folder(path)\n    return fin\ndef get_riegenlist_file_from_dynamics(path):\n    dc = DynamicsClient()\n    fin = dc.download_riegenlist_to_folder(path)\n    return fin\ndef get_statistics(db:Database):\n    not_active_erw_cat = [",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "get_riegenlist_file_from_dynamics",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def get_riegenlist_file_from_dynamics(path):\n    dc = DynamicsClient()\n    fin = dc.download_riegenlist_to_folder(path)\n    return fin\ndef get_statistics(db:Database):\n    not_active_erw_cat = [\n                \"Passivmitglied\",\n                \"Freimitg. nturnend (10)\",\n                \"Ehrenmitg. nturnend\"]\n    max_age = 0",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "get_statistics",
+        "kind": 2,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "def get_statistics(db:Database):\n    not_active_erw_cat = [\n                \"Passivmitglied\",\n                \"Freimitg. nturnend (10)\",\n                \"Ehrenmitg. nturnend\"]\n    max_age = 0\n    min_age = 200\n    num_of_men = 0\n    num_of_women = 0\n    num_of_girls = 0",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "path",
+        "kind": 5,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "path = \"/Users/Lukas/Library/CloudStorage/OneDrive-FreigegebeneBibliotheken–TurnvereinWürenlos/Kommunikation - Dokumente/Interne Kommunikation/CleverReach/Adressen/\"\n# path = path.replace(\" \", \"\\ \")\nfadditional = \"Newsletter_Zusaetzlich.xlsx\"\nfremove = \"Newsletter_abmeldungen.xlsx\"\nfbackup = \"Kontaktliste/Mitglieder10_23.xlsx\"\nfout = \"TVW_List_OUT.csv\"\nfout_nomail = \"TVW_List_OUT_nomail.xlsx\"\nfout_neumitglieder = \"TVW_List_OUT_neumitglieder.xlsx\"\nfout_jugenduebertritt = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nfout_ehren_nomail = \"TVW_List_OUT_ehrenmitglieder_nomail.xlsx\"",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "fadditional",
+        "kind": 5,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "fadditional = \"Newsletter_Zusaetzlich.xlsx\"\nfremove = \"Newsletter_abmeldungen.xlsx\"\nfbackup = \"Kontaktliste/Mitglieder10_23.xlsx\"\nfout = \"TVW_List_OUT.csv\"\nfout_nomail = \"TVW_List_OUT_nomail.xlsx\"\nfout_neumitglieder = \"TVW_List_OUT_neumitglieder.xlsx\"\nfout_jugenduebertritt = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nfout_ehren_nomail = \"TVW_List_OUT_ehrenmitglieder_nomail.xlsx\"\nif __name__ == \"__main__\":\n    userlist_file = get_userlist_file_from_dynamics(path)",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "fremove",
+        "kind": 5,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "fremove = \"Newsletter_abmeldungen.xlsx\"\nfbackup = \"Kontaktliste/Mitglieder10_23.xlsx\"\nfout = \"TVW_List_OUT.csv\"\nfout_nomail = \"TVW_List_OUT_nomail.xlsx\"\nfout_neumitglieder = \"TVW_List_OUT_neumitglieder.xlsx\"\nfout_jugenduebertritt = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nfout_ehren_nomail = \"TVW_List_OUT_ehrenmitglieder_nomail.xlsx\"\nif __name__ == \"__main__\":\n    userlist_file = get_userlist_file_from_dynamics(path)\n    riegenlist_file = get_riegenlist_file_from_dynamics(path)",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "fbackup",
+        "kind": 5,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "fbackup = \"Kontaktliste/Mitglieder10_23.xlsx\"\nfout = \"TVW_List_OUT.csv\"\nfout_nomail = \"TVW_List_OUT_nomail.xlsx\"\nfout_neumitglieder = \"TVW_List_OUT_neumitglieder.xlsx\"\nfout_jugenduebertritt = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nfout_ehren_nomail = \"TVW_List_OUT_ehrenmitglieder_nomail.xlsx\"\nif __name__ == \"__main__\":\n    userlist_file = get_userlist_file_from_dynamics(path)\n    riegenlist_file = get_riegenlist_file_from_dynamics(path)\n    main_db = load_main_db(path + userlist_file, path + riegenlist_file)",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "fout",
+        "kind": 5,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "fout = \"TVW_List_OUT.csv\"\nfout_nomail = \"TVW_List_OUT_nomail.xlsx\"\nfout_neumitglieder = \"TVW_List_OUT_neumitglieder.xlsx\"\nfout_jugenduebertritt = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nfout_ehren_nomail = \"TVW_List_OUT_ehrenmitglieder_nomail.xlsx\"\nif __name__ == \"__main__\":\n    userlist_file = get_userlist_file_from_dynamics(path)\n    riegenlist_file = get_riegenlist_file_from_dynamics(path)\n    main_db = load_main_db(path + userlist_file, path + riegenlist_file)\n    export_riegenlisten_excel(main_db, path)",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "fout_nomail",
+        "kind": 5,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "fout_nomail = \"TVW_List_OUT_nomail.xlsx\"\nfout_neumitglieder = \"TVW_List_OUT_neumitglieder.xlsx\"\nfout_jugenduebertritt = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nfout_ehren_nomail = \"TVW_List_OUT_ehrenmitglieder_nomail.xlsx\"\nif __name__ == \"__main__\":\n    userlist_file = get_userlist_file_from_dynamics(path)\n    riegenlist_file = get_riegenlist_file_from_dynamics(path)\n    main_db = load_main_db(path + userlist_file, path + riegenlist_file)\n    export_riegenlisten_excel(main_db, path)\n    #get_statistics(main_db)",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "fout_neumitglieder",
+        "kind": 5,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "fout_neumitglieder = \"TVW_List_OUT_neumitglieder.xlsx\"\nfout_jugenduebertritt = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nfout_ehren_nomail = \"TVW_List_OUT_ehrenmitglieder_nomail.xlsx\"\nif __name__ == \"__main__\":\n    userlist_file = get_userlist_file_from_dynamics(path)\n    riegenlist_file = get_riegenlist_file_from_dynamics(path)\n    main_db = load_main_db(path + userlist_file, path + riegenlist_file)\n    export_riegenlisten_excel(main_db, path)\n    #get_statistics(main_db)\n    #create_riegenmatrix(main_db, path)",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "fout_jugenduebertritt",
+        "kind": 5,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "fout_jugenduebertritt = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nfout_ehren_nomail = \"TVW_List_OUT_ehrenmitglieder_nomail.xlsx\"\nif __name__ == \"__main__\":\n    userlist_file = get_userlist_file_from_dynamics(path)\n    riegenlist_file = get_riegenlist_file_from_dynamics(path)\n    main_db = load_main_db(path + userlist_file, path + riegenlist_file)\n    export_riegenlisten_excel(main_db, path)\n    #get_statistics(main_db)\n    #create_riegenmatrix(main_db, path)\n    main_db = add_from_additional_list(main_db, path + fadditional)",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "fout_ehren_nomail",
+        "kind": 5,
+        "importPath": "src.old_main",
+        "description": "src.old_main",
+        "peekOfCode": "fout_ehren_nomail = \"TVW_List_OUT_ehrenmitglieder_nomail.xlsx\"\nif __name__ == \"__main__\":\n    userlist_file = get_userlist_file_from_dynamics(path)\n    riegenlist_file = get_riegenlist_file_from_dynamics(path)\n    main_db = load_main_db(path + userlist_file, path + riegenlist_file)\n    export_riegenlisten_excel(main_db, path)\n    #get_statistics(main_db)\n    #create_riegenmatrix(main_db, path)\n    main_db = add_from_additional_list(main_db, path + fadditional)\n    people_no_mail_before_backup = [person for person in main_db.people if person.email is None]",
+        "detail": "src.old_main",
+        "documentation": {}
+    },
+    {
+        "label": "TestCleverreachDatabase",
+        "kind": 6,
+        "importPath": "tests.test_cleverreach_database",
+        "description": "tests.test_cleverreach_database",
+        "peekOfCode": "class TestCleverreachDatabase(TestCase):\n    def test_load_cleverreach_database(self):\n        file = \"tests/data/test_database.xlsx\"\n        cr_db = CleverreachDatabase(file)\n        expected_df = pd.read_csv(\"tests/data/test_cleverreach_database_expected_output.csv\")\n        for col in expected_df.columns:\n            if col == \"updated\":\n                expected_df[col] = [pd.Timestamp.now().floor(freq='D') for _ in expected_df[col].values]\n            if col == \"Email\":\n                expected_df[col] = [val if not isinstance(val, type(np.nan)) else None for val in expected_df[col].values]",
+        "detail": "tests.test_cleverreach_database",
+        "documentation": {}
+    },
+    {
+        "label": "TestDatabase",
+        "kind": 6,
+        "importPath": "tests.test_database",
+        "description": "tests.test_database",
+        "peekOfCode": "class TestDatabase(TestCase):\n    def test_load_database_excel(self):\n        file = \"tests/data/test_database.xlsx\"\n        db = Database(file)\n        self.assertTrue(len(db.people) == 4)\n    def test_load_database_csv(self):\n        file = \"tests/data/test_database.csv\"\n        db = Database(file)\n        self.assertTrue(len(db.people) == 4)\n    def test_lookup_by_property(self):",
+        "detail": "tests.test_database",
+        "documentation": {}
+    },
+    {
+        "label": "TestMailBasedDatabase",
+        "kind": 6,
+        "importPath": "tests.test_mail_based_database",
+        "description": "tests.test_mail_based_database",
+        "peekOfCode": "class TestMailBasedDatabase(TestCase):\n    def test_load_mail_based_database_csv(self):\n        file = \"tests/data/test_database.csv\"\n        mb_db = MailBasedDatabase(file)\n        self.assertTrue(len(mb_db.mail_based_families) == 3)\n        mb_db.add_mail_based_family(MailBasedFamily([Person(emails=[\"email3\"])]))\n        self.assertTrue(len(mb_db.mail_based_families) == 3)\n        self.assertTrue(len(mb_db.mail_based_families[1].people)==3)\n        self.assertTrue(len(mb_db.lookup_by_property(\"email\", None))==1)\n    def test_load_mail_based_database_excel(self):",
+        "detail": "tests.test_mail_based_database",
+        "documentation": {}
+    },
+    {
+        "label": "TestPerson",
+        "kind": 6,
+        "importPath": "tests.test_person",
+        "description": "tests.test_person",
+        "peekOfCode": "class TestPerson(TestCase):\n    def test_age(self):\n        me = Person(birthday=\"22.08.1996\")\n        me.age\n        age1 = me.calculate_age_at_ts(pd.Timestamp(\"2023-08-21\"))\n        age2 = me.calculate_age_at_ts(pd.Timestamp(\"2023-08-22\"))\n        self.assertEqual(age1, 26)\n        self.assertEqual(age2, 27)",
+        "detail": "tests.test_person",
+        "documentation": {}
+    },
+    {
+        "label": "calculate_age",
+        "kind": 2,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "def calculate_age(geb, stichtag):\n\tstichtag = datetime.datetime.strptime(stichtag,\"%d.%m.%Y\")\n\tborn = datetime.datetime.strptime(geb,\"%d.%m.%Y\")\n\treturn stichtag.year - born.year - ((stichtag.month, stichtag.day) < (born.month, born.day))\ndef create_katlist(kat,sex,geb):\n\tglobal dat_gv\n\tglobal dat_16m\n\tkatlist = [\"Aktive Turner\", \"Aktive Turnerin\", \"Passivmitglied\", \"Kitu (Kinder)\", \"Mädchen\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\", \"Männlich\", \"Weiblich\"]\n\t#Männer = [\"Aktive Turner\", \"Passivmitglied\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\"]\n\tl = []",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "create_katlist",
+        "kind": 2,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "def create_katlist(kat,sex,geb):\n\tglobal dat_gv\n\tglobal dat_16m\n\tkatlist = [\"Aktive Turner\", \"Aktive Turnerin\", \"Passivmitglied\", \"Kitu (Kinder)\", \"Mädchen\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\", \"Männlich\", \"Weiblich\"]\n\t#Männer = [\"Aktive Turner\", \"Passivmitglied\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\"]\n\tl = []\n\tfor i in range(len(katlist)):#last two are geschlecht\n\t\tif i < len(katlist)-2: #last two are sex\n\t\t\tif katlist[i] == kat:\n\t\t\t\tl.append(\"YES\")",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "combine_katlists",
+        "kind": 2,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "def combine_katlists(l1,l2):\n\t#katlist = [\"Aktive Turner\", \"Aktive Turnerin\", \"Passivmitglied\", \"Kitu (Kinder)\", \"Mädchen\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\", \"Männlich\", \"Weiblich\"]\n\tl = []\n\tif len(l1)!=len(l2):\n\t\tsys.exit(\"aa! errors!\")\n\tfor i in range(len(l1)):\n\t\tif l1[i] == \"YES\" or l2[i] == \"YES\":\n\t\t\tl.append(\"YES\")\n\t\telse:\n\t\t\tl.append(\"NO\")",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "clean_person",
+        "kind": 2,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "def clean_person(person): #remove \\x00 (or \\000 in sublime)\n\tperson = [i.rstrip(\"\\x00\") for i in person]\n\tperson = [i.rstrip(\"\\n\") for i in person]\n\tperson = [i.rstrip(\"\\x00\") for i in person]\n\treturn person\ndef get_abmeldungen():\n\twith open(path+\"Newsletter_abmeldungen.csv\",\"r\",encoding='utf-8-sig') as file:\n\t\t\tdata=file.readlines()\n\tdata = [i.split(\";\") for i in data if i]\n\tdata = [i for i in data if i[0]] #[mail,vname,nname,date]",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "get_abmeldungen",
+        "kind": 2,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "def get_abmeldungen():\n\twith open(path+\"Newsletter_abmeldungen.csv\",\"r\",encoding='utf-8-sig') as file:\n\t\t\tdata=file.readlines()\n\tdata = [i.split(\";\") for i in data if i]\n\tdata = [i for i in data if i[0]] #[mail,vname,nname,date]\n\t#only get email\n\tdata = [i[0] for i in data]\n\treturn data\ndef get_additional():\n\twith open(path+\"Newsletter_Zusaetzlich.csv\",\"r\") as file:",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "get_additional",
+        "kind": 2,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "def get_additional():\n\twith open(path+\"Newsletter_Zusaetzlich.csv\",\"r\") as file:\n\t\tdata=file.readlines()\n\tdata = [i.split(\";\") for i in data if i]\n\tdata = [i for i in data if i[0]] #[mail,vname,nname,kat,date]\n\treturn data\nabmeldungen = get_abmeldungen()\noutdata = [[\"Vorname\", \"Nachname\", \"Email\", \"Aktive Turner\", \"Aktive Turnerin\", \"Passivmitglied\", \"Kitu\", \"Mädchen\", \"Knaben\", \"Freimitglied turnend\", \"Freimitglied nicht turnend\", \"Ehrenmitglied nicht turnend\", \"Ehrenmitglied turnend\", \"Männlich\", \"Weiblich\", \"updated\"]] #+ \"18 an GV\" + \"Männlich über 16\"\nseen_mails = []\nno_mail = []",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "now",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "now = datetime.datetime.now()\ncurr_date = now.strftime(\"%d.%m.%Y\")\nwith open(path+fin,\"r\") as file:\n\tdata=file.readlines()\ndata = [i.split(\";\") for i in data[1:] if i]\ndata = [i for i in data if i[0]]\ngeschlecht = 1\nnachname = 3\nvorname = 2\nstrasse = 4",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "curr_date",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "curr_date = now.strftime(\"%d.%m.%Y\")\nwith open(path+fin,\"r\") as file:\n\tdata=file.readlines()\ndata = [i.split(\";\") for i in data[1:] if i]\ndata = [i for i in data if i[0]]\ngeschlecht = 1\nnachname = 3\nvorname = 2\nstrasse = 4\nplz = 5",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "data",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "data = [i.split(\";\") for i in data[1:] if i]\ndata = [i for i in data if i[0]]\ngeschlecht = 1\nnachname = 3\nvorname = 2\nstrasse = 4\nplz = 5\nort = 6\ngeb = 7\nkat = 8",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "data",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "data = [i for i in data if i[0]]\ngeschlecht = 1\nnachname = 3\nvorname = 2\nstrasse = 4\nplz = 5\nort = 6\ngeb = 7\nkat = 8\nemail = 9",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "geschlecht",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "geschlecht = 1\nnachname = 3\nvorname = 2\nstrasse = 4\nplz = 5\nort = 6\ngeb = 7\nkat = 8\nemail = 9\naltemail = 10",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "nachname",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "nachname = 3\nvorname = 2\nstrasse = 4\nplz = 5\nort = 6\ngeb = 7\nkat = 8\nemail = 9\naltemail = 10\nvereinemail = 11",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "vorname",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "vorname = 2\nstrasse = 4\nplz = 5\nort = 6\ngeb = 7\nkat = 8\nemail = 9\naltemail = 10\nvereinemail = 11\ndef calculate_age(geb, stichtag):",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "strasse",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "strasse = 4\nplz = 5\nort = 6\ngeb = 7\nkat = 8\nemail = 9\naltemail = 10\nvereinemail = 11\ndef calculate_age(geb, stichtag):\n\tstichtag = datetime.datetime.strptime(stichtag,\"%d.%m.%Y\")",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "plz",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "plz = 5\nort = 6\ngeb = 7\nkat = 8\nemail = 9\naltemail = 10\nvereinemail = 11\ndef calculate_age(geb, stichtag):\n\tstichtag = datetime.datetime.strptime(stichtag,\"%d.%m.%Y\")\n\tborn = datetime.datetime.strptime(geb,\"%d.%m.%Y\")",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "ort",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "ort = 6\ngeb = 7\nkat = 8\nemail = 9\naltemail = 10\nvereinemail = 11\ndef calculate_age(geb, stichtag):\n\tstichtag = datetime.datetime.strptime(stichtag,\"%d.%m.%Y\")\n\tborn = datetime.datetime.strptime(geb,\"%d.%m.%Y\")\n\treturn stichtag.year - born.year - ((stichtag.month, stichtag.day) < (born.month, born.day))",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "geb",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "geb = 7\nkat = 8\nemail = 9\naltemail = 10\nvereinemail = 11\ndef calculate_age(geb, stichtag):\n\tstichtag = datetime.datetime.strptime(stichtag,\"%d.%m.%Y\")\n\tborn = datetime.datetime.strptime(geb,\"%d.%m.%Y\")\n\treturn stichtag.year - born.year - ((stichtag.month, stichtag.day) < (born.month, born.day))\ndef create_katlist(kat,sex,geb):",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "kat",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "kat = 8\nemail = 9\naltemail = 10\nvereinemail = 11\ndef calculate_age(geb, stichtag):\n\tstichtag = datetime.datetime.strptime(stichtag,\"%d.%m.%Y\")\n\tborn = datetime.datetime.strptime(geb,\"%d.%m.%Y\")\n\treturn stichtag.year - born.year - ((stichtag.month, stichtag.day) < (born.month, born.day))\ndef create_katlist(kat,sex,geb):\n\tglobal dat_gv",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "email",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "email = 9\naltemail = 10\nvereinemail = 11\ndef calculate_age(geb, stichtag):\n\tstichtag = datetime.datetime.strptime(stichtag,\"%d.%m.%Y\")\n\tborn = datetime.datetime.strptime(geb,\"%d.%m.%Y\")\n\treturn stichtag.year - born.year - ((stichtag.month, stichtag.day) < (born.month, born.day))\ndef create_katlist(kat,sex,geb):\n\tglobal dat_gv\n\tglobal dat_16m",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "altemail",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "altemail = 10\nvereinemail = 11\ndef calculate_age(geb, stichtag):\n\tstichtag = datetime.datetime.strptime(stichtag,\"%d.%m.%Y\")\n\tborn = datetime.datetime.strptime(geb,\"%d.%m.%Y\")\n\treturn stichtag.year - born.year - ((stichtag.month, stichtag.day) < (born.month, born.day))\ndef create_katlist(kat,sex,geb):\n\tglobal dat_gv\n\tglobal dat_16m\n\tkatlist = [\"Aktive Turner\", \"Aktive Turnerin\", \"Passivmitglied\", \"Kitu (Kinder)\", \"Mädchen\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\", \"Männlich\", \"Weiblich\"]",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "vereinemail",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "vereinemail = 11\ndef calculate_age(geb, stichtag):\n\tstichtag = datetime.datetime.strptime(stichtag,\"%d.%m.%Y\")\n\tborn = datetime.datetime.strptime(geb,\"%d.%m.%Y\")\n\treturn stichtag.year - born.year - ((stichtag.month, stichtag.day) < (born.month, born.day))\ndef create_katlist(kat,sex,geb):\n\tglobal dat_gv\n\tglobal dat_16m\n\tkatlist = [\"Aktive Turner\", \"Aktive Turnerin\", \"Passivmitglied\", \"Kitu (Kinder)\", \"Mädchen\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\", \"Männlich\", \"Weiblich\"]\n\t#Männer = [\"Aktive Turner\", \"Passivmitglied\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\"]",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tstichtag",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tstichtag = datetime.datetime.strptime(stichtag,\"%d.%m.%Y\")\n\tborn = datetime.datetime.strptime(geb,\"%d.%m.%Y\")\n\treturn stichtag.year - born.year - ((stichtag.month, stichtag.day) < (born.month, born.day))\ndef create_katlist(kat,sex,geb):\n\tglobal dat_gv\n\tglobal dat_16m\n\tkatlist = [\"Aktive Turner\", \"Aktive Turnerin\", \"Passivmitglied\", \"Kitu (Kinder)\", \"Mädchen\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\", \"Männlich\", \"Weiblich\"]\n\t#Männer = [\"Aktive Turner\", \"Passivmitglied\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\"]\n\tl = []\n\tfor i in range(len(katlist)):#last two are geschlecht",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tborn",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tborn = datetime.datetime.strptime(geb,\"%d.%m.%Y\")\n\treturn stichtag.year - born.year - ((stichtag.month, stichtag.day) < (born.month, born.day))\ndef create_katlist(kat,sex,geb):\n\tglobal dat_gv\n\tglobal dat_16m\n\tkatlist = [\"Aktive Turner\", \"Aktive Turnerin\", \"Passivmitglied\", \"Kitu (Kinder)\", \"Mädchen\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\", \"Männlich\", \"Weiblich\"]\n\t#Männer = [\"Aktive Turner\", \"Passivmitglied\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\"]\n\tl = []\n\tfor i in range(len(katlist)):#last two are geschlecht\n\t\tif i < len(katlist)-2: #last two are sex",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tkatlist",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tkatlist = [\"Aktive Turner\", \"Aktive Turnerin\", \"Passivmitglied\", \"Kitu (Kinder)\", \"Mädchen\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\", \"Männlich\", \"Weiblich\"]\n\t#Männer = [\"Aktive Turner\", \"Passivmitglied\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\"]\n\tl = []\n\tfor i in range(len(katlist)):#last two are geschlecht\n\t\tif i < len(katlist)-2: #last two are sex\n\t\t\tif katlist[i] == kat:\n\t\t\t\tl.append(\"YES\")\n\t\t\telse:\n\t\t\t\tl.append(\"NO\")\n\t\telse:",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\t#Männer",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\t#Männer = [\"Aktive Turner\", \"Passivmitglied\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\"]\n\tl = []\n\tfor i in range(len(katlist)):#last two are geschlecht\n\t\tif i < len(katlist)-2: #last two are sex\n\t\t\tif katlist[i] == kat:\n\t\t\t\tl.append(\"YES\")\n\t\t\telse:\n\t\t\t\tl.append(\"NO\")\n\t\telse:\n\t\t\tif katlist[i] == sex:",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tl",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tl = []\n\tfor i in range(len(katlist)):#last two are geschlecht\n\t\tif i < len(katlist)-2: #last two are sex\n\t\t\tif katlist[i] == kat:\n\t\t\t\tl.append(\"YES\")\n\t\t\telse:\n\t\t\t\tl.append(\"NO\")\n\t\telse:\n\t\t\tif katlist[i] == sex:\n\t\t\t\tl.append(\"YES\")",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\t#katlist",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\t#katlist = [\"Aktive Turner\", \"Aktive Turnerin\", \"Passivmitglied\", \"Kitu (Kinder)\", \"Mädchen\", \"Knaben\", \"Freimitg. Turnend (1)\", \"Freimitg. nturnend (10)\", \"Ehrenmitg. nturnend\", \"Ehrenmitg. turnend\", \"Männlich\", \"Weiblich\"]\n\tl = []\n\tif len(l1)!=len(l2):\n\t\tsys.exit(\"aa! errors!\")\n\tfor i in range(len(l1)):\n\t\tif l1[i] == \"YES\" or l2[i] == \"YES\":\n\t\t\tl.append(\"YES\")\n\t\telse:\n\t\t\tl.append(\"NO\")\n\treturn(l)",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tl",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tl = []\n\tif len(l1)!=len(l2):\n\t\tsys.exit(\"aa! errors!\")\n\tfor i in range(len(l1)):\n\t\tif l1[i] == \"YES\" or l2[i] == \"YES\":\n\t\t\tl.append(\"YES\")\n\t\telse:\n\t\t\tl.append(\"NO\")\n\treturn(l)\ndef clean_person(person): #remove \\x00 (or \\000 in sublime)",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tperson",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tperson = [i.rstrip(\"\\x00\") for i in person]\n\tperson = [i.rstrip(\"\\n\") for i in person]\n\tperson = [i.rstrip(\"\\x00\") for i in person]\n\treturn person\ndef get_abmeldungen():\n\twith open(path+\"Newsletter_abmeldungen.csv\",\"r\",encoding='utf-8-sig') as file:\n\t\t\tdata=file.readlines()\n\tdata = [i.split(\";\") for i in data if i]\n\tdata = [i for i in data if i[0]] #[mail,vname,nname,date]\n\t#only get email",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tperson",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tperson = [i.rstrip(\"\\n\") for i in person]\n\tperson = [i.rstrip(\"\\x00\") for i in person]\n\treturn person\ndef get_abmeldungen():\n\twith open(path+\"Newsletter_abmeldungen.csv\",\"r\",encoding='utf-8-sig') as file:\n\t\t\tdata=file.readlines()\n\tdata = [i.split(\";\") for i in data if i]\n\tdata = [i for i in data if i[0]] #[mail,vname,nname,date]\n\t#only get email\n\tdata = [i[0] for i in data]",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tperson",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tperson = [i.rstrip(\"\\x00\") for i in person]\n\treturn person\ndef get_abmeldungen():\n\twith open(path+\"Newsletter_abmeldungen.csv\",\"r\",encoding='utf-8-sig') as file:\n\t\t\tdata=file.readlines()\n\tdata = [i.split(\";\") for i in data if i]\n\tdata = [i for i in data if i[0]] #[mail,vname,nname,date]\n\t#only get email\n\tdata = [i[0] for i in data]\n\treturn data",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tdata",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tdata = [i.split(\";\") for i in data if i]\n\tdata = [i for i in data if i[0]] #[mail,vname,nname,date]\n\t#only get email\n\tdata = [i[0] for i in data]\n\treturn data\ndef get_additional():\n\twith open(path+\"Newsletter_Zusaetzlich.csv\",\"r\") as file:\n\t\tdata=file.readlines()\n\tdata = [i.split(\";\") for i in data if i]\n\tdata = [i for i in data if i[0]] #[mail,vname,nname,kat,date]",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tdata",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tdata = [i for i in data if i[0]] #[mail,vname,nname,date]\n\t#only get email\n\tdata = [i[0] for i in data]\n\treturn data\ndef get_additional():\n\twith open(path+\"Newsletter_Zusaetzlich.csv\",\"r\") as file:\n\t\tdata=file.readlines()\n\tdata = [i.split(\";\") for i in data if i]\n\tdata = [i for i in data if i[0]] #[mail,vname,nname,kat,date]\n\treturn data",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tdata",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tdata = [i[0] for i in data]\n\treturn data\ndef get_additional():\n\twith open(path+\"Newsletter_Zusaetzlich.csv\",\"r\") as file:\n\t\tdata=file.readlines()\n\tdata = [i.split(\";\") for i in data if i]\n\tdata = [i for i in data if i[0]] #[mail,vname,nname,kat,date]\n\treturn data\nabmeldungen = get_abmeldungen()\noutdata = [[\"Vorname\", \"Nachname\", \"Email\", \"Aktive Turner\", \"Aktive Turnerin\", \"Passivmitglied\", \"Kitu\", \"Mädchen\", \"Knaben\", \"Freimitglied turnend\", \"Freimitglied nicht turnend\", \"Ehrenmitglied nicht turnend\", \"Ehrenmitglied turnend\", \"Männlich\", \"Weiblich\", \"updated\"]] #+ \"18 an GV\" + \"Männlich über 16\"",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tdata",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tdata = [i.split(\";\") for i in data if i]\n\tdata = [i for i in data if i[0]] #[mail,vname,nname,kat,date]\n\treturn data\nabmeldungen = get_abmeldungen()\noutdata = [[\"Vorname\", \"Nachname\", \"Email\", \"Aktive Turner\", \"Aktive Turnerin\", \"Passivmitglied\", \"Kitu\", \"Mädchen\", \"Knaben\", \"Freimitglied turnend\", \"Freimitglied nicht turnend\", \"Ehrenmitglied nicht turnend\", \"Ehrenmitglied turnend\", \"Männlich\", \"Weiblich\", \"updated\"]] #+ \"18 an GV\" + \"Männlich über 16\"\nseen_mails = []\nno_mail = []\nfor person in data:\n\tperson = clean_person(person)\n\tif person[email] == \"\":",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tdata",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tdata = [i for i in data if i[0]] #[mail,vname,nname,kat,date]\n\treturn data\nabmeldungen = get_abmeldungen()\noutdata = [[\"Vorname\", \"Nachname\", \"Email\", \"Aktive Turner\", \"Aktive Turnerin\", \"Passivmitglied\", \"Kitu\", \"Mädchen\", \"Knaben\", \"Freimitglied turnend\", \"Freimitglied nicht turnend\", \"Ehrenmitglied nicht turnend\", \"Ehrenmitglied turnend\", \"Männlich\", \"Weiblich\", \"updated\"]] #+ \"18 an GV\" + \"Männlich über 16\"\nseen_mails = []\nno_mail = []\nfor person in data:\n\tperson = clean_person(person)\n\tif person[email] == \"\":\n\t\t#no_mail.append(person[vorname] + \" \" + person[nachname])",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "abmeldungen",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "abmeldungen = get_abmeldungen()\noutdata = [[\"Vorname\", \"Nachname\", \"Email\", \"Aktive Turner\", \"Aktive Turnerin\", \"Passivmitglied\", \"Kitu\", \"Mädchen\", \"Knaben\", \"Freimitglied turnend\", \"Freimitglied nicht turnend\", \"Ehrenmitglied nicht turnend\", \"Ehrenmitglied turnend\", \"Männlich\", \"Weiblich\", \"updated\"]] #+ \"18 an GV\" + \"Männlich über 16\"\nseen_mails = []\nno_mail = []\nfor person in data:\n\tperson = clean_person(person)\n\tif person[email] == \"\":\n\t\t#no_mail.append(person[vorname] + \" \" + person[nachname])\n\t\tif person[altemail] == \"\":\n\t\t\tif person[vereinemail] == \"\":",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "outdata",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "outdata = [[\"Vorname\", \"Nachname\", \"Email\", \"Aktive Turner\", \"Aktive Turnerin\", \"Passivmitglied\", \"Kitu\", \"Mädchen\", \"Knaben\", \"Freimitglied turnend\", \"Freimitglied nicht turnend\", \"Ehrenmitglied nicht turnend\", \"Ehrenmitglied turnend\", \"Männlich\", \"Weiblich\", \"updated\"]] #+ \"18 an GV\" + \"Männlich über 16\"\nseen_mails = []\nno_mail = []\nfor person in data:\n\tperson = clean_person(person)\n\tif person[email] == \"\":\n\t\t#no_mail.append(person[vorname] + \" \" + person[nachname])\n\t\tif person[altemail] == \"\":\n\t\t\tif person[vereinemail] == \"\":\n\t\t\t\tno_mail.append(person)",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "seen_mails",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "seen_mails = []\nno_mail = []\nfor person in data:\n\tperson = clean_person(person)\n\tif person[email] == \"\":\n\t\t#no_mail.append(person[vorname] + \" \" + person[nachname])\n\t\tif person[altemail] == \"\":\n\t\t\tif person[vereinemail] == \"\":\n\t\t\t\tno_mail.append(person)\n\t\t\t\tcontinue",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "no_mail",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "no_mail = []\nfor person in data:\n\tperson = clean_person(person)\n\tif person[email] == \"\":\n\t\t#no_mail.append(person[vorname] + \" \" + person[nachname])\n\t\tif person[altemail] == \"\":\n\t\t\tif person[vereinemail] == \"\":\n\t\t\t\tno_mail.append(person)\n\t\t\t\tcontinue\n\t\t\telse:",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tperson",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tperson = clean_person(person)\n\tif person[email] == \"\":\n\t\t#no_mail.append(person[vorname] + \" \" + person[nachname])\n\t\tif person[altemail] == \"\":\n\t\t\tif person[vereinemail] == \"\":\n\t\t\t\tno_mail.append(person)\n\t\t\t\tcontinue\n\t\t\telse:\n\t\t\t\tperson[email]=person[vereinemail]\n\t\telse:",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\t\tj",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\t\tj = seen_mails.index(person[email]) + 1 #+1 wegen titelzeile\n\t\tif outdata[j][2] != person[email]: #check\n\t\t\tsys.exit(\"aa! errors!\")\n\t\toutdata[j][0] = outdata[j][0] + \" & \" + person[vorname]\n\t\tif outdata[j][1] == person[nachname]:\n\t\t\tpass\n\t\telse:\n\t\t\toutdata[j][1] = outdata[j][1] + \" & \" + person[nachname]\n\t\t#print(person[email])\n\t\tl1 =  create_katlist(person[kat],person[geschlecht],person[geb])",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\t\toutdata[j][0]",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\t\toutdata[j][0] = outdata[j][0] + \" & \" + person[vorname]\n\t\tif outdata[j][1] == person[nachname]:\n\t\t\tpass\n\t\telse:\n\t\t\toutdata[j][1] = outdata[j][1] + \" & \" + person[nachname]\n\t\t#print(person[email])\n\t\tl1 =  create_katlist(person[kat],person[geschlecht],person[geb])\n\t\tl2 = outdata[j][3:-1]\n\t\toutdata[j][3:-1] = combine_katlists(l1,l2)\n\telse:",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\t\t\toutdata[j][1]",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\t\t\toutdata[j][1] = outdata[j][1] + \" & \" + person[nachname]\n\t\t#print(person[email])\n\t\tl1 =  create_katlist(person[kat],person[geschlecht],person[geb])\n\t\tl2 = outdata[j][3:-1]\n\t\toutdata[j][3:-1] = combine_katlists(l1,l2)\n\telse:\n\t\tseen_mails.append(person[email])\n\t\tnew_person = [ person[vorname] , person[nachname] , person[email] ]\n\t\t#print(person[nachname])\n\t\tl = create_katlist( person[kat], person[geschlecht], person[geb] )",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\t\tl1",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\t\tl1 =  create_katlist(person[kat],person[geschlecht],person[geb])\n\t\tl2 = outdata[j][3:-1]\n\t\toutdata[j][3:-1] = combine_katlists(l1,l2)\n\telse:\n\t\tseen_mails.append(person[email])\n\t\tnew_person = [ person[vorname] , person[nachname] , person[email] ]\n\t\t#print(person[nachname])\n\t\tl = create_katlist( person[kat], person[geschlecht], person[geb] )\n\t\toutdata.append(new_person+l+[curr_date])\nprint(no_mail)",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\t\tl2",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\t\tl2 = outdata[j][3:-1]\n\t\toutdata[j][3:-1] = combine_katlists(l1,l2)\n\telse:\n\t\tseen_mails.append(person[email])\n\t\tnew_person = [ person[vorname] , person[nachname] , person[email] ]\n\t\t#print(person[nachname])\n\t\tl = create_katlist( person[kat], person[geschlecht], person[geb] )\n\t\toutdata.append(new_person+l+[curr_date])\nprint(no_mail)\n#get additional emails:",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\t\toutdata[j][3:-1]",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\t\toutdata[j][3:-1] = combine_katlists(l1,l2)\n\telse:\n\t\tseen_mails.append(person[email])\n\t\tnew_person = [ person[vorname] , person[nachname] , person[email] ]\n\t\t#print(person[nachname])\n\t\tl = create_katlist( person[kat], person[geschlecht], person[geb] )\n\t\toutdata.append(new_person+l+[curr_date])\nprint(no_mail)\n#get additional emails:\nadd_mails=get_additional()",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\t\tnew_person",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\t\tnew_person = [ person[vorname] , person[nachname] , person[email] ]\n\t\t#print(person[nachname])\n\t\tl = create_katlist( person[kat], person[geschlecht], person[geb] )\n\t\toutdata.append(new_person+l+[curr_date])\nprint(no_mail)\n#get additional emails:\nadd_mails=get_additional()\nadd_index_mail=0\nadd_index_vname=1\nadd_index_nname=2",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\t\tl",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\t\tl = create_katlist( person[kat], person[geschlecht], person[geb] )\n\t\toutdata.append(new_person+l+[curr_date])\nprint(no_mail)\n#get additional emails:\nadd_mails=get_additional()\nadd_index_mail=0\nadd_index_vname=1\nadd_index_nname=2\nadd_index_kat=3\nadd_index_geschlecht=5",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tperson",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tperson = clean_person(person)\n\t#check if not already present:\n\tif person[add_index_mail] in seen_mails:\n\t\tprint(\"ERROR: \" + person[add_index_mail] + \" already in list!!\")\n\t\tcontinue\n\tnew_person=[person[add_index_vname],person[add_index_nname],person[add_index_mail]]\n\tl = create_katlist(person[add_index_kat],person[add_index_geschlecht],[])\n\toutdata.append(new_person+l+[curr_date])\n########\n#OUT",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\tl",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\tl = create_katlist(person[add_index_kat],person[add_index_geschlecht],[])\n\toutdata.append(new_person+l+[curr_date])\n########\n#OUT\n########\nwith open(path+fout,\"w\",newline='') as file:\n\twriter = csv.writer(file,delimiter=\",\")\n\twriter.writerow(outdata[0])\n\twriter.writerows(outdata[1:])\nwith open(path+fout_nomail,\"w\",newline='') as file:",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\twriter",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\twriter = csv.writer(file,delimiter=\",\")\n\twriter.writerow(outdata[0])\n\twriter.writerows(outdata[1:])\nwith open(path+fout_nomail,\"w\",newline='') as file:\n\twriter = csv.writer(file,delimiter=\",\")\n\twriter.writerows(no_mail)",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    },
+    {
+        "label": "\twriter",
+        "kind": 5,
+        "importPath": "old_tvw_create_csv",
+        "description": "old_tvw_create_csv",
+        "peekOfCode": "\twriter = csv.writer(file,delimiter=\",\")\n\twriter.writerows(no_mail)",
+        "detail": "old_tvw_create_csv",
+        "documentation": {}
+    }
+]

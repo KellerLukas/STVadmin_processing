@@ -8,5 +8,11 @@
     "birthday": "GEBURTSDATUM",
     "emails": ["EMAIL", "EMAIL ALTERNATIV", "EMAILVEREIN"],
     "category": "KATEGORIE",
-    "date_added": "EINTRITT"
+    "date_added": "EINTRITT",
+    "member_number": "MITGLIEDERNR",
+    "riege": "FUNKTIOND",
+    "organ": "ORGANTITEL",
+    "phone_p": "TELEFONP",
+    "phone_m": "TELEFONM",
+    "phone_g": "TELEFONG"
 }
