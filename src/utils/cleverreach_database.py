@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+from pathlib import Path
 from src.utils.databases import MailBasedFamily, MailBasedDatabase
 
 
@@ -94,4 +95,6 @@ class CleverreachDatabase:
     def to_csv(self, filename: str):
         df_copy = self.df.copy()
         df_copy['updated'] = [pd.Timestamp(ts).strftime('%d.%m.%Y') for ts in df_copy["updated"].values]
+        path = Path(filename).parent
+        path.mkdir(parents=True, exist_ok=True)
         df_copy.to_csv(filename,index=False)

@@ -1,4 +1,5 @@
-import time
+import os
+import signal
 import pandas as pd
 import streamlit as st
 
@@ -64,14 +65,16 @@ def setup_page():
 # Title and header configuration
 def configure_title():
     st.markdown("# STVAdmin Export")
-    st.markdown("Exportiere diverse Listen aus STVAdmin")
+    st.markdown("Export various lists from STVAdmin")
     
 def configure_download_data():
     st.markdown("## Setup", unsafe_allow_html=True)
     if not data_is_available():
         st.markdown("Retrieve the data from the Microsoft Dynamics Database")
         if st.button(label="Download data"):
+            st.toast("Downloading data...")
             st.session_state.client.main_db
+            st.toast("Finished downloading data.")
             st.rerun()
     else:
         st.markdown("Reset and retrieve new data from Microsoft Dynamics Database")
@@ -82,7 +85,7 @@ def configure_download_data():
     # Section divider and spacing
     st.markdown('<div class="section-spacing"></div>', unsafe_allow_html=True)
     
-def configure_basic_export():
+def configure_export_buttons():
     st.markdown("## Export", unsafe_allow_html=True)
     if not data_is_available():
         st.markdown("Data is not available")
@@ -147,6 +150,15 @@ def data_is_available():
     if st.session_state.client._userlist_filename is None or st.session_state.client._riegenlist_filename is None:
         return False
     return True
+
+def configure_stop():
+    st.markdown('<div class="section-spacing"></div>', unsafe_allow_html=True)
+    st.markdown('<hr style="border:1px solid #e0e0e0; margin:10px 0;">', unsafe_allow_html=True)
+
+
+    if st.button("Shut down"):
+        os.kill(os.getpid(), signal.SIGTERM)
+        
         
 def main():
     if "client" not in st.session_state:
@@ -154,7 +166,8 @@ def main():
     setup_page()
     configure_title()
     configure_download_data()
-    configure_basic_export()
+    configure_export_buttons()
+    configure_stop()
 
 if __name__ == "__main__":
     main()

@@ -28,7 +28,7 @@ FILENAME_LOST_EMAIL = "TVW_List_OUT_lost_email.xlsx"
 class STVAdminExportClient:
     tag_base_member = "BaseMember"
     tag_non_member_newsletter_recipient = "NonMemberNewsletterRecipient"
-    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False):
+    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False, debugging_mode: Optional[bool]=False):
         self.path = path or PATH
         self.path = Path(self.path)
         Path(os.path.join(self.path,OUTPUT_FOLDER)).mkdir(parents=True, exist_ok=True)
@@ -36,6 +36,7 @@ class STVAdminExportClient:
         self._riegenlist_filename: Optional[Path] = None
         self._main_db = None
         self._keep_files = keep_files
+        self._debugging_mode = debugging_mode
         
     def __del__(self):
         if self._keep_files:
@@ -274,12 +275,12 @@ class STVAdminExportClient:
         return riegen  
     
     def _get_userlist_file_from_dynamics(self):
-        dc = DynamicsClient()
+        dc = DynamicsClient(debugging_mode=self._debugging_mode)
         filename = dc.download_userlist_to_folder(self.path)
         return filename
     
     def _get_riegenlist_file_from_dynamics(self):
-        dc = DynamicsClient()
+        dc = DynamicsClient(debugging_mode=self._debugging_mode)
         filename = dc.download_riegenlist_to_folder(self.path)
         return filename
     

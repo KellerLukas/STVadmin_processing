@@ -26,6 +26,30 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "MailBasedFamily",
         "importPath": "src.utils.databases",
         "description": "src.utils.databases",
@@ -203,6 +227,22 @@
         "documentation": {}
     },
     {
+        "label": "WebDriverWait",
+        "importPath": "selenium.webdriver.support.ui",
+        "description": "selenium.webdriver.support.ui",
+        "isExtraImport": true,
+        "detail": "selenium.webdriver.support.ui",
+        "documentation": {}
+    },
+    {
+        "label": "expected_conditions",
+        "importPath": "selenium.webdriver.support",
+        "description": "selenium.webdriver.support",
+        "isExtraImport": true,
+        "detail": "selenium.webdriver.support",
+        "documentation": {}
+    },
+    {
         "label": "time",
         "kind": 6,
         "isExtraImport": true,
@@ -212,20 +252,20 @@
         "documentation": {}
     },
     {
-        "label": "Options",
-        "importPath": "selenium.webdriver.firefox.options",
-        "description": "selenium.webdriver.firefox.options",
-        "isExtraImport": true,
-        "detail": "selenium.webdriver.firefox.options",
-        "documentation": {}
-    },
-    {
         "label": "os",
         "kind": 6,
         "isExtraImport": true,
         "importPath": "os",
         "description": "os",
         "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "md5",
+        "importPath": "hashlib",
+        "description": "hashlib",
+        "isExtraImport": true,
+        "detail": "hashlib",
         "documentation": {}
     },
     {
@@ -261,14 +301,6 @@
         "importPath": "logging",
         "description": "logging",
         "detail": "logging",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
         "documentation": {}
     },
     {
@@ -392,23 +424,6 @@
         "documentation": {}
     },
     {
-        "label": "streamlit",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "streamlit",
-        "description": "streamlit",
-        "detail": "streamlit",
-        "documentation": {}
-    },
-    {
-        "label": "STVAdminExportClient",
-        "importPath": "src.STVAdmin_export_client",
-        "description": "src.STVAdmin_export_client",
-        "isExtraImport": true,
-        "detail": "src.STVAdmin_export_client",
-        "documentation": {}
-    },
-    {
         "label": "pickle",
         "kind": 6,
         "isExtraImport": true,
@@ -456,6 +471,32 @@
         "importPath": "pytest",
         "description": "pytest",
         "detail": "pytest",
+        "documentation": {}
+    },
+    {
+        "label": "signal",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "signal",
+        "description": "signal",
+        "detail": "signal",
+        "documentation": {}
+    },
+    {
+        "label": "streamlit",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "streamlit",
+        "description": "streamlit",
+        "detail": "streamlit",
+        "documentation": {}
+    },
+    {
+        "label": "STVAdminExportClient",
+        "importPath": "src.STVAdmin_export_client",
+        "description": "src.STVAdmin_export_client",
+        "isExtraImport": true,
+        "detail": "src.STVAdmin_export_client",
         "documentation": {}
     },
     {
@@ -517,7 +558,7 @@
         "kind": 6,
         "importPath": "src.utils.adress_databases",
         "description": "src.utils.adress_databases",
-        "peekOfCode": "class RiegenAdressDatabase:\n    def __init__(self, member_ad_db: AdressDatabase, coach_ad_db: AdressDatabase):\n        member_df = member_ad_db.df\n        member_df[\"Funktion\"] = \"Mitglied\"\n        coach_df = coach_ad_db.df\n        coach_df[\"Funktion\"] = \"Leiter*in\"\n        self.df = pd.concat([member_df, coach_df])\n    def to_excel(self, filename: str):\n        self.df.to_excel(filename, index=False)",
+        "peekOfCode": "class RiegenAdressDatabase:\n    def __init__(self, member_ad_db: AdressDatabase, coach_ad_db: AdressDatabase):\n        member_df = member_ad_db.df\n        member_df[\"Funktion\"] = \"Mitglied\"\n        coach_df = coach_ad_db.df\n        coach_df[\"Funktion\"] = \"Leiter*in\"\n        self.df = pd.concat([member_df, coach_df])\n    def to_excel(self, filename: str):\n        path = Path(filename).parent\n        path.mkdir(parents=True, exist_ok=True)",
         "detail": "src.utils.adress_databases",
         "documentation": {}
     },
@@ -580,7 +621,7 @@
         "kind": 6,
         "importPath": "src.utils.dynamics_client",
         "description": "src.utils.dynamics_client",
-        "peekOfCode": "class DynamicsClient:\n    def __init__(self, working_dir: str = None):\n        self._client = None\n        if working_dir is None:\n            working_dir = os.getcwd()\n        self.download_location = os.path.join(working_dir, \"dynamics_client_temp_folder\")\n        self.create_temporary_download_folder()\n        self.creds = STVAdminCreds()\n    def __del__(self):\n        shutil.rmtree(self.download_location)",
+        "peekOfCode": "class DynamicsClient:\n    def __init__(self, working_dir: str = None, debugging_mode: bool = False):\n        self._client = None\n        if working_dir is None:\n            working_dir = os.getcwd()\n        self.download_location = os.path.join(working_dir, \"dynamics_client_temp_folder\")\n        self.create_temporary_download_folder()\n        self.creds = STVAdminCreds()\n        self._debugging_mode = debugging_mode\n    def __del__(self):",
         "detail": "src.utils.dynamics_client",
         "documentation": {}
     },
@@ -598,7 +639,7 @@
         "kind": 6,
         "importPath": "src.STVAdmin_export_client",
         "description": "src.STVAdmin_export_client",
-        "peekOfCode": "class STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False):\n        self.path = path or PATH\n        self.path = Path(self.path)\n        Path(os.path.join(self.path,OUTPUT_FOLDER)).mkdir(parents=True, exist_ok=True)\n        self._userlist_filename: Optional[Path] = None\n        self._riegenlist_filename: Optional[Path] = None\n        self._main_db = None",
+        "peekOfCode": "class STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False, debugging_mode: Optional[bool]=False):\n        self.path = path or PATH\n        self.path = Path(self.path)\n        Path(os.path.join(self.path,OUTPUT_FOLDER)).mkdir(parents=True, exist_ok=True)\n        self._userlist_filename: Optional[Path] = None\n        self._riegenlist_filename: Optional[Path] = None\n        self._main_db = None",
         "detail": "src.STVAdmin_export_client",
         "documentation": {}
     },
@@ -634,7 +675,7 @@
         "kind": 5,
         "importPath": "src.STVAdmin_export_client",
         "description": "src.STVAdmin_export_client",
-        "peekOfCode": "FILENAME_BACKUP_LIST = \"TVW_Mitglieder_Backup_10_23.xlsx\"\nFILENAME_REMOVE_LIST = \"Newsletter_abmeldungen.xlsx\"\nFILENAME_JUBILARE = \"TVW_List_OUT_Jubilare_{year}.xlsx\"\nFILENAME_NEUMITGLIEDER = \"TVW_List_OUT_neumitglieder.xlsx\"\nFILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False):",
+        "peekOfCode": "FILENAME_BACKUP_LIST = \"TVW_Mitglieder_Backup_10_23.xlsx\"\nFILENAME_REMOVE_LIST = \"Newsletter_abmeldungen.xlsx\"\nFILENAME_JUBILARE = \"TVW_List_OUT_Jubilare_{year}.xlsx\"\nFILENAME_NEUMITGLIEDER = \"TVW_List_OUT_neumitglieder.xlsx\"\nFILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False, debugging_mode: Optional[bool]=False):",
         "detail": "src.STVAdmin_export_client",
         "documentation": {}
     },
@@ -643,7 +684,7 @@
         "kind": 5,
         "importPath": "src.STVAdmin_export_client",
         "description": "src.STVAdmin_export_client",
-        "peekOfCode": "FILENAME_REMOVE_LIST = \"Newsletter_abmeldungen.xlsx\"\nFILENAME_JUBILARE = \"TVW_List_OUT_Jubilare_{year}.xlsx\"\nFILENAME_NEUMITGLIEDER = \"TVW_List_OUT_neumitglieder.xlsx\"\nFILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False):\n        self.path = path or PATH",
+        "peekOfCode": "FILENAME_REMOVE_LIST = \"Newsletter_abmeldungen.xlsx\"\nFILENAME_JUBILARE = \"TVW_List_OUT_Jubilare_{year}.xlsx\"\nFILENAME_NEUMITGLIEDER = \"TVW_List_OUT_neumitglieder.xlsx\"\nFILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False, debugging_mode: Optional[bool]=False):\n        self.path = path or PATH",
         "detail": "src.STVAdmin_export_client",
         "documentation": {}
     },
@@ -652,7 +693,7 @@
         "kind": 5,
         "importPath": "src.STVAdmin_export_client",
         "description": "src.STVAdmin_export_client",
-        "peekOfCode": "FILENAME_JUBILARE = \"TVW_List_OUT_Jubilare_{year}.xlsx\"\nFILENAME_NEUMITGLIEDER = \"TVW_List_OUT_neumitglieder.xlsx\"\nFILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False):\n        self.path = path or PATH\n        self.path = Path(self.path)",
+        "peekOfCode": "FILENAME_JUBILARE = \"TVW_List_OUT_Jubilare_{year}.xlsx\"\nFILENAME_NEUMITGLIEDER = \"TVW_List_OUT_neumitglieder.xlsx\"\nFILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False, debugging_mode: Optional[bool]=False):\n        self.path = path or PATH\n        self.path = Path(self.path)",
         "detail": "src.STVAdmin_export_client",
         "documentation": {}
     },
@@ -661,7 +702,7 @@
         "kind": 5,
         "importPath": "src.STVAdmin_export_client",
         "description": "src.STVAdmin_export_client",
-        "peekOfCode": "FILENAME_NEUMITGLIEDER = \"TVW_List_OUT_neumitglieder.xlsx\"\nFILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False):\n        self.path = path or PATH\n        self.path = Path(self.path)\n        Path(os.path.join(self.path,OUTPUT_FOLDER)).mkdir(parents=True, exist_ok=True)",
+        "peekOfCode": "FILENAME_NEUMITGLIEDER = \"TVW_List_OUT_neumitglieder.xlsx\"\nFILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False, debugging_mode: Optional[bool]=False):\n        self.path = path or PATH\n        self.path = Path(self.path)\n        Path(os.path.join(self.path,OUTPUT_FOLDER)).mkdir(parents=True, exist_ok=True)",
         "detail": "src.STVAdmin_export_client",
         "documentation": {}
     },
@@ -670,7 +711,7 @@
         "kind": 5,
         "importPath": "src.STVAdmin_export_client",
         "description": "src.STVAdmin_export_client",
-        "peekOfCode": "FILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False):\n        self.path = path or PATH\n        self.path = Path(self.path)\n        Path(os.path.join(self.path,OUTPUT_FOLDER)).mkdir(parents=True, exist_ok=True)\n        self._userlist_filename: Optional[Path] = None",
+        "peekOfCode": "FILENAME_JUGENDUEBERTRITT = \"TVW_List_OUT_jugenduebertritte.xlsx\"\nFILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False, debugging_mode: Optional[bool]=False):\n        self.path = path or PATH\n        self.path = Path(self.path)\n        Path(os.path.join(self.path,OUTPUT_FOLDER)).mkdir(parents=True, exist_ok=True)\n        self._userlist_filename: Optional[Path] = None",
         "detail": "src.STVAdmin_export_client",
         "documentation": {}
     },
@@ -679,71 +720,8 @@
         "kind": 5,
         "importPath": "src.STVAdmin_export_client",
         "description": "src.STVAdmin_export_client",
-        "peekOfCode": "FILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False):\n        self.path = path or PATH\n        self.path = Path(self.path)\n        Path(os.path.join(self.path,OUTPUT_FOLDER)).mkdir(parents=True, exist_ok=True)\n        self._userlist_filename: Optional[Path] = None\n        self._riegenlist_filename: Optional[Path] = None",
+        "peekOfCode": "FILENAME_LOST_EMAIL = \"TVW_List_OUT_lost_email.xlsx\"\nclass STVAdminExportClient:\n    tag_base_member = \"BaseMember\"\n    tag_non_member_newsletter_recipient = \"NonMemberNewsletterRecipient\"\n    def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False, debugging_mode: Optional[bool]=False):\n        self.path = path or PATH\n        self.path = Path(self.path)\n        Path(os.path.join(self.path,OUTPUT_FOLDER)).mkdir(parents=True, exist_ok=True)\n        self._userlist_filename: Optional[Path] = None\n        self._riegenlist_filename: Optional[Path] = None",
         "detail": "src.STVAdmin_export_client",
-        "documentation": {}
-    },
-    {
-        "label": "setup_page",
-        "kind": 2,
-        "importPath": "src.home",
-        "description": "src.home",
-        "peekOfCode": "def setup_page():\n    st.set_page_config(page_title=\"STVAdmin Export\")\n    st.markdown(\n        \"\"\"\n        <style>\n        body {\n            background-color: white;\n            color: #878787;\n        }\n        h1 {",
-        "detail": "src.home",
-        "documentation": {}
-    },
-    {
-        "label": "configure_title",
-        "kind": 2,
-        "importPath": "src.home",
-        "description": "src.home",
-        "peekOfCode": "def configure_title():\n    st.markdown(\"# STVAdmin Export\")\n    st.markdown(\"Exportiere diverse Listen aus STVAdmin\")\ndef configure_download_data():\n    st.markdown(\"## Setup\", unsafe_allow_html=True)\n    if not data_is_available():\n        st.markdown(\"Retrieve the data from the Microsoft Dynamics Database\")\n        if st.button(label=\"Download data\"):\n            st.session_state.client.main_db\n            st.rerun()",
-        "detail": "src.home",
-        "documentation": {}
-    },
-    {
-        "label": "configure_download_data",
-        "kind": 2,
-        "importPath": "src.home",
-        "description": "src.home",
-        "peekOfCode": "def configure_download_data():\n    st.markdown(\"## Setup\", unsafe_allow_html=True)\n    if not data_is_available():\n        st.markdown(\"Retrieve the data from the Microsoft Dynamics Database\")\n        if st.button(label=\"Download data\"):\n            st.session_state.client.main_db\n            st.rerun()\n    else:\n        st.markdown(\"Reset and retrieve new data from Microsoft Dynamics Database\")\n        if st.button(label=\"Reset\"):",
-        "detail": "src.home",
-        "documentation": {}
-    },
-    {
-        "label": "configure_basic_export",
-        "kind": 2,
-        "importPath": "src.home",
-        "description": "src.home",
-        "peekOfCode": "def configure_basic_export():\n    st.markdown(\"## Export\", unsafe_allow_html=True)\n    if not data_is_available():\n        st.markdown(\"Data is not available\")\n        return\n    # Button status trackers in session state\n    if 'success_buttons' not in st.session_state:\n        st.session_state.success_buttons = {}\n    # Button grid for other exports\n    col1, col2 = st.columns(2)",
-        "detail": "src.home",
-        "documentation": {}
-    },
-    {
-        "label": "reset_client",
-        "kind": 2,
-        "importPath": "src.home",
-        "description": "src.home",
-        "peekOfCode": "def reset_client():\n    if isinstance(st.session_state.client, STVAdminExportClient):\n        del st.session_state.client\n    st.session_state.client = STVAdminExportClient(keep_files=False)\ndef data_is_available():\n    if st.session_state.client._userlist_filename is None or st.session_state.client._riegenlist_filename is None:\n        return False\n    return True\ndef main():\n    if \"client\" not in st.session_state:",
-        "detail": "src.home",
-        "documentation": {}
-    },
-    {
-        "label": "data_is_available",
-        "kind": 2,
-        "importPath": "src.home",
-        "description": "src.home",
-        "peekOfCode": "def data_is_available():\n    if st.session_state.client._userlist_filename is None or st.session_state.client._riegenlist_filename is None:\n        return False\n    return True\ndef main():\n    if \"client\" not in st.session_state:\n        st.session_state.client = STVAdminExportClient()\n    setup_page()\n    configure_title()\n    configure_download_data()",
-        "detail": "src.home",
-        "documentation": {}
-    },
-    {
-        "label": "main",
-        "kind": 2,
-        "importPath": "src.home",
-        "description": "src.home",
-        "peekOfCode": "def main():\n    if \"client\" not in st.session_state:\n        st.session_state.client = STVAdminExportClient()\n    setup_page()\n    configure_title()\n    configure_download_data()\n    configure_basic_export()\nif __name__ == \"__main__\":\n    main()",
-        "detail": "src.home",
         "documentation": {}
     },
     {
@@ -1014,6 +992,78 @@
         "description": "tests.test_person",
         "peekOfCode": "class TestPerson(TestCase):\n    def test_age(self):\n        me = Person(birthday=\"22.08.1996\")\n        me.age\n        age1 = me.calculate_age_at_ts(pd.Timestamp(\"2023-08-21\"))\n        age2 = me.calculate_age_at_ts(pd.Timestamp(\"2023-08-22\"))\n        self.assertEqual(age1, 26)\n        self.assertEqual(age2, 27)",
         "detail": "tests.test_person",
+        "documentation": {}
+    },
+    {
+        "label": "setup_page",
+        "kind": 2,
+        "importPath": "home",
+        "description": "home",
+        "peekOfCode": "def setup_page():\n    st.set_page_config(page_title=\"STVAdmin Export\")\n    st.markdown(\n        \"\"\"\n        <style>\n        body {\n            background-color: white;\n            color: #878787;\n        }\n        h1 {",
+        "detail": "home",
+        "documentation": {}
+    },
+    {
+        "label": "configure_title",
+        "kind": 2,
+        "importPath": "home",
+        "description": "home",
+        "peekOfCode": "def configure_title():\n    st.markdown(\"# STVAdmin Export\")\n    st.markdown(\"Export various lists from STVAdmin\")\ndef configure_download_data():\n    st.markdown(\"## Setup\", unsafe_allow_html=True)\n    if not data_is_available():\n        st.markdown(\"Retrieve the data from the Microsoft Dynamics Database\")\n        if st.button(label=\"Download data\"):\n            st.toast(\"Downloading data...\")\n            st.session_state.client.main_db",
+        "detail": "home",
+        "documentation": {}
+    },
+    {
+        "label": "configure_download_data",
+        "kind": 2,
+        "importPath": "home",
+        "description": "home",
+        "peekOfCode": "def configure_download_data():\n    st.markdown(\"## Setup\", unsafe_allow_html=True)\n    if not data_is_available():\n        st.markdown(\"Retrieve the data from the Microsoft Dynamics Database\")\n        if st.button(label=\"Download data\"):\n            st.toast(\"Downloading data...\")\n            st.session_state.client.main_db\n            st.toast(\"Finished downloading data.\")\n            st.rerun()\n    else:",
+        "detail": "home",
+        "documentation": {}
+    },
+    {
+        "label": "configure_export_buttons",
+        "kind": 2,
+        "importPath": "home",
+        "description": "home",
+        "peekOfCode": "def configure_export_buttons():\n    st.markdown(\"## Export\", unsafe_allow_html=True)\n    if not data_is_available():\n        st.markdown(\"Data is not available\")\n        return\n    # Button status trackers in session state\n    if 'success_buttons' not in st.session_state:\n        st.session_state.success_buttons = {}\n    # Button grid for other exports\n    col1, col2 = st.columns(2)",
+        "detail": "home",
+        "documentation": {}
+    },
+    {
+        "label": "reset_client",
+        "kind": 2,
+        "importPath": "home",
+        "description": "home",
+        "peekOfCode": "def reset_client():\n    if isinstance(st.session_state.client, STVAdminExportClient):\n        del st.session_state.client\n    st.session_state.client = STVAdminExportClient(keep_files=False)\ndef data_is_available():\n    if st.session_state.client._userlist_filename is None or st.session_state.client._riegenlist_filename is None:\n        return False\n    return True\ndef configure_stop():\n    st.markdown('<div class=\"section-spacing\"></div>', unsafe_allow_html=True)",
+        "detail": "home",
+        "documentation": {}
+    },
+    {
+        "label": "data_is_available",
+        "kind": 2,
+        "importPath": "home",
+        "description": "home",
+        "peekOfCode": "def data_is_available():\n    if st.session_state.client._userlist_filename is None or st.session_state.client._riegenlist_filename is None:\n        return False\n    return True\ndef configure_stop():\n    st.markdown('<div class=\"section-spacing\"></div>', unsafe_allow_html=True)\n    st.markdown('<hr style=\"border:1px solid #e0e0e0; margin:10px 0;\">', unsafe_allow_html=True)\n    if st.button(\"Shut down\"):\n        os.kill(os.getpid(), signal.SIGTERM)\ndef main():",
+        "detail": "home",
+        "documentation": {}
+    },
+    {
+        "label": "configure_stop",
+        "kind": 2,
+        "importPath": "home",
+        "description": "home",
+        "peekOfCode": "def configure_stop():\n    st.markdown('<div class=\"section-spacing\"></div>', unsafe_allow_html=True)\n    st.markdown('<hr style=\"border:1px solid #e0e0e0; margin:10px 0;\">', unsafe_allow_html=True)\n    if st.button(\"Shut down\"):\n        os.kill(os.getpid(), signal.SIGTERM)\ndef main():\n    if \"client\" not in st.session_state:\n        st.session_state.client = STVAdminExportClient()\n    setup_page()\n    configure_title()",
+        "detail": "home",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "home",
+        "description": "home",
+        "peekOfCode": "def main():\n    if \"client\" not in st.session_state:\n        st.session_state.client = STVAdminExportClient()\n    setup_page()\n    configure_title()\n    configure_download_data()\n    configure_export_buttons()\n    configure_stop()\nif __name__ == \"__main__\":\n    main()",
+        "detail": "home",
         "documentation": {}
     },
     {

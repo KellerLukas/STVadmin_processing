@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+from pathlib import Path
 from src.utils.databases import MailBasedFamily, MailBasedDatabase, Database, Person
 
 
@@ -60,9 +61,13 @@ class AdressDatabase:
         self._df = pd.concat([self._df, pd.DataFrame.from_dict(entry_constructor_dict)])
 
     def to_csv(self, filename: str):
+        path = Path(filename).parent
+        path.mkdir(parents=True, exist_ok=True)
         self.df.to_csv(filename,index=False)
         
     def to_excel(self, filename: str):
+        path = Path(filename).parent
+        path.mkdir(parents=True, exist_ok=True)
         self.df.to_excel(filename, index=False)
 
 class RiegenAdressDatabase:
@@ -74,6 +79,8 @@ class RiegenAdressDatabase:
         self.df = pd.concat([member_df, coach_df])
     
     def to_excel(self, filename: str):
+        path = Path(filename).parent
+        path.mkdir(parents=True, exist_ok=True)
         self.df.to_excel(filename, index=False)
         
     
