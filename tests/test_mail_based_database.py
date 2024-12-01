@@ -1,4 +1,3 @@
-import pytest
 from unittest import TestCase
 from src.utils.databases import MailBasedDatabase, MailBasedFamily, Person
 

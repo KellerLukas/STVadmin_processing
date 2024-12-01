@@ -12,8 +12,8 @@ from src.utils.dynamics_client import DynamicsClient
 from src.utils.databases import MailBasedDatabase, Database
 from src.utils.cleverreach_database import CleverreachDatabase
 from src.utils.adress_databases import AdressDatabase, RiegenAdressDatabase
+from src.config.paths import WORKING_DIR_PATH
 
-PATH = "/Users/Lukas/Library/CloudStorage/OneDrive-FreigegebeneBibliotheken–TurnvereinWürenlos/Kommunikation - Dokumente/Interne Kommunikation/CleverReach/Adressen/"
 OUTPUT_FOLDER = "OUT"
 FILENAME_ADDITIONAL_PEOPLE = "Newsletter_Zusaetzlich.xlsx"
 FILENAME_BACKUP_LIST = "TVW_Mitglieder_Backup_10_23.xlsx"
@@ -29,7 +29,7 @@ class STVAdminExportClient:
     tag_base_member = "BaseMember"
     tag_non_member_newsletter_recipient = "NonMemberNewsletterRecipient"
     def __init__(self, path: Optional[str] = None, keep_files: Optional[bool]=False, debugging_mode: Optional[bool]=False):
-        self.path = path or PATH
+        self.path = path or WORKING_DIR_PATH
         self.path = Path(self.path)
         Path(os.path.join(self.path,OUTPUT_FOLDER)).mkdir(parents=True, exist_ok=True)
         self._userlist_filename: Optional[Path] = None
@@ -158,6 +158,7 @@ class STVAdminExportClient:
         
     
     def get_statistics(self) -> str:
+        #ToDo: refactor to make code easier to read / maintain
         max_age = 0
         min_age = np.inf
         num_of_men = 0

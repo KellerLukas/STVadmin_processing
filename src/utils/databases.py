@@ -4,7 +4,7 @@ import json
 from typing import Optional
 
 
-EXCEPTIONS_MEMBER_NUMBERS = [317492, 871369]
+EXCEPTIONS_MEMBER_NUMBERS = [317492, 871369] # Those entries are somehow broken in the source database. As they are not required, its easiest to just exclude them.
 
 class Person:
     def __init__(
@@ -207,7 +207,7 @@ class Database:
         for person in self.people:
             if person.category == "Kitu (Kinder)":
                 if "Kitu" in person.riegen_member:
-                    raise ValueError("Something about the organe changed! This is not supposed to be true")
+                    raise ValueError("Something about the Organe changed! This is not supposed to be true.") # Detect unexpected change in source database
                 person.riegen_member.append("Kitu")
             
 

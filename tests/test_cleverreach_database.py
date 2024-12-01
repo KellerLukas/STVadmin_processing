@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import pickle
 from unittest import TestCase
 from src.utils.cleverreach_database import CleverreachDatabase
 

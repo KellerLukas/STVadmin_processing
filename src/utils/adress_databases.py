@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 from pathlib import Path
-from src.utils.databases import MailBasedFamily, MailBasedDatabase, Database, Person
+from src.utils.databases import Database, Person
 
 
 class AdressDatabase:
