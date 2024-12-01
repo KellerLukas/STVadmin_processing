@@ -8,7 +8,7 @@ Note: This tool is made specifically to work with the setup of one particular sp
 - Automatic retrieval of an up-to-date database snapshot from the STV Admin Database using Selenium webdriver (I do not have access to any APIs!) resulting in two csv files containing personal data as well as group membership information.
 - Convert the exported csv into a class based database.
 - Export a special csv file used to import the recipients into some newsletter tool (where duplicate email addresses are combined in a specific way)
-- Export a list containing members of each group (a very tedious task in the original database)
+- Export lists containing members of each group (a very tedious task in the original database)
 - Export special lists and statistics used for various tasks throughout the year.
 
 ### Note
@@ -16,5 +16,5 @@ The custom database used is far from optimal, but it was fun implementing. As th
 
 For privacy reasons two directories are not commited to this repositoriy:
 
-- demo folder: containing jupyter notebooks and other files used to manually extract statistics and other information not used regulalry
+- demo folder: containing jupyter notebooks and other files used to manually extract statistics and other information not used regularly
 - config folder: containing local paths used
