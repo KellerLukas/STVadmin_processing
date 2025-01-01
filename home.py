@@ -66,6 +66,9 @@ def setup_page():
 def configure_title():
     st.markdown("# STVAdmin Export")
     st.markdown("Export various lists from STVAdmin")
+    if data_is_available():
+        st.markdown("### Statistics")
+        st.markdown(st.session_state.client.get_statistics())
     
 def configure_download_data():
     st.markdown("## Setup", unsafe_allow_html=True)
@@ -162,7 +165,7 @@ def configure_stop():
         
 def main():
     if "client" not in st.session_state:
-        st.session_state.client = STVAdminExportClient()
+        st.session_state.client = STVAdminExportClient(debugging_mode=False)
     setup_page()
     configure_title()
     configure_download_data()

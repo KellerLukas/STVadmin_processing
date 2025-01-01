@@ -171,9 +171,11 @@ class STVAdminExportClient:
         num_of_passive_or_nturnend_men = 0
         num_of_active_women = 0
         num_of_passive_or_nturnend_women = 0
+        num_total = 0
         for person in self.main_db.people:
             if not self.tag_base_member in person.tags:
                 continue
+            num_total += 1
             if person.age < min_age:
                 min_age = person.age
             if person.age > max_age:
@@ -199,25 +201,26 @@ class STVAdminExportClient:
                     else:
                         num_of_active_women +=1 
             
-        
-        total = len(self.main_db.people)
         res = f"""
-            ältestes Mitglied: {str(max_age)} Jahre alt 
-            jüngstes Mitglied: {str(min_age)} Jahre alt
-            
-            Anzahl Erwachsene: {str(num_of_erw)}
-            davon Anzahl Männer: {str(num_of_men)}
-            davon Anzahl aktive Männer: {str(num_of_active_men)}
-            davon Anzahl passive Männer: {str(num_of_passive_or_nturnend_men)}
-            davon Anzahl Frauen: {str(num_of_women)}
-            davon Anzahl aktive Frauen: {str(num_of_active_women)}
-            davon Anzahl passive Frauen: {str(num_of_passive_or_nturnend_women)}
-            
-            Anzahl Kinder: {str(num_of_kids)}
-            davon Anzahl Jungs: {str(num_of_boys)}
-            davon Anzahl Mädchen: {str(num_of_girls)}
-            
-            Anzahl Mitglieder: {str(total)}
+
+
+            **Total Number of Members:** {str(num_total)}  
+
+            **Number of Adults:** {str(num_of_erw)}  
+            Men: {str(num_of_men)}  
+            active Men: {str(num_of_active_men)}  
+            passive or non-active Men: {str(num_of_passive_or_nturnend_men)}  
+            Women: {str(num_of_women)}  
+            active Women: {str(num_of_active_women)}  
+            passive or non-active Women: {str(num_of_passive_or_nturnend_women)}  
+                
+            **Number of Children:** {str(num_of_kids)}  
+                Boys: {str(num_of_boys)}  
+                Girls: {str(num_of_girls)}  
+
+
+            **Oldest Member:** {str(max_age)} years old  
+            **Youngest Member:** {str(min_age)} years old
             """
         return res
     

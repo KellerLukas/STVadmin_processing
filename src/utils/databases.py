@@ -45,6 +45,9 @@ class Person:
         self.riegen_member = riegen_member if riegen_member else []
         self.riegen_coach = riegen_coach if riegen_coach else []
         self.tags = tags if tags else set()
+        
+    def __repr__(self):
+        return f"{self.first_name} {self.last_name} - {self.member_number}"
 
     @property
     def email(self):

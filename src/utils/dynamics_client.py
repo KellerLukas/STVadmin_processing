@@ -151,6 +151,7 @@ class DynamicsClient:
     def _wait_for_download_and_move_to_folder(self, folder, filetype):
         while not self.temp_folder_contains_filetype(filetype):
             time.sleep(0.5)  # Wait for the file to appear
+        time.sleep(0.5) 
         return self.move_file_with_type_to_folder(filetype, folder)
 
     def create_temporary_download_folder(self):
