@@ -4,7 +4,11 @@ import json
 from typing import Optional
 
 
-EXCEPTIONS_MEMBER_NUMBERS = [317492, 871369] # Those entries are somehow broken in the source database. As they are not required, its easiest to just exclude them.
+EXCEPTIONS_MEMBER_NUMBERS = [
+    317492,
+    871369,
+]  # Those entries are somehow broken in the source database. As they are not required, its easiest to just exclude them.
+
 
 class Person:
     def __init__(
@@ -14,7 +18,7 @@ class Person:
         first_name: str = None,
         last_name: str = None,
         street: str = None,
-        plz = None,
+        plz=None,
         city: str = None,
         birthday: str = None,
         emails: list[str] = None,
@@ -37,17 +41,25 @@ class Person:
         self.city = city
         self._birthday = birthday
         self._email = None
-        self.emails = [email for email in emails if isinstance(email, str)] if emails else None
-        self.phone_p = Person.__no_spaces(phone_p) if Person.__nans_to_none(phone_p) else None
-        self.phone_m = Person.__no_spaces(phone_m) if Person.__nans_to_none(phone_m) else None
-        self.phone_g = Person.__no_spaces(phone_g) if Person.__nans_to_none(phone_g) else None
+        self.emails = (
+            [email for email in emails if isinstance(email, str)] if emails else None
+        )
+        self.phone_p = (
+            Person.__no_spaces(phone_p) if Person.__nans_to_none(phone_p) else None
+        )
+        self.phone_m = (
+            Person.__no_spaces(phone_m) if Person.__nans_to_none(phone_m) else None
+        )
+        self.phone_g = (
+            Person.__no_spaces(phone_g) if Person.__nans_to_none(phone_g) else None
+        )
         self.category = category
         self._date_added = date_added
         self.riegen_member = riegen_member if riegen_member else []
         self.riegen_coach = riegen_coach if riegen_coach else []
         self.tags = tags if tags else set()
         self.printed_magazine = printed_magazine
-        
+
     def __repr__(self):
         return f"{self.first_name} {self.last_name} - {self.member_number}"
 
@@ -59,7 +71,7 @@ class Person:
             if len(self.emails) > 0:
                 self._email = self.emails[0]
         return self._email
-    
+
     @email.setter
     def email(self, value):
         self._email = value
@@ -73,7 +85,7 @@ class Person:
         if isinstance(self._birthday, str):
             self._birthday = pd.Timestamp(self._birthday)
         return self._birthday
-    
+
     @birthday.setter
     def birthday(self, value):
         self._birthday = value
@@ -83,7 +95,7 @@ class Person:
         if isinstance(self._date_added, str):
             self._date_added = pd.Timestamp(self._date_added)
         return self._date_added
-    
+
     @date_added.setter
     def date_added(self, value):
         self._date_added = value
@@ -94,7 +106,7 @@ class Person:
             return None
         now = pd.Timestamp.now()
         return self.calculate_age_at_ts(now)
-    
+
     @age.setter
     def age(self, value):
         pass
@@ -105,7 +117,7 @@ class Person:
         age = ts.year - self.birthday.year
         age -= (ts.month, ts.day) < (self.birthday.month, self.birthday.day)
         return age
-    
+
     @staticmethod
     def __nans_to_none(x):
         if x is None:
@@ -115,12 +127,13 @@ class Person:
         if np.isnan(x):
             return None
         return x
-    
+
     @staticmethod
     def __no_spaces(x):
         if not isinstance(x, str):
             return x
-        return x.replace(" ","")
+        return x.replace(" ", "")
+
 
 class Database:
     def __init__(self, input_file: str = None):
@@ -129,7 +142,9 @@ class Database:
         if input_file is not None:
             self.people = self._load_people_from_input_file(input_file)
 
-    def lookup_by_property(self, property: str, search_input, comparator=None) -> list[Person]:
+    def lookup_by_property(
+        self, property: str, search_input, comparator=None
+    ) -> list[Person]:
         comparator = comparator or np.equal
         people_found = []
         for person in self.people:
@@ -139,16 +154,16 @@ class Database:
             if comparator(attr, search_input):
                 people_found.append(person)
         return people_found
-    
-    def add_people(self, people_list: list[Person], tags: Optional[set[str]]=None):
+
+    def add_people(self, people_list: list[Person], tags: Optional[set[str]] = None):
         if tags is not None:
             for person in people_list:
                 person.tags = person.tags.union(tags)
         self.people += people_list
-        
+
     def add_tag_to_all(self, tag: str):
         for person in self.people:
-                person.tags.add(tag)
+            person.tags.add(tag)
 
     def _load_people_from_input_file(self, input_file: str) -> list[Person]:
         input_df = self.__load_input_file(input_file)
@@ -160,7 +175,7 @@ class Database:
             row = input_df.loc[idx, :]
             person_constructor_dict = {}
             for key in translator:
-                if key in ["riege","organ"]:
+                if key in ["riege", "organ"]:
                     continue
                 if key == "printed_magazine":
                     value = getattr(row, translator[key], None)
@@ -179,10 +194,10 @@ class Database:
             people_list.append(Person(**person_constructor_dict))
 
         return people_list
-    
+
     def load_riegen(self, input_file: str):
-        input_df = self.__load_input_file(input_file, 'latin1')
-        input_df = input_df.dropna(how="all")            
+        input_df = self.__load_input_file(input_file, "latin1")
+        input_df = input_df.dropna(how="all")
         with open("src/utils/STVAdmin_export_translator.json", "r") as f:
             translator = json.load(f)
         with open("src/utils/STVAdmin_organ_to_riegenlist.json", "r") as f:
@@ -190,43 +205,41 @@ class Database:
         unique_riegen = []
         for idx in input_df.index:
             row = input_df.loc[idx, :]
-            member_number = getattr(row, translator['member_number'], None)
+            member_number = getattr(row, translator["member_number"], None)
             if member_number is None:
                 continue
             if member_number in EXCEPTIONS_MEMBER_NUMBERS:
                 continue
-            people = self.lookup_by_property('member_number', member_number)
-            if len(people) !=1:
+            people = self.lookup_by_property("member_number", member_number)
+            if len(people) != 1:
                 continue
             assert len(people) == 1
             person = people[0]
-            riege = getattr(row, translator['riege'], None)
+            riege = getattr(row, translator["riege"], None)
             if riege not in ["Leiter", "Leiterin"]:
                 person.riegen_member.append(riege)
                 if riege not in unique_riegen:
                     unique_riegen.append(riege)
                 continue
-            organ = getattr(row, translator['organ'], None)
+            organ = getattr(row, translator["organ"], None)
             riegenlist = organ_to_riegenlist[organ]
             person.riegen_coach += riegenlist
-        
+
         self._load_kitu_separately()
         if "Kitu" not in unique_riegen:
             unique_riegen.append("Kitu")
         self.riegen = unique_riegen
-    
+
     def _load_kitu_separately(self):
         for person in self.people:
             if person.category == "Kitu (Kinder)":
                 if "Kitu" in person.riegen_member:
-                    raise ValueError("Something about the Organe changed! This is not supposed to be true.") # Detect unexpected change in source database
+                    raise ValueError(
+                        "Something about the Organe changed! This is not supposed to be true."
+                    )  # Detect unexpected change in source database
                 person.riegen_member.append("Kitu")
-            
 
-            
-                
-
-    def __load_input_file(self, input_file: str, encoding: str=None) -> pd.DataFrame:
+    def __load_input_file(self, input_file: str, encoding: str = None) -> pd.DataFrame:
         if "csv" in input_file:
             return self.__load_csv(input_file, encoding)
         excel_endings = ["xls", "xlsx", "xlsm", "xlsb"]
@@ -237,38 +250,59 @@ class Database:
 
     def __load_csv(self, input_file: str, encoding: str = "utf8") -> pd.DataFrame:
         csv = pd.read_csv(input_file, encoding=encoding, sep=";")
-        if len(csv.columns)<3:
-            csv = pd.read_csv(input_file, encoding=encoding, sep=",", quotechar='+')
+        if len(csv.columns) < 3:
+            csv = pd.read_csv(input_file, encoding=encoding, sep=",", quotechar="+")
         return csv
-    
+
     def __load_excel(self, input_file: str) -> pd.DataFrame:
         return pd.read_excel(input_file)
-    
-    def copy_value_of_property_from_reference_if_empty_and_all_other_properties_match_except_exclusion_list(self, property: str, reference: Person, exclusion_list: list[str]):
+
+    def copy_value_of_property_from_reference_if_empty_and_all_other_properties_match_except_exclusion_list(
+        self, property: str, reference: Person, exclusion_list: list[str]
+    ):
         for person in self.people:
-            if self._person_matches_all_properties_present_in_reference_except_property_list(person, reference, [property]+exclusion_list):
+            if self._person_matches_all_properties_present_in_reference_except_property_list(
+                person, reference, [property] + exclusion_list
+            ):
                 if getattr(person, property, None) is None:
                     setattr(person, property, getattr(reference, property))
-                
-    def copy_value_of_property_from_referencelist_if_empty_and_all_other_properties_match_except_exclusion_list(self, property: str, referencelist: list[Person], exclusion_list: list[str]):
+
+    def copy_value_of_property_from_referencelist_if_empty_and_all_other_properties_match_except_exclusion_list(
+        self, property: str, referencelist: list[Person], exclusion_list: list[str]
+    ):
         for reference in referencelist:
-            self.copy_value_of_property_from_reference_if_empty_and_all_other_properties_match_except_exclusion_list(property, reference, exclusion_list)
-    
-    def remove_property_for_people_matching_removelist(self, property: str, removelist: list[Person]):
+            self.copy_value_of_property_from_reference_if_empty_and_all_other_properties_match_except_exclusion_list(
+                property, reference, exclusion_list
+            )
+
+    def remove_property_for_people_matching_removelist(
+        self, property: str, removelist: list[Person]
+    ):
         for person_to_remove in removelist:
-            self.remove_property_for_people_matching_reference(property, person_to_remove)
-    
-    def remove_property_for_people_matching_reference(self, property: str, reference: Person):
+            self.remove_property_for_people_matching_reference(
+                property, person_to_remove
+            )
+
+    def remove_property_for_people_matching_reference(
+        self, property: str, reference: Person
+    ):
         for person in self.people:
-            if self._person_matches_all_properties_present_in_reference(person, reference):
+            if self._person_matches_all_properties_present_in_reference(
+                person, reference
+            ):
                 setattr(person, property, None)
-            
-    
-    def _person_matches_all_properties_present_in_reference(self, person: Person, reference: Person):
-        return Database._person_matches_all_properties_present_in_reference_except_property_list(person, reference, [])
-    
+
+    def _person_matches_all_properties_present_in_reference(
+        self, person: Person, reference: Person
+    ):
+        return Database._person_matches_all_properties_present_in_reference_except_property_list(
+            person, reference, []
+        )
+
     @staticmethod
-    def _person_matches_all_properties_present_in_reference_except_property_list(person: Person, reference: Person, property_list: list[str]):
+    def _person_matches_all_properties_present_in_reference_except_property_list(
+        person: Person, reference: Person, property_list: list[str]
+    ):
         for key, value in vars(reference).items():
             if "email" in property_list:
                 property_list.append("emails")
@@ -279,17 +313,26 @@ class Database:
             if getattr(person, key) != getattr(reference, key):
                 return False
         return True
-    
-    def remove_value_for_property_from_people(self, value:str, property: str):
+
+    def remove_value_for_property_from_people(self, value: str, property: str):
         for person in self.people:
             if isinstance(getattr(person, property), list):
-                setattr(person, property, [x for x in getattr(person,property) if x != value])
+                setattr(
+                    person,
+                    property,
+                    [x for x in getattr(person, property) if x != value],
+                )
                 continue
-            if isinstance(getattr(person,property), set):   
-                setattr(person, property, {x for x in getattr(person,property) if x != value})
+            if isinstance(getattr(person, property), set):
+                setattr(
+                    person,
+                    property,
+                    {x for x in getattr(person, property) if x != value},
+                )
                 continue
-            if getattr(person,property) == value:
+            if getattr(person, property) == value:
                 setattr(person, property, None)
+
 
 class MailBasedFamily:
     def __init__(self, people: list[Person]):
@@ -297,19 +340,20 @@ class MailBasedFamily:
         assert len(people) > 0
         self.people = people
         self.email = self.people[0].email
-    
 
     def get_property_list(self, property: str) -> list:
-        property_list = list(set([getattr(person, property, None) for person in self.people]))
+        property_list = list(
+            set([getattr(person, property, None) for person in self.people])
+        )
         property_list.sort()
         return property_list
 
     def __all_emails_are_equal(self, people: list[Person]):
         email_list = [person.email for person in people]
         return len(set(email_list)) == 1
-    
+
     def add_person(self, new_person: Person):
-        assert self.__all_emails_are_equal(self.people+[new_person])
+        assert self.__all_emails_are_equal(self.people + [new_person])
         self.people.append(new_person)
 
 
@@ -321,11 +365,11 @@ class MailBasedDatabase:
             self.input_db = Database(input_file)
         if self.input_db is not None:
             self.add_from_database(self.input_db)
-        
+
     def add_from_database(self, db: Database):
         for person in db.people:
             self.add_person(person)
-    
+
     def add_mail_based_family(self, new_mbfamily: MailBasedFamily):
         for mbfamily in self.mail_based_families:
             if new_mbfamily.email == mbfamily.email:
@@ -333,16 +377,17 @@ class MailBasedDatabase:
                     mbfamily.add_person(person)
                     return
         self.mail_based_families.append(new_mbfamily)
-    
+
     def add_person(self, new_person: Person):
         self.add_mail_based_family(MailBasedFamily([new_person]))
-    
+
     def lookup_by_property(self, property: str, search_input) -> list[MailBasedFamily]:
         mbfamilies_found = []
         for mbfamily in self.mail_based_families:
             if search_input in mbfamily.get_property_list(property):
                 mbfamilies_found.append(mbfamily)
         return mbfamilies_found
+
 
 class HouseBasedFamily:
     def __init__(self, people: list[Person]):
@@ -353,31 +398,43 @@ class HouseBasedFamily:
         self.street = self.people[0].street
         self.plz = self.people[0].plz
         self.city = self.people[0].city
-    
+
     def __eq__(self, value):
-        return (self.clean_steet_name(self.street)== self.clean_steet_name(value.street) and
-                self.plz == value.plz and
-                self.city == value.city and
-                self.last_name == value.last_name)
-    
+        return (
+            self.clean_steet_name(self.street) == self.clean_steet_name(value.street)
+            and self.plz == value.plz
+            and self.city == value.city
+            and self.last_name == value.last_name
+        )
+
     @staticmethod
     def clean_steet_name(street: str) -> str:
-        return street.lower().replace("str.","strasse")
-    
+        return street.lower().replace("str.", "strasse")
 
     def get_property_list(self, property: str) -> list:
-        property_list = list(set([getattr(person, property, None) for person in self.people]))
+        property_list = list(
+            set([getattr(person, property, None) for person in self.people])
+        )
         property_list.sort()
         return property_list
 
     def __all_properties_match(self, people: list[Person]):
-        address_list = [(person.last_name, self.clean_steet_name(person.street), person.plz, person.city) for person in people]
+        address_list = [
+            (
+                person.last_name,
+                self.clean_steet_name(person.street),
+                person.plz,
+                person.city,
+            )
+            for person in people
+        ]
         return len(set(address_list)) == 1
-    
+
     def add_person(self, new_person: Person, ignore_properties_check: bool = False):
         if not ignore_properties_check:
-            assert self.__all_properties_match(self.people+[new_person])
+            assert self.__all_properties_match(self.people + [new_person])
         self.people.append(new_person)
+
 
 class HouseBasedDatabase:
     def __init__(self, input_file: str = None, input_db: Database = None):
@@ -387,14 +444,14 @@ class HouseBasedDatabase:
             self.input_db = Database(input_file)
         if self.input_db is not None:
             self.add_from_database(self.input_db)
-        
+
     def add_from_database(self, db: Database):
         for person in db.people:
             self.add_person(person)
-    
+
     def add_person(self, new_person: Person):
         self.add_house_based_family(HouseBasedFamily([new_person]))
-    
+
     def add_house_based_family(self, new_hbfamily: HouseBasedFamily):
         for hbfamily in self.house_based_families:
             if new_hbfamily == hbfamily:
@@ -402,28 +459,32 @@ class HouseBasedDatabase:
                     hbfamily.add_person(person)
                     return
         self.house_based_families.append(new_hbfamily)
-    
+
     def lookup_by_property(self, property: str, search_input) -> list[HouseBasedFamily]:
         hbfamilies_found = []
         for hbfamily in self.house_based_families:
             if search_input in hbfamily.get_property_list(property):
                 hbfamilies_found.append(hbfamily)
         return hbfamilies_found
-    
+
     def combine_housemates(self, housemates_file: str):
         grouped_member_numbers = self.load_grouped_member_numbers(housemates_file)
         for group in grouped_member_numbers:
             families_to_merge = []
             for member_number in group:
                 for hb_family in self.house_based_families:
-                    family_member_numbers = [person.member_number for person in hb_family.people]
+                    family_member_numbers = [
+                        person.member_number for person in hb_family.people
+                    ]
                     if member_number in family_member_numbers:
                         families_to_merge.append(hb_family)
                         break
             if len(families_to_merge) > 1:
                 self._force_merge_house_based_families(families_to_merge)
-                
-    def _force_merge_house_based_families(self, families_to_merge: list[HouseBasedFamily]):
+
+    def _force_merge_house_based_families(
+        self, families_to_merge: list[HouseBasedFamily]
+    ):
         if len(families_to_merge) < 2:
             return
         first_family = families_to_merge[0]
@@ -431,7 +492,7 @@ class HouseBasedDatabase:
             for person in family.people:
                 first_family.add_person(person, ignore_properties_check=True)
             self.house_based_families.remove(family)
-        
+
     def load_grouped_member_numbers(self, housemates_file: str) -> list[list[int]]:
         if housemates_file is None:
             return []

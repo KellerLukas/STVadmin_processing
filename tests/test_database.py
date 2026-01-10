@@ -20,18 +20,24 @@ class TestDatabase(TestCase):
         db = Database(file)
         people_found = db.lookup_by_property("first_name", "vorname1")
         self.assertEqual(len(people_found), 1)
-        
-        people_found = db.lookup_by_property("birthday", pd.Timestamp('1999-01-01'), comparator=np.greater)
+
+        people_found = db.lookup_by_property(
+            "birthday", pd.Timestamp("1999-01-01"), comparator=np.greater
+        )
         self.assertEqual(len(people_found), 1)
-        
-        people_found = db.lookup_by_property("birthday", pd.Timestamp('1999-01-01'), comparator=np.greater_equal)
+
+        people_found = db.lookup_by_property(
+            "birthday", pd.Timestamp("1999-01-01"), comparator=np.greater_equal
+        )
         self.assertEqual(len(people_found), 2)
-        
+
     def test_remove_property_for_person(self):
         file = "tests/data/test_database.xlsx"
         db = Database(file)
         person_to_remove = Person(first_name="vorname2", last_name="nachname2")
-        
-        self.assertEqual(len(db.lookup_by_property('email', None)), 1)
-        db.remove_property_for_people_matching_removelist(property="email", removelist=[person_to_remove])
-        self.assertEqual(len(db.lookup_by_property('email', None)), 2)      
+
+        self.assertEqual(len(db.lookup_by_property("email", None)), 1)
+        db.remove_property_for_people_matching_removelist(
+            property="email", removelist=[person_to_remove]
+        )
+        self.assertEqual(len(db.lookup_by_property("email", None)), 2)

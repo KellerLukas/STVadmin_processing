@@ -1,0 +1,39 @@
+[project]
+name = "STVadmin_processing"
+version = "0.0.0"
+description = "Export and process STVadmin data"
+requires-python = ">=3.14"
+dependencies = [
+    "pandas",
+    "onepassword>=0.4.1",
+    "selenium",
+    "numpy",
+    "openpyxl",
+    "streamlit",
+]
+
+[dependency-groups]
+test = [
+    "pytest",
+    "jupyter",
+    "ruff",
+    "mypy",
+]
+
+[tool.uv]
+default-groups = ["test"]
+
+[tool.mypy]
+files = "src, tests"
+mypy_path = "src"
+namespace_packages = true
+explicit_package_bases = true
+strict = true
+enable_error_code = [
+    "ignore-without-code",
+    "redundant-expr",
+    "truthy-bool",
+]
+exclude = [
+]
+

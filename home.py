@@ -5,6 +5,7 @@ import streamlit as st
 
 from src.STVAdmin_export_client import STVAdminExportClient
 
+
 # Setting up page with branding colors
 def setup_page():
     st.set_page_config(page_title="STVAdmin Export")
@@ -62,6 +63,7 @@ def setup_page():
         unsafe_allow_html=True,
     )
 
+
 # Title and header configuration
 def configure_title():
     st.markdown("# STVAdmin Export")
@@ -69,7 +71,8 @@ def configure_title():
     if data_is_available():
         st.markdown("### Statistics")
         st.markdown(st.session_state.client.get_statistics())
-    
+
+
 def configure_download_data():
     st.markdown("## Setup", unsafe_allow_html=True)
     if not data_is_available():
@@ -84,10 +87,11 @@ def configure_download_data():
         if st.button(label="Reset"):
             reset_client()
             st.rerun()
-    
+
     # Section divider and spacing
     st.markdown('<div class="section-spacing"></div>', unsafe_allow_html=True)
-    
+
+
 def configure_export_buttons():
     st.markdown("## Export", unsafe_allow_html=True)
     if not data_is_available():
@@ -95,7 +99,7 @@ def configure_export_buttons():
         return
 
     # Button status trackers in session state
-    if 'success_buttons' not in st.session_state:
+    if "success_buttons" not in st.session_state:
         st.session_state.success_buttons = {}
 
     # Button grid for other exports
@@ -108,7 +112,7 @@ def configure_export_buttons():
         if st.button(label="Riegenlisten", key="btn_riegenlisten"):
             st.session_state.client.export_riegenlisten_excel()
             st.toast("Exported riegenlisten")
-        
+
         if st.button(label="Infoheft Liste", key="btn_infoheft"):
             st.session_state.client.export_infoheft_list()
             st.toast("Exported Infoheft Liste")
@@ -124,7 +128,9 @@ def configure_export_buttons():
 
     # Year input and button alignment
     st.markdown("Export GV Lists by Year:")
-    input_col, button_col = st.columns([3, 1])  # Two-column layout: wide input, narrow button
+    input_col, button_col = st.columns(
+        [3, 1]
+    )  # Two-column layout: wide input, narrow button
 
     with input_col:
         # Use default Streamlit label behavior
@@ -133,7 +139,7 @@ def configure_export_buttons():
             value="",
             max_chars=4,
             placeholder=str(pd.Timestamp.now().year),
-            label_visibility="collapsed"
+            label_visibility="collapsed",
         )
 
     with button_col:
@@ -148,25 +154,32 @@ def configure_export_buttons():
     # Section divider and spacing
     st.markdown('<div class="section-spacing"></div>', unsafe_allow_html=True)
 
+
 def reset_client():
     if isinstance(st.session_state.client, STVAdminExportClient):
         del st.session_state.client
     st.session_state.client = STVAdminExportClient(keep_files=False)
-    
+
+
 def data_is_available():
-    if st.session_state.client._userlist_filename is None or st.session_state.client._riegenlist_filename is None:
+    if (
+        st.session_state.client._userlist_filename is None
+        or st.session_state.client._riegenlist_filename is None
+    ):
         return False
     return True
 
+
 def configure_stop():
     st.markdown('<div class="section-spacing"></div>', unsafe_allow_html=True)
-    st.markdown('<hr style="border:1px solid #e0e0e0; margin:10px 0;">', unsafe_allow_html=True)
-
+    st.markdown(
+        '<hr style="border:1px solid #e0e0e0; margin:10px 0;">', unsafe_allow_html=True
+    )
 
     if st.button("Shut down"):
         os.kill(os.getpid(), signal.SIGTERM)
-        
-        
+
+
 def main():
     if "client" not in st.session_state:
         st.session_state.client = STVAdminExportClient(debugging_mode=True)
@@ -175,6 +188,7 @@ def main():
     configure_download_data()
     configure_export_buttons()
     configure_stop()
+
 
 if __name__ == "__main__":
     main()
