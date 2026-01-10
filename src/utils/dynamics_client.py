@@ -8,6 +8,7 @@ from hashlib import md5
 import shutil
 from onepassword import OnePassword
 
+DELAY_MULTIPLIER = 1
 
 class DynamicsClient:
     def __init__(self, working_dir: str = None, debugging_mode: bool = False):
@@ -54,7 +55,7 @@ class DynamicsClient:
     def _login(self):
         login_url = "https://nav17.stv-fsg.ch/DynamicsNAV100-NAVUser/WebClient/SignIn.aspx?ReturnUrl=%2fDynamicsNAV100-NAVUser%2fWebClient%2f"
         self.client.get(login_url)
-        WebDriverWait(self.client, 10).until(EC.presence_of_element_located((By.NAME, "ctl00$PHM$UserName")))
+        WebDriverWait(self.client, 10*DELAY_MULTIPLIER).until(EC.presence_of_element_located((By.NAME, "ctl00$PHM$UserName")))
         user = self.client.find_element(By.NAME, "ctl00$PHM$UserName")
         pwd = self.client.find_element(By.NAME, "ctl00$PHM$Password")
         login_button = self.client.find_element(By.NAME, "ctl00$PHM$LoginButton")
@@ -76,13 +77,14 @@ class DynamicsClient:
             index (int, optional): The index of the item to select from the list, if it is a list.
             wait_time (int, optional): The wait time for the element to become clickable. Default is 10 seconds.
         """
-        wait_time = 10
+        wait_time = 10*DELAY_MULTIPLIER
         self._wait_for_javascript_completion(timeout=wait_time) 
         self._wait_for_dom_stability(timeout=wait_time)
         # Wait for elements matching the XPath to be present
         WebDriverWait(self.client, wait_time).until(
             lambda driver: len(self.client.find_elements(By.XPATH, xpath)) > 0
         )
+        time.sleep(0.3)  # Small delay to ensure stability
         # Get all matching elements
         elements = self.client.find_elements(By.XPATH, xpath)
 
@@ -124,7 +126,7 @@ class DynamicsClient:
         raise Exception("DOM did not stabilize within the given timeout.")
 
 
-    def _wait_for_javascript_completion(self, timeout=10):
+    def _wait_for_javascript_completion(self, timeout=10*DELAY_MULTIPLIER):
         """Wait for all JavaScript events to complete."""
         WebDriverWait(self.client, timeout).until(
             lambda driver: self.client.execute_script("return document.readyState") == "complete"

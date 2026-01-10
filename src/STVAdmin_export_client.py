@@ -9,13 +9,14 @@ from pathlib import Path
 from src import ADULT_CAT, EHRENMITGLIEDER_CAT, NOT_ACTIVE_ERW_CAT, MALE, JUGEND_CAT, is_jugend_riege
 from src.utils.dynamics_client import DynamicsClient
 
-from src.utils.databases import MailBasedDatabase, Database
+from src.utils.databases import MailBasedDatabase, Database, HouseBasedDatabase
 from src.utils.cleverreach_database import CleverreachDatabase
-from src.utils.adress_databases import AdressDatabase, RiegenAdressDatabase
+from src.utils.adress_databases import AdressDatabase, RiegenAdressDatabase, HouseBasedAdressDatabase
 from src.config.paths import WORKING_DIR_PATH
 
 OUTPUT_FOLDER = "OUT"
 FILENAME_ADDITIONAL_PEOPLE = "Newsletter_Zusaetzlich.xlsx"
+FILENAME_HOUSEMATES = "TVW_Mitglieder_Housemates.xlsx"
 FILENAME_BACKUP_LIST = "TVW_Mitglieder_Backup_10_23.xlsx"
 FILENAME_REMOVE_LIST = "Newsletter_abmeldungen.xlsx"
 FILENAME_JUBILARE = "TVW_List_OUT_Jubilare_{year}.xlsx"
@@ -23,6 +24,7 @@ FILENAME_JUBILARE = "TVW_List_OUT_Jubilare_{year}.xlsx"
 FILENAME_NEUMITGLIEDER = "TVW_List_OUT_neumitglieder.xlsx"
 FILENAME_JUGENDUEBERTRITT = "TVW_List_OUT_jugenduebertritte.xlsx"
 FILENAME_LOST_EMAIL = "TVW_List_OUT_lost_email.xlsx"
+FILENAME_INFOHEFT = "TVW_List_OUT_Infoheft.xlsx"
 
 
 class STVAdminExportClient:
@@ -82,7 +84,7 @@ class STVAdminExportClient:
             coach_db.add_people(riegen[riege]["coaches"])
             coach_ad_db = AdressDatabase(input_db=coach_db)
             today = pd.Timestamp.now()
-            filename = f"{riege}_export_{today.strftime("%d.%m.%Y")}.xlsx"
+            filename = f"{riege}_export_{today.strftime('%d.%m.%Y')}.xlsx"
             
             riegen_ad_db = RiegenAdressDatabase(member_ad_db=member_ad_db, coach_ad_db=coach_ad_db)
             riegen_ad_db.to_excel(os.path.join(path, filename))
@@ -156,6 +158,14 @@ class STVAdminExportClient:
                                                                end=pd.Timestamp(year=year+1,month=1,day=1))
         self.export_jugend_born_in_year(year=year_for_uebertritt, output_filename=FILENAME_JUGENDUEBERTRITT)
         
+    def export_infoheft_list(self):
+        printed_infoheft_people = self.main_db.lookup_by_property("printed_magazine", True)
+        printed_infoheft_db = Database()
+        printed_infoheft_db.add_people(printed_infoheft_people)
+        hb_db = HouseBasedDatabase(input_db=printed_infoheft_db)
+        hb_db.combine_housemates(housemates_file=os.path.join(self.path, FILENAME_HOUSEMATES))
+        hb_ad_db = HouseBasedAdressDatabase(hb_db=hb_db)
+        hb_ad_db.to_excel(os.path.join(self.path, OUTPUT_FOLDER, FILENAME_INFOHEFT))
     
     def get_statistics(self) -> str:
         #ToDo: refactor to make code easier to read / maintain

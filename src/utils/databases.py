@@ -25,7 +25,8 @@ class Person:
         date_added: str = None,
         riegen_member: list[str] = None,
         riegen_coach: list[str] = None,
-        tags: Optional[set[str]] = None
+        tags: Optional[set[str]] = None,
+        printed_magazine: bool = None,
     ):
         self.member_number = int(member_number) if member_number else None
         self.gender = gender
@@ -45,6 +46,7 @@ class Person:
         self.riegen_member = riegen_member if riegen_member else []
         self.riegen_coach = riegen_coach if riegen_coach else []
         self.tags = tags if tags else set()
+        self.printed_magazine = printed_magazine
         
     def __repr__(self):
         return f"{self.first_name} {self.last_name} - {self.member_number}"
@@ -159,6 +161,13 @@ class Database:
             person_constructor_dict = {}
             for key in translator:
                 if key in ["riege","organ"]:
+                    continue
+                if key == "printed_magazine":
+                    value = getattr(row, translator[key], None)
+                    if value == "VEREINSZEITSCHRIFT" or value is None:
+                        person_constructor_dict[key] = False
+                    else:
+                        person_constructor_dict[key] = True
                     continue
                 if isinstance(translator[key], str):
                     person_constructor_dict[key] = getattr(row, translator[key], None)
@@ -317,7 +326,6 @@ class MailBasedDatabase:
         for person in db.people:
             self.add_person(person)
     
-    
     def add_mail_based_family(self, new_mbfamily: MailBasedFamily):
         for mbfamily in self.mail_based_families:
             if new_mbfamily.email == mbfamily.email:
@@ -335,3 +343,100 @@ class MailBasedDatabase:
             if search_input in mbfamily.get_property_list(property):
                 mbfamilies_found.append(mbfamily)
         return mbfamilies_found
+
+class HouseBasedFamily:
+    def __init__(self, people: list[Person]):
+        assert self.__all_properties_match(people)
+        assert len(people) > 0
+        self.people = people
+        self.last_name = self.people[0].last_name
+        self.street = self.people[0].street
+        self.plz = self.people[0].plz
+        self.city = self.people[0].city
+    
+    def __eq__(self, value):
+        return (self.clean_steet_name(self.street)== self.clean_steet_name(value.street) and
+                self.plz == value.plz and
+                self.city == value.city and
+                self.last_name == value.last_name)
+    
+    @staticmethod
+    def clean_steet_name(street: str) -> str:
+        return street.lower().replace("str.","strasse")
+    
+
+    def get_property_list(self, property: str) -> list:
+        property_list = list(set([getattr(person, property, None) for person in self.people]))
+        property_list.sort()
+        return property_list
+
+    def __all_properties_match(self, people: list[Person]):
+        address_list = [(person.last_name, self.clean_steet_name(person.street), person.plz, person.city) for person in people]
+        return len(set(address_list)) == 1
+    
+    def add_person(self, new_person: Person, ignore_properties_check: bool = False):
+        if not ignore_properties_check:
+            assert self.__all_properties_match(self.people+[new_person])
+        self.people.append(new_person)
+
+class HouseBasedDatabase:
+    def __init__(self, input_file: str = None, input_db: Database = None):
+        self.house_based_families = []
+        self.input_db = input_db
+        if input_file is not None:
+            self.input_db = Database(input_file)
+        if self.input_db is not None:
+            self.add_from_database(self.input_db)
+        
+    def add_from_database(self, db: Database):
+        for person in db.people:
+            self.add_person(person)
+    
+    def add_person(self, new_person: Person):
+        self.add_house_based_family(HouseBasedFamily([new_person]))
+    
+    def add_house_based_family(self, new_hbfamily: HouseBasedFamily):
+        for hbfamily in self.house_based_families:
+            if new_hbfamily == hbfamily:
+                for person in new_hbfamily.people:
+                    hbfamily.add_person(person)
+                    return
+        self.house_based_families.append(new_hbfamily)
+    
+    def lookup_by_property(self, property: str, search_input) -> list[HouseBasedFamily]:
+        hbfamilies_found = []
+        for hbfamily in self.house_based_families:
+            if search_input in hbfamily.get_property_list(property):
+                hbfamilies_found.append(hbfamily)
+        return hbfamilies_found
+    
+    def combine_housemates(self, housemates_file: str):
+        grouped_member_numbers = self.load_grouped_member_numbers(housemates_file)
+        for group in grouped_member_numbers:
+            families_to_merge = []
+            for member_number in group:
+                for hb_family in self.house_based_families:
+                    family_member_numbers = [person.member_number for person in hb_family.people]
+                    if member_number in family_member_numbers:
+                        families_to_merge.append(hb_family)
+                        break
+            if len(families_to_merge) > 1:
+                self._force_merge_house_based_families(families_to_merge)
+                
+    def _force_merge_house_based_families(self, families_to_merge: list[HouseBasedFamily]):
+        if len(families_to_merge) < 2:
+            return
+        first_family = families_to_merge[0]
+        for family in families_to_merge[1:]:
+            for person in family.people:
+                first_family.add_person(person, ignore_properties_check=True)
+            self.house_based_families.remove(family)
+        
+    def load_grouped_member_numbers(self, housemates_file: str) -> list[list[int]]:
+        if housemates_file is None:
+            return []
+        housemates_df = pd.read_excel(housemates_file)
+        grouped_memeber_numbers = housemates_df["Mitgliedernummern"].tolist()
+        grouped_memeber_numbers = [x.split(", ") for x in grouped_memeber_numbers]
+        grouped_memeber_numbers = [[int(y) for y in x] for x in grouped_memeber_numbers]
+        return grouped_memeber_numbers

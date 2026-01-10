@@ -1,0 +1,8 @@
+streamlit
+pandas
+1password
+selenium
+numpy
+jupyter
+openpyxl
+

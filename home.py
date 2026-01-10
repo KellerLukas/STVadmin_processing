@@ -108,6 +108,10 @@ def configure_export_buttons():
         if st.button(label="Riegenlisten", key="btn_riegenlisten"):
             st.session_state.client.export_riegenlisten_excel()
             st.toast("Exported riegenlisten")
+        
+        if st.button(label="Infoheft Liste", key="btn_infoheft"):
+            st.session_state.client.export_infoheft_list()
+            st.toast("Exported Infoheft Liste")
 
     with col2:
         if st.button(label="No Mail", key="btn_no_mail"):
@@ -165,7 +169,7 @@ def configure_stop():
         
 def main():
     if "client" not in st.session_state:
-        st.session_state.client = STVAdminExportClient(debugging_mode=False)
+        st.session_state.client = STVAdminExportClient(debugging_mode=True)
     setup_page()
     configure_title()
     configure_download_data()

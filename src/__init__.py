@@ -23,7 +23,7 @@ MALE = "Männlich"
 FEMALE = "Weiblich"
 
 def is_jugend_riege(riege:str)-> bool:
-    jugend_strings = ["Meitliriege", "Knaben", "Jugi", "Kids", "Jugend", "klein", "Mädchen", "Elki"]
+    jugend_strings = ["Meitliriege", "Knaben", "Jugi", "Kids", "Jugend", "klein", "Mädchen", "Elki", "Kitu"]
     for string in jugend_strings:
         if string in riege:
             return True
