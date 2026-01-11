@@ -10,6 +10,7 @@ Note: This tool is made specifically to work with the setup of one particular sp
 - Export a special csv file used to import the recipients into some newsletter tool (where duplicate email addresses are combined in a specific way)
 - Export lists containing members of each group (a very tedious task in the original database)
 - Export special lists and statistics used for various tasks throughout the year.
+- Use CleverReach API to push data to its database automatically
 
 ### Note
 The custom database used is far from optimal, but it was fun implementing. As the size of the database is limited naturally by the local population, there is no real reason to improve performance with a proper database (e.g. SQL or even keeping everything as a simple dataframe).
