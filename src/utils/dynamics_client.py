@@ -6,7 +6,8 @@ import time
 import os
 from hashlib import md5
 import shutil
-from onepassword import OnePassword
+
+from src.utils.credentials import CredentialsBase, STVADMIN_ITEM_UUID
 
 DELAY_MULTIPLIER = 1
 
@@ -20,7 +21,7 @@ class DynamicsClient:
             working_dir, "dynamics_client_temp_folder"
         )
         self.create_temporary_download_folder()
-        self.creds = STVAdminCreds()
+        self.creds = CredentialsBase(item_uuid=STVADMIN_ITEM_UUID)
         self._debugging_mode = debugging_mode
 
     def __del__(self):
@@ -220,36 +221,3 @@ class DynamicsClient:
             os.path.join(folder, filename),
         )
         return filename
-
-
-class STVAdminCreds:
-    def __init__(self):
-        self._client_id = None
-        self._client_secret = None
-        self.op = OnePassword()
-        self.item_uuid = "utpuxkadynh4bnoqufqp5umzvy"
-
-    @property
-    def client_id(self):
-        if self._client_id is None:
-            self._client_id = self.get_client_id()
-        return self._client_id
-
-    @property
-    def client_secret(self):
-        if self._client_secret is None:
-            self._client_secret = self.get_client_secret()
-        return self._client_secret
-
-    def get_client_id(self):
-        return self.get_field("username")
-
-    def get_client_secret(self):
-        return self.get_field("password")
-
-    def get_field(self, label):
-        item = self.op.get_item(uuid=self.item_uuid)
-        fields = item["fields"]
-        for field in fields:
-            if field["id"] == label:
-                return field["value"]

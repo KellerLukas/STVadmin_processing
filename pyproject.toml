@@ -5,7 +5,7 @@ description = "Export and process STVadmin data"
 requires-python = ">=3.14"
 dependencies = [
     "pandas",
-    "onepassword>=0.4.1",
+    "1password",
     "selenium",
     "numpy",
     "openpyxl",
@@ -35,4 +35,7 @@ enable_error_code = [
 ]
 exclude = [
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
 

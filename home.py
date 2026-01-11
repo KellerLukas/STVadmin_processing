@@ -1,9 +1,13 @@
 import os
 import signal
+import logging
 import pandas as pd
 import streamlit as st
 
 from src.STVAdmin_export_client import STVAdminExportClient
+
+# Set logging level to INFO
+logging.basicConfig(level=logging.INFO)
 
 
 # Setting up page with branding colors
@@ -105,9 +109,13 @@ def configure_export_buttons():
     # Button grid for other exports
     col1, col2 = st.columns(2)
     with col1:
-        if st.button(label="CleverReach Data", key="btn_cleverreach"):
-            st.session_state.client.export_cleverreach_csv()
-            st.toast("Exported CleverReach Data")
+        removed_eamails_from_cleverreach = []
+        activated_emails_in_cleverreach = []
+        if st.button(label="Sync to CleverReach", key="btn_cleverreach_sync"):
+            removed_emails_from_cleverreach, activated_emails_in_cleverreach = (
+                st.session_state.client.sync_to_cleverreach()
+            )
+            st.toast("Synced to CleverReach")
 
         if st.button(label="Riegenlisten", key="btn_riegenlisten"):
             st.session_state.client.export_riegenlisten_excel()
@@ -118,6 +126,10 @@ def configure_export_buttons():
             st.toast("Exported Infoheft Liste")
 
     with col2:
+        if st.button(label="Export CleverReach Data", key="btn_cleverreach_export"):
+            st.session_state.client.export_cleverreach_csv()
+            st.toast("Exported CleverReach Data")
+
         if st.button(label="No Mail", key="btn_no_mail"):
             st.session_state.client.export_no_mail_excel()
             st.toast("Exported No Mail")
@@ -150,6 +162,18 @@ def configure_export_buttons():
                 st.toast(f"Exported GV lists for year {gv_year}.")
             else:
                 st.error("Please enter a valid 4-digit year.")
+    if removed_eamails_from_cleverreach:
+        st.markdown(
+            f"Removed {len(removed_emails_from_cleverreach)} receivers from 'ausgetreten' filter in CleverReach:"
+        )
+        for email in removed_emails_from_cleverreach:
+            st.markdown(f"- {email}")
+    if activated_emails_in_cleverreach:
+        st.markdown(
+            f"Activated {len(activated_emails_in_cleverreach)} inactive receivers in CleverReach:"
+        )
+        for email in activated_emails_in_cleverreach:
+            st.markdown(f"- {email}")
 
     # Section divider and spacing
     st.markdown('<div class="section-spacing"></div>', unsafe_allow_html=True)

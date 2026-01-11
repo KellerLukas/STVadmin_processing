@@ -2,30 +2,20 @@ import json
 import pandas as pd
 from pathlib import Path
 from src.utils.databases import MailBasedFamily, MailBasedDatabase
+from src.utils.cleverreach_client import Receiver
 
 
 class CleverreachDatabase:
     def __init__(
         self, input_file: str = None, input_mb_database: MailBasedDatabase = None
     ):
-        self.categories = [
-            "Aktive Turner",
-            "Aktive Turnerin",
-            "Passivmitglied",
-            "Kitu",
-            "Mädchen",
-            "Knaben",
-            "Freimitglied turnend",
-            "Freimitglied nicht turnend",
-            "Ehrenmitglied nicht turnend",
-            "Ehrenmitglied turnend",
-        ]
+        self.categories = list(self._get_translator().keys())
         self.columns = [
-            "Vorname",
-            "Nachname",
+            "firstname",
+            "lastname",
             "Email",
-            "Männlich",
-            "Weiblich",
+            "maennlich",
+            "weiblich",
             "updated",
         ] + self.categories
         self._df = None
@@ -55,28 +45,27 @@ class CleverreachDatabase:
     def __add_entry(self, mbfamily: MailBasedFamily):
         entry_constructor_dict = {}
         entry_constructor_dict["Email"] = mbfamily.email
-        entry_constructor_dict["Vorname"] = (
+        entry_constructor_dict["firstname"] = (
             self._concatenate_unique_list_entries_to_string(
                 mbfamily.get_property_list("first_name")
             )
         )
-        entry_constructor_dict["Nachname"] = (
+        entry_constructor_dict["lastname"] = (
             self._concatenate_unique_list_entries_to_string(
                 mbfamily.get_property_list("last_name")
             )
         )
 
-        entry_constructor_dict["updated"] = pd.Timestamp.today().floor(freq="D")
+        entry_constructor_dict["updated"] = (
+            pd.Timestamp.today().floor(freq="D").strftime("%d.%m.%Y")
+        )
 
-        for gender in ["Männlich", "Weiblich"]:
-            entry_constructor_dict[gender] = gender in mbfamily.get_property_list(
-                "gender"
-            )
-
-        with open(
-            "src/utils/STVAdmin_to_Cleverreach_category_translator.json", "r"
-        ) as f:
-            translator = json.load(f)
+        mbfamily_genders = mbfamily.get_property_list("gender")
+        mbfamily_genders = [gender.lower() for gender in mbfamily_genders]
+        mbfamily_genders = [gender.replace("ä", "ae") for gender in mbfamily_genders]
+        for gender in ["maennlich", "weiblich"]:
+            entry_constructor_dict[gender] = gender in mbfamily_genders
+        translator = self._get_translator()
         for category in self.categories:
             entry_constructor_dict[category] = translator[
                 category
@@ -98,9 +87,23 @@ class CleverreachDatabase:
 
     def to_csv(self, filename: str):
         df_copy = self.df.copy()
-        df_copy["updated"] = [
-            pd.Timestamp(ts).strftime("%d.%m.%Y") for ts in df_copy["updated"].values
-        ]
         path = Path(filename).parent
         path.mkdir(parents=True, exist_ok=True)
         df_copy.to_csv(filename, index=False)
+
+    def to_receivers(self) -> list[Receiver]:
+        receivers = []
+        for _, row in self.df.iterrows():
+            receiver = Receiver(email=row["Email"], global_attributes={})
+            for column in self.df.columns:
+                if column not in ["Email"]:
+                    receiver.global_attributes[column] = str(row[column])
+            receivers.append(receiver.to_dict())
+        return receivers
+
+    def _get_translator(self) -> dict:
+        with open(
+            "src/utils/STVAdmin_to_Cleverreach_category_translator.json", "r"
+        ) as f:
+            translator = json.load(f)
+        return translator

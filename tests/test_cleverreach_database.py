@@ -15,7 +15,8 @@ class TestCleverreachDatabase(TestCase):
         for col in expected_df.columns:
             if col == "updated":
                 expected_df[col] = [
-                    pd.Timestamp.now().floor(freq="D") for _ in expected_df[col].values
+                    pd.Timestamp.now().floor(freq="D").strftime("%d.%m.%Y")
+                    for _ in expected_df[col].values
                 ]
             if col == "Email":
                 expected_df[col] = [

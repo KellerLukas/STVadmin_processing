@@ -32,7 +32,7 @@ class Person:
         tags: Optional[set[str]] = None,
         printed_magazine: bool = None,
     ):
-        self.member_number = int(member_number) if member_number else None
+        self.member_number = int(member_number) if not pd.isna(member_number) else None
         self.gender = gender
         self.first_name = first_name
         self.last_name = last_name

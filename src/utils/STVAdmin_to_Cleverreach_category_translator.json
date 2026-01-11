@@ -1,12 +1,12 @@
 {
-    "Aktive Turner": "Aktive Turner",
-    "Aktive Turnerin": "Aktive Turnerin",
-    "Passivmitglied": "Passivmitglied",
-    "Kitu": "Kitu (Kinder)",
-    "Mädchen": "Mädchen",
-    "Knaben": "Knaben",
-    "Freimitglied turnend": "Freimitg. Turnend (1)",
-    "Freimitglied nicht turnend": "Freimitg. nturnend (10)",
-    "Ehrenmitglied nicht turnend": "Ehrenmitg. nturnend",
-    "Ehrenmitglied turnend": "Ehrenmitg. turnend"
+    "aktive_turner": "Aktive Turner",
+    "aktive_turnerin": "Aktive Turnerin",
+    "passivmitglied": "Passivmitglied",
+    "kitu": "Kitu (Kinder)",
+    "maedchen": "Mädchen",
+    "knaben": "Knaben",
+    "freimitglied_turnend": "Freimitg. Turnend (1)",
+    "freimitglied_nicht_turnend": "Freimitg. nturnend (10)",
+    "ehrenmitglied_nicht_turnend": "Ehrenmitg. nturnend",
+    "ehrenmitglied_turnend": "Ehrenmitg. turnend"
 }

@@ -93,8 +93,16 @@ class CleverreachClient:
         return True
 
     def get_receivers_for_group(
-        self, group_id: int, pagesize: Optional[int] = None, page: Optional[int] = None
+        self,
+        group_id: int,
+        pagesize: Optional[int] = None,
+        page: Optional[int] = None,
+        type: Optional[str] = None,
     ) -> list:
+        if type and type not in ["active", "inactive", "all", "bounce"]:
+            raise ValueError(
+                "type must be one of 'active', 'inactive', 'all', 'bounce'"
+            )
         logger.info(f"Retrieving receivers for group {group_id}")
         path = f"/v3/groups.json/{group_id}/receivers"
         params = {}
@@ -102,6 +110,8 @@ class CleverreachClient:
             params["pagesize"] = pagesize
         if page is not None:
             params["page"] = page
+        if type is not None:
+            params["type"] = type
         res = requests.get(self._URL + path, headers=self.headers, params=params)
         if res.status_code != 200:
             logger.error(f"Failed to get receivers for group {group_id}: {res.text}")
@@ -110,12 +120,26 @@ class CleverreachClient:
         logger.info(f"Retrieved {len(receivers)} receivers for group {group_id}")
         return receivers
 
-    def get_receivers_for_group_complete(self, group_id: int) -> list:
-        total_count = self.get_group_stats(group_id)["total_count"]
+    def get_receivers_for_group_complete(
+        self, group_id: int, type: Optional[str] = None
+    ) -> list:
+        stats = self.get_group_stats(group_id)
+        if type is None or type == "all":
+            total_count = stats["total_count"]
+        elif type == "active":
+            total_count = stats["active_count"]
+        elif type == "inactive":
+            total_count = stats["inactive_count"]
+        elif type == "bounce":
+            total_count = stats["bounce_count"]
+        else:
+            raise ValueError(
+                "type must be one of 'active', 'inactive', 'all', 'bounce'"
+            )
         all_receivers = []
         page = 0
         while len(all_receivers) < total_count:
-            receivers = self.get_receivers_for_group(group_id, page=page)
+            receivers = self.get_receivers_for_group(group_id, page=page, type=type)
             all_receivers.extend(receivers)
             page += 1
         return all_receivers
@@ -248,5 +272,18 @@ class CleverreachClient:
         logger.info(f"Retrieved group statistics for group {group_id}")
         return statistics
 
-    # ToDo: remove ausgetreten segment
-    # ToDo: activate all deactivated receivers?
+    def activate_receiver(self, group_id: int, receiver_id: int) -> bool:
+        logger.info(f"Activating receiver {receiver_id} in group {group_id}")
+        path = f"/v3/groups.json/{group_id}/receivers/{receiver_id}/activate"
+        res = requests.put(self._URL + path, headers=self.headers)
+        if res.status_code != 200:
+            logger.error(
+                f"Failed to activate receiver {receiver_id} in group {group_id}: {res.text}"
+            )
+            raise Exception(
+                f"Failed to activate receiver {receiver_id} in group {group_id}: {res.text}"
+            )
+        logger.info(
+            f"Successfully activated receiver {receiver_id} in group {group_id}"
+        )
+        return res.json()

@@ -14,6 +14,11 @@ from src import (
     JUGEND_CAT,
     is_jugend_riege,
 )
+from src.utils.cleverreach_client import (
+    ALLE_MITGLIEDER_GROUP_ID,
+    AUSGETRETEN_FILTER_ID,
+    CleverreachClient,
+)
 from src.utils.dynamics_client import DynamicsClient
 
 from src.utils.databases import MailBasedDatabase, Database, HouseBasedDatabase
@@ -56,6 +61,7 @@ class STVAdminExportClient:
         self._main_db = None
         self._keep_files = keep_files
         self._debugging_mode = debugging_mode
+        self.cr_client = CleverreachClient()
 
     def __del__(self):
         if self._keep_files:
@@ -111,6 +117,77 @@ class STVAdminExportClient:
         mb_db = MailBasedDatabase(input_db=self.main_db)
         cr_db = CleverreachDatabase(input_mb_database=mb_db)
         cr_db.to_csv(os.path.join(self.path, OUTPUT_FOLDER, output_filename))
+
+    def sync_to_cleverreach(self) -> list[str]:
+        self.push_data_to_cleverreach()
+        self.update_ausgetreten_filter_in_cleverreach(pd.Timestamp.today().floor("D"))
+        removed_emails = self.remove_receivers_from_ausgetreten_filter_in_cleverreach()
+        activated_emails = self.activate_inactive_receivers_in_cleverreach()
+        return removed_emails, activated_emails
+
+    def push_data_to_cleverreach(self):
+        mb_db = MailBasedDatabase(input_db=self.main_db)
+        cr_db = CleverreachDatabase(input_mb_database=mb_db)
+        receivers = cr_db.to_receivers()
+        self.cr_client.update_receivers_for_group(
+            group_id=ALLE_MITGLIEDER_GROUP_ID, receivers=receivers
+        )
+
+    def update_ausgetreten_filter_in_cleverreach(self, date: pd.Timestamp):
+        filter_template = {
+            "id": AUSGETRETEN_FILTER_ID,
+            "name": "Ausgetreten",
+            "rules": [
+                {"operator": "AND", "field": "(", "logic": "", "condition": ""},
+                {
+                    "operator": "OR",
+                    "field": "a1037193.value",
+                    "logic": "NEQ",
+                    "condition": date.strftime("%Y-%m-%d"),
+                },
+                {
+                    "operator": "OR",
+                    "field": "a1037193.value",
+                    "logic": "ISNULL",
+                    "condition": "",
+                },
+                {"operator": "AND", "field": ")", "logic": "", "condition": ""},
+            ],
+        }
+        self.cr_client.update_filter(
+            group_id=ALLE_MITGLIEDER_GROUP_ID,
+            filter_id=AUSGETRETEN_FILTER_ID,
+            filter_data=filter_template,
+        )
+
+    def remove_receivers_from_ausgetreten_filter_in_cleverreach(self) -> list[str]:
+        r = self.cr_client.get_receivers_for_group_filtered_complete(
+            group_id=ALLE_MITGLIEDER_GROUP_ID, filter_id=AUSGETRETEN_FILTER_ID
+        )
+        ids_to_remove = [receiver["id"] for receiver in r]
+        emails_to_remove = [receiver["email"] for receiver in r]
+        if len(ids_to_remove) == 0:
+            logging.info("No receivers to remove from ausgetreten filter")
+            return []
+        self.cr_client.delete_receivers(
+            group_id=ALLE_MITGLIEDER_GROUP_ID, receivers=ids_to_remove
+        )
+        return emails_to_remove
+
+    def activate_inactive_receivers_in_cleverreach(self) -> list[str]:
+        r = self.cr_client.get_receivers_for_group_complete(
+            group_id=ALLE_MITGLIEDER_GROUP_ID, type="inactive"
+        )
+        ids_to_activate = [receiver["id"] for receiver in r]
+        emails_activated = [receiver["email"] for receiver in r]
+        if len(ids_to_activate) == 0:
+            logging.info("No inactive receivers to activate")
+            return []
+        for receiver_id in ids_to_activate:
+            self.cr_client.activate_receiver(
+                group_id=ALLE_MITGLIEDER_GROUP_ID, receiver_id=receiver_id
+            )
+        return emails_activated
 
     def export_no_mail_excel(self, output_filename: str = "TVW_List_OUT_nomail.xlsx"):
         ad_db = self._convert_no_mail_people_with_property_to_ad_db()
