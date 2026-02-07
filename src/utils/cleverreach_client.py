@@ -140,6 +140,11 @@ class CleverreachClient:
         page = 0
         while len(all_receivers) < total_count:
             receivers = self.get_receivers_for_group(group_id, page=page, type=type)
+            if len(receivers) == 0:
+                logger.warning(
+                    f"Received empty receiver list for group {group_id} on page {page} without reaching total count {total_count}. Stopping pagination to avoid infinite loop."
+                )
+                break
             all_receivers.extend(receivers)
             page += 1
         return all_receivers
@@ -202,7 +207,7 @@ class CleverreachClient:
         page: Optional[int] = None,
     ) -> list:
         logger.info(
-            f"Retrieving filtered receivers for group {group_id} with filter {filter_id}"
+            f"Retrieving filtered receivers for group {group_id} with filter {filter_id}, page {page}, pagesize {pagesize}"
         )
         path = f"/v3/groups.json/{group_id}/filters/{filter_id}/receivers"
         params = {}
@@ -213,14 +218,14 @@ class CleverreachClient:
         res = requests.get(self._URL + path, headers=self.headers, params=params)
         if res.status_code != 200:
             logger.error(
-                f"Failed to get filtered receivers for group {group_id}: {res.text}"
+                f"Failed to get filtered receivers for group {group_id} with filter {filter_id}, page {page}, pagesize {pagesize}: {res.text}"
             )
             raise Exception(
-                f"Failed to get filtered receivers for group {group_id}: {res.text}"
+                f"Failed to get filtered receivers for group {group_id} with filter {filter_id}, page {page}, pagesize {pagesize}: {res.text}"
             )
         receivers = res.json()
         logger.info(
-            f"Retrieved {len(receivers)} filtered receivers for group {group_id}"
+            f"Retrieved {len(receivers)} filtered receivers for group {group_id} with filter {filter_id}, page {page}, pagesize {pagesize}"
         )
         return receivers
 
@@ -236,6 +241,11 @@ class CleverreachClient:
             receivers = self.get_receivers_for_group_filtered(
                 group_id, filter_id, page=page
             )
+            if len(receivers) == 0:
+                logger.warning(
+                    f"Received empty receiver list for group {group_id} with filter {filter_id} on page {page} without reaching total count {total_count}. Stopping pagination to avoid infinite loop."
+                )
+                break
             all_receivers.extend(receivers)
             page += 1
         return all_receivers
