@@ -14,6 +14,13 @@ EHRENMITGLIEDER_CAT = [
     "Ehrenmitg. nturnend",
     "Ehrenmitg. turnend",
 ]
+ACTIVE_ERW_CAT = [
+    "Aktive Turner",
+    "Aktive Turnerin",
+    "Freimitg. Turnend (1)",
+    "Ehrenmitg. turnend",
+]
+
 NOT_ACTIVE_ERW_CAT = [
     "Passivmitglied",
     "Freimitg. nturnend (10)",

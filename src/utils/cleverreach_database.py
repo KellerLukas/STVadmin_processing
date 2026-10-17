@@ -17,6 +17,7 @@ class CleverreachDatabase:
             "maennlich",
             "weiblich",
             "updated",
+            "age_below_65",
         ] + self.categories
         self._df = None
         self._mb_database = input_mb_database
@@ -65,6 +66,10 @@ class CleverreachDatabase:
         mbfamily_genders = [gender.replace("ä", "ae") for gender in mbfamily_genders]
         for gender in ["maennlich", "weiblich"]:
             entry_constructor_dict[gender] = gender in mbfamily_genders
+            
+        mbfamily_ages = mbfamily.get_property_list("age")
+        mbfamily_ages = [age for age in mbfamily_ages if isinstance(age, int)]
+        entry_constructor_dict["age_below_65"] = any(age < 65 for age in mbfamily_ages)
         translator = self._get_translator()
         for category in self.categories:
             entry_constructor_dict[category] = translator[

@@ -1,4 +1,5 @@
 import json
+from operator import xor
 import pandas as pd
 from pathlib import Path
 from src.utils.databases import Database, HouseBasedDatabase, HouseBasedFamily, Person
@@ -7,6 +8,7 @@ from src.utils.databases import Database, HouseBasedDatabase, HouseBasedFamily, 
 class AdressDatabase:
     def __init__(self, input_file: str = None, input_db: Database = None):
         self.columns = [
+            "Mitgliedsnummer",
             "Vorname",
             "Nachname",
             "Strasse",
@@ -19,16 +21,22 @@ class AdressDatabase:
             "Email",
             "Beitrittsdatum",
         ]
-        self._df = None
         self._database = input_db
         self.input_file = input_file
-
-        assert self._database or self.input_file
+        assert xor(self._database is not None, self.input_file is not None)
+        self.__create_from_database(self.database)
+        
+    
+    def __add__(self, other):
+        if not isinstance(other, AdressDatabase):
+            raise ValueError("Can only sum with another AdressDatabase")
+        new_db = AdressDatabase(input_db=self.database)
+        for person in other.database.people:
+            new_db.__add_entry(person)
+        return new_db
 
     @property
     def df(self):
-        if self._df is None:
-            self.__create_from_database(self.database)
         return self._df
 
     @property
@@ -62,7 +70,7 @@ class AdressDatabase:
             key: [value] for key, value in entry_constructor_dict.items()
         }
 
-        self._df = pd.concat([self._df, pd.DataFrame.from_dict(entry_constructor_dict)])
+        self._df = pd.concat([self.df, pd.DataFrame.from_dict(entry_constructor_dict)])
 
     def to_csv(self, filename: str):
         path = Path(filename).parent

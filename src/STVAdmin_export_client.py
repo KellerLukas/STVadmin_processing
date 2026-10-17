@@ -96,22 +96,53 @@ class STVAdminExportClient:
         riegen = self._get_riegen()
         path = Path(os.path.join(self.path, OUTPUT_FOLDER, "Riegenlisten"))
         path.mkdir(parents=True, exist_ok=True)
-
+        today = pd.Timestamp.now()
         for riege in riegen.keys():
-            member_db = Database()
-            member_db.add_people(riegen[riege]["members"])
+            filename = f"{riege}_export_{today.strftime('%d.%m.%Y')}.xlsx"    
+            member_db = self._get_member_db_for_riege(riege)
             member_ad_db = AdressDatabase(input_db=member_db)
-
-            coach_db = Database()
-            coach_db.add_people(riegen[riege]["coaches"])
+            coach_db = self._get_coach_db_for_riege(riege)
             coach_ad_db = AdressDatabase(input_db=coach_db)
-            today = pd.Timestamp.now()
-            filename = f"{riege}_export_{today.strftime('%d.%m.%Y')}.xlsx"
-
             riegen_ad_db = RiegenAdressDatabase(
                 member_ad_db=member_ad_db, coach_ad_db=coach_ad_db
             )
             riegen_ad_db.to_excel(os.path.join(path, filename))
+    
+    def export_coach_list_excel(self):
+        path = Path(os.path.join(self.path, OUTPUT_FOLDER))
+        path.mkdir(parents=True, exist_ok=True)
+        today = pd.Timestamp.now()
+        filename = f"Coachliste_export_{today.strftime('%d.%m.%Y')}.xlsx"
+        def list_is_longer_than_n(l,n):
+            return len(l) > n
+        coaches = self.main_db.lookup_by_property("riegen_coach", 0, comparator=list_is_longer_than_n)
+        coach_db = Database()
+        coach_db.add_people(coaches)
+        coach_ad_db = AdressDatabase(input_db=coach_db)
+        coach_df = coach_ad_db.df
+        
+        def extract_riegen_from_row(row: pd.Series):
+            person = self.main_db.lookup_by_property("member_number", row["Mitgliedsnummer"])[0]
+            return ", ".join(person.riegen_coach)
+        
+        coach_df["Riegen"] = coach_df.apply(extract_riegen_from_row, axis=1)
+        coach_df.to_excel(os.path.join(path, filename), index=False)
+            
+    def _get_coach_db_for_riege(self, riege: str) -> Database:
+        riegen = self._get_riegen()
+        if riege not in riegen.keys():
+            raise ValueError(f"Riege {riege} not found")
+        coach_db = Database()
+        coach_db.add_people(riegen[riege]["coaches"])
+        return coach_db
+    
+    def _get_member_db_for_riege(self, riege: str) -> Database:
+        riegen = self._get_riegen()
+        if riege not in riegen.keys():
+            raise ValueError(f"Riege {riege} not found")
+        member_db = Database()
+        member_db.add_people(riegen[riege]["members"])
+        return member_db
 
     def export_cleverreach_csv(self, output_filename: str = "TVW_List_OUT.csv"):
         mb_db = MailBasedDatabase(input_db=self.main_db)

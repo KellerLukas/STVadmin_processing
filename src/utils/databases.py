@@ -141,6 +141,16 @@ class Database:
         self.riegen = None
         if input_file is not None:
             self.people = self._load_people_from_input_file(input_file)
+            
+    def __add__(self, other: Database) -> Database:
+        if not isinstance(other, Database):
+            raise ValueError("Can only sum with another Database")
+        new_db = Database()
+        new_db.add_people(self.people)
+        new_db.add_people(other.people)
+        return new_db
+
+        
 
     def lookup_by_property(
         self, property: str, search_input, comparator=None

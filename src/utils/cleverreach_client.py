@@ -77,11 +77,11 @@ class CleverreachClient:
         path = f"/v3/groups.json/{group_id}/receivers/upsert"
         res = requests.post(self._URL + path, json=receivers, headers=self.headers)
         if res.status_code != 200:
-            logger.error(f"Failed to update receivers for group {group_id}: {res.text}")
+            logger.error(f"Failed to update receivers for group {group_id}, got status {res.status_code}: {res.text}")
             raise Exception(
                 f"Failed to update receivers for group {group_id}: {res.text}"
             )
-        status_per_receiver = [x["status"] for x in res.json()]
+        status_per_receiver = [x.get("status") for x in res.json()]
         if not all(s == "update success" for s in status_per_receiver):
             logger.error(
                 f"Failed to update some receivers for group {group_id}: {res.json()}"
@@ -114,7 +114,7 @@ class CleverreachClient:
             params["type"] = type
         res = requests.get(self._URL + path, headers=self.headers, params=params)
         if res.status_code != 200:
-            logger.error(f"Failed to get receivers for group {group_id}: {res.text}")
+            logger.error(f"Failed to get receivers for group {group_id}, got status {res.status_code}: {res.text}")
             raise Exception(f"Failed to get receivers for group {group_id}: {res.text}")
         receivers = res.json()
         logger.info(f"Retrieved {len(receivers)} receivers for group {group_id}")
@@ -154,8 +154,8 @@ class CleverreachClient:
         path = "/v3/attributes.json"
         res = requests.get(self._URL + path, headers=self.headers)
         if res.status_code != 200:
-            logger.error(f"Failed to get attributes: {res.text}")
-            raise Exception(f"Failed to get attributes: {res.text}")
+            logger.error(f"Failed to get attributes, got status {res.status_code}: {res.text}")
+            raise Exception(f"Failed to get attributes, got status {res.status_code}: {res.text}")
         attributes = res.json()
         logger.info(f"Retrieved {len(attributes)} attributes")
         return attributes
@@ -165,8 +165,8 @@ class CleverreachClient:
         path = f"/v3/groups.json/{group_id}/filters/{filter_id}"
         res = requests.get(self._URL + path, headers=self.headers)
         if res.status_code != 200:
-            logger.error(f"Failed to get filter {filter_id}: {res.text}")
-            raise Exception(f"Failed to get filter {filter_id}: {res.text}")
+            logger.error(f"Failed to get filter {filter_id}, got status {res.status_code}: {res.text}")
+            raise Exception(f"Failed to get filter {filter_id}, got status {res.status_code}: {res.text}")
         filter_data = res.json()
         logger.info(f"Retrieved filter {filter_id}")
         return filter_data
@@ -176,8 +176,8 @@ class CleverreachClient:
         path = f"/v3/groups.json/{group_id}/filters/{filter_id}"
         res = requests.put(self._URL + path, json=filter_data, headers=self.headers)
         if res.status_code != 200:
-            logger.error(f"Failed to update filter {filter_id}: {res.text}")
-            raise Exception(f"Failed to update filter {filter_id}: {res.text}")
+            logger.error(f"Failed to update filter {filter_id}, got status {res.status_code}: {res.text}")
+            raise Exception(f"Failed to update filter {filter_id}, got status {res.status_code}: {res.text}")
         logger.info(f"Successfully updated filter {filter_id}")
         return res.json()["success"]
 
@@ -187,15 +187,15 @@ class CleverreachClient:
         res = requests.post(self._URL + path, json=receivers, headers=self.headers)
         if res.status_code != 200:
             logger.error(
-                f"Failed to delete receivers from group {group_id}: {res.text}"
+                f"Failed to delete receivers from group {group_id}, got status {res.status_code}: {res.text}"
             )
             raise Exception(
-                f"Failed to delete receivers from group {group_id}: {res.text}"
+                f"Failed to delete receivers from group {group_id}, got status {res.status_code}: {res.text}"
             )
-        status_per_receiver = [x["status"] for x in res.json()]
+        status_per_receiver = [x.get("status") for x in res.json()]
         if not all(s == "success" for s in status_per_receiver):
-            logger.error(f"Failed to delete all receivers from group {group_id}")
-            raise Exception(f"Failed to delete all receivers from group {group_id}")
+            logger.error(f"Failed to delete all receivers from group {group_id}, got status {res.status_code}: {res.text}")
+            raise Exception(f"Failed to delete all receivers from group {group_id}, got status {res.status_code}: {res.text}")
         logger.info(f"Successfully deleted receivers from group {group_id}")
         return True
 
@@ -218,10 +218,10 @@ class CleverreachClient:
         res = requests.get(self._URL + path, headers=self.headers, params=params)
         if res.status_code != 200:
             logger.error(
-                f"Failed to get filtered receivers for group {group_id} with filter {filter_id}, page {page}, pagesize {pagesize}: {res.text}"
+                f"Failed to get filtered receivers for group {group_id} with filter {filter_id}, page {page}, pagesize {pagesize}, got status {res.status_code}: {res.text}"
             )
             raise Exception(
-                f"Failed to get filtered receivers for group {group_id} with filter {filter_id}, page {page}, pagesize {pagesize}: {res.text}"
+                f"Failed to get filtered receivers for group {group_id} with filter {filter_id}, page {page}, pagesize {pagesize}, got status {res.status_code}: {res.text}"
             )
         receivers = res.json()
         logger.info(
@@ -256,10 +256,10 @@ class CleverreachClient:
         res = requests.get(self._URL + path, headers=self.headers)
         if res.status_code != 200:
             logger.error(
-                f"Failed to get group statistics for group {group_id}: {res.text}"
+                f"Failed to get group statistics for group {group_id}, got status {res.status_code}: {res.text}"
             )
             raise Exception(
-                f"Failed to get group statistics for group {group_id}: {res.text}"
+                f"Failed to get group statistics for group {group_id}, got status {res.status_code}: {res.text}"
             )
         statistics = res.json()
         logger.info(f"Retrieved group statistics for group {group_id}")
@@ -273,10 +273,10 @@ class CleverreachClient:
         res = requests.get(self._URL + path, headers=self.headers)
         if res.status_code != 200:
             logger.error(
-                f"Failed to get group statistics for group {group_id}: {res.text}"
+                f"Failed to get group statistics for group {group_id}, got status {res.status_code}: {res.text}"
             )
             raise Exception(
-                f"Failed to get group statistics for group {group_id}: {res.text}"
+                f"Failed to get group statistics for group {group_id}, got status {res.status_code}: {res.text}"
             )
         statistics = res.json()
         logger.info(f"Retrieved group statistics for group {group_id}")
@@ -288,10 +288,10 @@ class CleverreachClient:
         res = requests.put(self._URL + path, headers=self.headers)
         if res.status_code != 200:
             logger.error(
-                f"Failed to activate receiver {receiver_id} in group {group_id}: {res.text}"
+                f"Failed to activate receiver {receiver_id} in group {group_id}, got status {res.status_code}: {res.text}"
             )
             raise Exception(
-                f"Failed to activate receiver {receiver_id} in group {group_id}: {res.text}"
+                f"Failed to activate receiver {receiver_id} in group {group_id}, got status {res.status_code}: {res.text}"
             )
         logger.info(
             f"Successfully activated receiver {receiver_id} in group {group_id}"

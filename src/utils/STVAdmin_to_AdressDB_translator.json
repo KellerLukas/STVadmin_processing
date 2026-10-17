@@ -8,5 +8,6 @@
     "Kategorie": "category",
     "Geschlecht": "gender",
     "Email": "email",
-    "Beitrittsdatum": "date_added"
+    "Beitrittsdatum": "date_added",
+    "Mitgliedsnummer": "member_number"
 }

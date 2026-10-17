@@ -124,6 +124,10 @@ def configure_export_buttons():
         if st.button(label="Infoheft Liste", key="btn_infoheft"):
             st.session_state.client.export_infoheft_list()
             st.toast("Exported Infoheft Liste")
+        
+        if st.button(label="Coachliste", key="btn_coachliste"):
+            st.session_state.client.export_coach_list_excel()
+            st.toast("Exported Coachliste")
 
     with col2:
         if st.button(label="Export CleverReach Data", key="btn_cleverreach_export"):
