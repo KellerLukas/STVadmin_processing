@@ -7,7 +7,8 @@ import os
 from hashlib import md5
 import shutil
 
-from src.utils.credentials import CredentialsBase, STVADMIN_ITEM_UUID
+from src.utils.credentials import CredentialsBase
+from src.config.constants import OP_STVADMIN_ITEM_UUID
 
 DELAY_MULTIPLIER = 1
 
@@ -21,7 +22,7 @@ class DynamicsClient:
             working_dir, "dynamics_client_temp_folder"
         )
         self.create_temporary_download_folder()
-        self.creds = CredentialsBase(item_uuid=STVADMIN_ITEM_UUID)
+        self.creds = CredentialsBase(item_uuid=OP_STVADMIN_ITEM_UUID)
         self._debugging_mode = debugging_mode
 
     def __del__(self):

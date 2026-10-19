@@ -3,6 +3,7 @@ name = "STVadmin_processing"
 version = "0.0.0"
 description = "Export and process STVadmin data"
 requires-python = ">=3.14"
+
 dependencies = [
     "pandas",
     "1password",
@@ -10,6 +11,7 @@ dependencies = [
     "numpy",
     "openpyxl",
     "streamlit",
+    "playwright>=1.64.0", # uv run playwright install chromium
 ]
 
 [dependency-groups]

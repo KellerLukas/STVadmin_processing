@@ -2,13 +2,9 @@ from typing import Any, Dict, List, Optional
 import requests
 import time
 import logging
-from attr import dataclass
-from src.utils.credentials import CredentialsBase, CLEVERREACH_ITEM_UUID
-
-logger = logging.getLogger(__name__)
-
-ALLE_MITGLIEDER_GROUP_ID = 518912
-AUSGETRETEN_FILTER_ID = 510203  # Placeholder, replace with actual segment ID if needed
+from dataclasses import dataclass, field
+from src.utils.credentials import CredentialsBase
+from src.config.constants import OP_CLEVERREACH_ITEM_UUID
 
 
 @dataclass
@@ -27,10 +23,10 @@ class Receiver:
     deactivated: Optional[str] = None  # timestamp
 
     source: str = "User Import"
-    attributes: Dict[str, str] = {}
-    global_attributes: Dict[str, str] = {}
-    tags: List[str] = []
-    orders: List[Dict[str, Any]] = []
+    attributes: Dict[str, str] = field(default_factory=dict)
+    global_attributes: Dict[str, str] = field(default_factory=dict)
+    tags: List[str] = field(default_factory=list)
+    orders: List[Dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         return {k: v for k, v in self.__dict__.items() if v is not None}
@@ -41,7 +37,7 @@ class CleverreachClient:
     _TOKEN_URL = "https://rest.cleverreach.com/oauth/token.php"
 
     def __init__(self):
-        self.creds = CredentialsBase(item_uuid=CLEVERREACH_ITEM_UUID)
+        self.creds = CredentialsBase(item_uuid=OP_CLEVERREACH_ITEM_UUID)
         self._token = None
         self._token_expiry = None
 
@@ -51,45 +47,51 @@ class CleverreachClient:
 
     def _get_token(self) -> str:
         if self._token and time.time() + 60 < self._token_expiry:
-            logger.debug("Using cached CleverReach token")
+            logging.debug("Using cached CleverReach token")
             return self._token
 
-        logger.info("Retrieving new CleverReach access token")
+        logging.info("Retrieving new CleverReach access token")
         response = requests.post(
             self._TOKEN_URL,
             auth=(self.creds.client_id, self.creds.client_secret),
             data={"grant_type": "client_credentials"},
         )
         if response.status_code != 200:
-            logger.error(f"Failed to retrieve CleverReach token: {response.text}")
+            logging.error(f"Failed to retrieve CleverReach token: {response.text}")
             raise Exception(f"Failed to retrieve token: {response.text}")
         token_data = response.json()
         self._token = token_data["access_token"]
         self._token_expiry = time.time() + token_data["expires_in"]
-        logger.info("Successfully retrieved new CleverReach access token")
+        logging.info("Successfully retrieved new CleverReach access token")
         return self._token
 
     def _get_headers(self) -> Dict[str, str]:
         return {"Authorization": f"Bearer {self._get_token()}"}
 
-    def update_receivers_for_group(self, group_id: str, receivers: list) -> bool:
-        logger.info(f"Updating {len(receivers)} receivers for group {group_id}")
+    def update_receivers_for_group(
+        self, group_id: str, receivers: list[Receiver]
+    ) -> bool:
+        logging.info(f"Updating {len(receivers)} receivers for group {group_id}")
         path = f"/v3/groups.json/{group_id}/receivers/upsert"
+        receivers = [r.to_dict() for r in receivers]
         res = requests.post(self._URL + path, json=receivers, headers=self.headers)
         if res.status_code != 200:
-            logger.error(f"Failed to update receivers for group {group_id}, got status {res.status_code}: {res.text}")
+            logging.error(
+                f"Failed to update receivers for group {group_id}, got status {res.status_code}: {res.text}"
+            )
             raise Exception(
                 f"Failed to update receivers for group {group_id}: {res.text}"
             )
         status_per_receiver = [x.get("status") for x in res.json()]
-        if not all(s == "update success" for s in status_per_receiver):
-            logger.error(
-                f"Failed to update some receivers for group {group_id}: {res.json()}"
+        if not all("success" in s for s in status_per_receiver):
+            failed = [x for x in res.json() if "success" not in x.get("status")]
+            logging.error(
+                f"Failed to update some receivers for group {group_id}: {failed}"
             )
             raise Exception(
-                f"Failed to update receivers for group {group_id}: {res.json()}"
+                f"Failed to update receivers for group {group_id}: {failed}"
             )
-        logger.info(f"Successfully updated receivers for group {group_id}")
+        logging.info(f"Successfully updated receivers for group {group_id}")
         return True
 
     def get_receivers_for_group(
@@ -103,7 +105,7 @@ class CleverreachClient:
             raise ValueError(
                 "type must be one of 'active', 'inactive', 'all', 'bounce'"
             )
-        logger.info(f"Retrieving receivers for group {group_id}")
+        logging.info(f"Retrieving receivers for group {group_id}")
         path = f"/v3/groups.json/{group_id}/receivers"
         params = {}
         if pagesize is not None:
@@ -114,10 +116,12 @@ class CleverreachClient:
             params["type"] = type
         res = requests.get(self._URL + path, headers=self.headers, params=params)
         if res.status_code != 200:
-            logger.error(f"Failed to get receivers for group {group_id}, got status {res.status_code}: {res.text}")
+            logging.error(
+                f"Failed to get receivers for group {group_id}, got status {res.status_code}: {res.text}"
+            )
             raise Exception(f"Failed to get receivers for group {group_id}: {res.text}")
         receivers = res.json()
-        logger.info(f"Retrieved {len(receivers)} receivers for group {group_id}")
+        logging.info(f"Retrieved {len(receivers)} receivers for group {group_id}")
         return receivers
 
     def get_receivers_for_group_complete(
@@ -141,7 +145,7 @@ class CleverreachClient:
         while len(all_receivers) < total_count:
             receivers = self.get_receivers_for_group(group_id, page=page, type=type)
             if len(receivers) == 0:
-                logger.warning(
+                logging.warning(
                     f"Received empty receiver list for group {group_id} on page {page} without reaching total count {total_count}. Stopping pagination to avoid infinite loop."
                 )
                 break
@@ -150,53 +154,70 @@ class CleverreachClient:
         return all_receivers
 
     def get_attributes(self) -> list:
-        logger.info("Retrieving CleverReach attributes")
+        logging.info("Retrieving CleverReach attributes")
         path = "/v3/attributes.json"
         res = requests.get(self._URL + path, headers=self.headers)
         if res.status_code != 200:
-            logger.error(f"Failed to get attributes, got status {res.status_code}: {res.text}")
-            raise Exception(f"Failed to get attributes, got status {res.status_code}: {res.text}")
+            logging.error(
+                f"Failed to get attributes, got status {res.status_code}: {res.text}"
+            )
+            raise Exception(
+                f"Failed to get attributes, got status {res.status_code}: {res.text}"
+            )
         attributes = res.json()
-        logger.info(f"Retrieved {len(attributes)} attributes")
+        logging.info(f"Retrieved {len(attributes)} attributes")
         return attributes
 
     def get_filter(self, group_id: int, filter_id: int) -> dict:
-        logger.info(f"Retrieving filter {filter_id}")
+        logging.info(f"Retrieving filter {filter_id}")
         path = f"/v3/groups.json/{group_id}/filters/{filter_id}"
         res = requests.get(self._URL + path, headers=self.headers)
         if res.status_code != 200:
-            logger.error(f"Failed to get filter {filter_id}, got status {res.status_code}: {res.text}")
-            raise Exception(f"Failed to get filter {filter_id}, got status {res.status_code}: {res.text}")
+            logging.error(
+                f"Failed to get filter {filter_id}, got status {res.status_code}: {res.text}"
+            )
+            raise Exception(
+                f"Failed to get filter {filter_id}, got status {res.status_code}: {res.text}"
+            )
         filter_data = res.json()
-        logger.info(f"Retrieved filter {filter_id}")
+        logging.info(f"Retrieved filter {filter_id}")
         return filter_data
 
     def update_filter(self, group_id: int, filter_id: int, filter_data: dict) -> bool:
-        logger.info(f"Updating filter {filter_id}")
+        logging.info(f"Updating filter {filter_id}")
         path = f"/v3/groups.json/{group_id}/filters/{filter_id}"
         res = requests.put(self._URL + path, json=filter_data, headers=self.headers)
         if res.status_code != 200:
-            logger.error(f"Failed to update filter {filter_id}, got status {res.status_code}: {res.text}")
-            raise Exception(f"Failed to update filter {filter_id}, got status {res.status_code}: {res.text}")
-        logger.info(f"Successfully updated filter {filter_id}")
+            logging.error(
+                f"Failed to update filter {filter_id}, got status {res.status_code}: {res.text}"
+            )
+            raise Exception(
+                f"Failed to update filter {filter_id}, got status {res.status_code}: {res.text}"
+            )
+        logging.info(f"Successfully updated filter {filter_id}")
         return res.json()["success"]
 
     def delete_receivers(self, group_id: int, receivers: list[str]) -> bool:
-        logger.info(f"Deleting {len(receivers)} receivers from group {group_id}")
+        logging.info(f"Deleting {len(receivers)} receivers from group {group_id}")
         path = f"/v3/groups.json/{group_id}/receivers/delete"
         res = requests.post(self._URL + path, json=receivers, headers=self.headers)
         if res.status_code != 200:
-            logger.error(
+            logging.error(
                 f"Failed to delete receivers from group {group_id}, got status {res.status_code}: {res.text}"
             )
             raise Exception(
                 f"Failed to delete receivers from group {group_id}, got status {res.status_code}: {res.text}"
             )
-        status_per_receiver = [x.get("status") for x in res.json()]
-        if not all(s == "success" for s in status_per_receiver):
-            logger.error(f"Failed to delete all receivers from group {group_id}, got status {res.status_code}: {res.text}")
-            raise Exception(f"Failed to delete all receivers from group {group_id}, got status {res.status_code}: {res.text}")
-        logger.info(f"Successfully deleted receivers from group {group_id}")
+        success_per_receiver = [x.get("success", False) for x in res.json()]
+        if not all(s for s in success_per_receiver):
+            failed = [x for x in res.json() if not x.get("success", False)]
+            logging.error(
+                f"Failed to delete all receivers from group {group_id}, got status {res.status_code}: {failed}"
+            )
+            raise Exception(
+                f"Failed to delete all receivers from group {group_id}, got status {res.status_code}: {failed}"
+            )
+        logging.info(f"Successfully deleted receivers from group {group_id}")
         return True
 
     def get_receivers_for_group_filtered(
@@ -206,7 +227,7 @@ class CleverreachClient:
         pagesize: Optional[int] = None,
         page: Optional[int] = None,
     ) -> list:
-        logger.info(
+        logging.info(
             f"Retrieving filtered receivers for group {group_id} with filter {filter_id}, page {page}, pagesize {pagesize}"
         )
         path = f"/v3/groups.json/{group_id}/filters/{filter_id}/receivers"
@@ -217,14 +238,14 @@ class CleverreachClient:
             params["page"] = page
         res = requests.get(self._URL + path, headers=self.headers, params=params)
         if res.status_code != 200:
-            logger.error(
+            logging.error(
                 f"Failed to get filtered receivers for group {group_id} with filter {filter_id}, page {page}, pagesize {pagesize}, got status {res.status_code}: {res.text}"
             )
             raise Exception(
                 f"Failed to get filtered receivers for group {group_id} with filter {filter_id}, page {page}, pagesize {pagesize}, got status {res.status_code}: {res.text}"
             )
         receivers = res.json()
-        logger.info(
+        logging.info(
             f"Retrieved {len(receivers)} filtered receivers for group {group_id} with filter {filter_id}, page {page}, pagesize {pagesize}"
         )
         return receivers
@@ -242,7 +263,7 @@ class CleverreachClient:
                 group_id, filter_id, page=page
             )
             if len(receivers) == 0:
-                logger.warning(
+                logging.warning(
                     f"Received empty receiver list for group {group_id} with filter {filter_id} on page {page} without reaching total count {total_count}. Stopping pagination to avoid infinite loop."
                 )
                 break
@@ -251,49 +272,49 @@ class CleverreachClient:
         return all_receivers
 
     def get_group_stats(self, group_id: int) -> int:
-        logger.info(f"Retrieving group statistics for group {group_id}")
+        logging.info(f"Retrieving group statistics for group {group_id}")
         path = f"/v3/groups.json/{group_id}/stats"
         res = requests.get(self._URL + path, headers=self.headers)
         if res.status_code != 200:
-            logger.error(
+            logging.error(
                 f"Failed to get group statistics for group {group_id}, got status {res.status_code}: {res.text}"
             )
             raise Exception(
                 f"Failed to get group statistics for group {group_id}, got status {res.status_code}: {res.text}"
             )
         statistics = res.json()
-        logger.info(f"Retrieved group statistics for group {group_id}")
+        logging.info(f"Retrieved group statistics for group {group_id}")
         return statistics
 
     def get_group_stats_based_on_filter(self, group_id: int, filter_id: int) -> int:
-        logger.info(
+        logging.info(
             f"Retrieving group statistics for group {group_id} based on filter {filter_id}"
         )
         path = f"/v3/groups.json/{group_id}/filters/{filter_id}/stats"
         res = requests.get(self._URL + path, headers=self.headers)
         if res.status_code != 200:
-            logger.error(
+            logging.error(
                 f"Failed to get group statistics for group {group_id}, got status {res.status_code}: {res.text}"
             )
             raise Exception(
                 f"Failed to get group statistics for group {group_id}, got status {res.status_code}: {res.text}"
             )
         statistics = res.json()
-        logger.info(f"Retrieved group statistics for group {group_id}")
+        logging.info(f"Retrieved group statistics for group {group_id}")
         return statistics
 
     def activate_receiver(self, group_id: int, receiver_id: int) -> bool:
-        logger.info(f"Activating receiver {receiver_id} in group {group_id}")
+        logging.info(f"Activating receiver {receiver_id} in group {group_id}")
         path = f"/v3/groups.json/{group_id}/receivers/{receiver_id}/activate"
         res = requests.put(self._URL + path, headers=self.headers)
         if res.status_code != 200:
-            logger.error(
+            logging.error(
                 f"Failed to activate receiver {receiver_id} in group {group_id}, got status {res.status_code}: {res.text}"
             )
             raise Exception(
                 f"Failed to activate receiver {receiver_id} in group {group_id}, got status {res.status_code}: {res.text}"
             )
-        logger.info(
+        logging.info(
             f"Successfully activated receiver {receiver_id} in group {group_id}"
         )
         return res.json()

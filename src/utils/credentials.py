@@ -1,8 +1,5 @@
 from onepassword import OnePassword
 
-STVADMIN_ITEM_UUID = "wegnpno2n665f2b55haag6di6a"
-CLEVERREACH_ITEM_UUID = "qh3omxhlbf6x3osjgzzklai62y"
-
 
 class CredentialsBase:
     def __init__(self, item_uuid: str = None):

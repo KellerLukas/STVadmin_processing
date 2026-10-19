@@ -2,7 +2,7 @@ import json
 import pandas as pd
 from pathlib import Path
 from src.utils.databases import MailBasedFamily, MailBasedDatabase
-from src.utils.cleverreach_client import Receiver
+from src.cleverreach.cleverreach_client import Receiver
 
 
 class CleverreachDatabase:
@@ -66,7 +66,7 @@ class CleverreachDatabase:
         mbfamily_genders = [gender.replace("ä", "ae") for gender in mbfamily_genders]
         for gender in ["maennlich", "weiblich"]:
             entry_constructor_dict[gender] = gender in mbfamily_genders
-            
+
         mbfamily_ages = mbfamily.get_property_list("age")
         mbfamily_ages = [age for age in mbfamily_ages if isinstance(age, int)]
         entry_constructor_dict["age_below_65"] = any(age < 65 for age in mbfamily_ages)

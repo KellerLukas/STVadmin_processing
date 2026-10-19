@@ -14,9 +14,7 @@ from src import (
     JUGEND_CAT,
     is_jugend_riege,
 )
-from src.utils.cleverreach_client import (
-    ALLE_MITGLIEDER_GROUP_ID,
-    AUSGETRETEN_FILTER_ID,
+from src.cleverreach.cleverreach_client import (
     CleverreachClient,
 )
 from src.utils.dynamics_client import DynamicsClient
@@ -28,19 +26,23 @@ from src.utils.adress_databases import (
     RiegenAdressDatabase,
     HouseBasedAdressDatabase,
 )
-from src.config.paths import WORKING_DIR_PATH
-
-OUTPUT_FOLDER = "OUT"
-FILENAME_ADDITIONAL_PEOPLE = "Newsletter_Zusaetzlich.xlsx"
-FILENAME_HOUSEMATES = "TVW_Mitglieder_Housemates.xlsx"
-FILENAME_BACKUP_LIST = "TVW_Mitglieder_Backup_10_23.xlsx"
-FILENAME_REMOVE_LIST = "Newsletter_abmeldungen.xlsx"
-FILENAME_JUBILARE = "TVW_List_OUT_Jubilare_{year}.xlsx"
-
-FILENAME_NEUMITGLIEDER = "TVW_List_OUT_neumitglieder.xlsx"
-FILENAME_JUGENDUEBERTRITT = "TVW_List_OUT_jugenduebertritte.xlsx"
-FILENAME_LOST_EMAIL = "TVW_List_OUT_lost_email.xlsx"
-FILENAME_INFOHEFT = "TVW_List_OUT_Infoheft.xlsx"
+from src.config.paths import (
+    WORKING_DIR_PATH,
+    OUTPUT_FOLDER,
+    FILENAME_ADDITIONAL_PEOPLE,
+    FILENAME_HOUSEMATES,
+    FILENAME_BACKUP_LIST,
+    FILENAME_NEWSLETTER_BLACKLIST,
+    FILENAME_JUBILARE,
+    FILENAME_NEUMITGLIEDER,
+    FILENAME_JUGENDUEBERTRITT,
+    FILENAME_LOST_EMAIL,
+    FILENAME_INFOHEFT,
+)
+from src.config.constants import (
+    CR_ALLE_MITGLIEDER_GROUP_ID,
+    CR_AUSGETRETEN_FILTER_ID,
+)
 
 
 class STVAdminExportClient:
@@ -98,7 +100,7 @@ class STVAdminExportClient:
         path.mkdir(parents=True, exist_ok=True)
         today = pd.Timestamp.now()
         for riege in riegen.keys():
-            filename = f"{riege}_export_{today.strftime('%d.%m.%Y')}.xlsx"    
+            filename = f"{riege}_export_{today.strftime('%d.%m.%Y')}.xlsx"
             member_db = self._get_member_db_for_riege(riege)
             member_ad_db = AdressDatabase(input_db=member_db)
             coach_db = self._get_coach_db_for_riege(riege)
@@ -107,27 +109,33 @@ class STVAdminExportClient:
                 member_ad_db=member_ad_db, coach_ad_db=coach_ad_db
             )
             riegen_ad_db.to_excel(os.path.join(path, filename))
-    
+
     def export_coach_list_excel(self):
         path = Path(os.path.join(self.path, OUTPUT_FOLDER))
         path.mkdir(parents=True, exist_ok=True)
         today = pd.Timestamp.now()
         filename = f"Coachliste_export_{today.strftime('%d.%m.%Y')}.xlsx"
-        def list_is_longer_than_n(l,n):
+
+        def list_is_longer_than_n(l, n):
             return len(l) > n
-        coaches = self.main_db.lookup_by_property("riegen_coach", 0, comparator=list_is_longer_than_n)
+
+        coaches = self.main_db.lookup_by_property(
+            "riegen_coach", 0, comparator=list_is_longer_than_n
+        )
         coach_db = Database()
         coach_db.add_people(coaches)
         coach_ad_db = AdressDatabase(input_db=coach_db)
         coach_df = coach_ad_db.df
-        
+
         def extract_riegen_from_row(row: pd.Series):
-            person = self.main_db.lookup_by_property("member_number", row["Mitgliedsnummer"])[0]
+            person = self.main_db.lookup_by_property(
+                "member_number", row["Mitgliedsnummer"]
+            )[0]
             return ", ".join(person.riegen_coach)
-        
+
         coach_df["Riegen"] = coach_df.apply(extract_riegen_from_row, axis=1)
         coach_df.to_excel(os.path.join(path, filename), index=False)
-            
+
     def _get_coach_db_for_riege(self, riege: str) -> Database:
         riegen = self._get_riegen()
         if riege not in riegen.keys():
@@ -135,7 +143,7 @@ class STVAdminExportClient:
         coach_db = Database()
         coach_db.add_people(riegen[riege]["coaches"])
         return coach_db
-    
+
     def _get_member_db_for_riege(self, riege: str) -> Database:
         riegen = self._get_riegen()
         if riege not in riegen.keys():
@@ -161,12 +169,12 @@ class STVAdminExportClient:
         cr_db = CleverreachDatabase(input_mb_database=mb_db)
         receivers = cr_db.to_receivers()
         self.cr_client.update_receivers_for_group(
-            group_id=ALLE_MITGLIEDER_GROUP_ID, receivers=receivers
+            group_id=CR_ALLE_MITGLIEDER_GROUP_ID, receivers=receivers
         )
 
     def update_ausgetreten_filter_in_cleverreach(self, date: pd.Timestamp):
         filter_template = {
-            "id": AUSGETRETEN_FILTER_ID,
+            "id": CR_AUSGETRETEN_FILTER_ID,
             "name": "Ausgetreten",
             "rules": [
                 {"operator": "AND", "field": "(", "logic": "", "condition": ""},
@@ -186,14 +194,14 @@ class STVAdminExportClient:
             ],
         }
         self.cr_client.update_filter(
-            group_id=ALLE_MITGLIEDER_GROUP_ID,
-            filter_id=AUSGETRETEN_FILTER_ID,
+            group_id=CR_ALLE_MITGLIEDER_GROUP_ID,
+            filter_id=CR_AUSGETRETEN_FILTER_ID,
             filter_data=filter_template,
         )
 
     def remove_receivers_from_ausgetreten_filter_in_cleverreach(self) -> list[str]:
         r = self.cr_client.get_receivers_for_group_filtered_complete(
-            group_id=ALLE_MITGLIEDER_GROUP_ID, filter_id=AUSGETRETEN_FILTER_ID
+            group_id=CR_ALLE_MITGLIEDER_GROUP_ID, filter_id=CR_AUSGETRETEN_FILTER_ID
         )
         ids_to_remove = [receiver["id"] for receiver in r]
         emails_to_remove = [receiver["email"] for receiver in r]
@@ -201,13 +209,13 @@ class STVAdminExportClient:
             logging.info("No receivers to remove from ausgetreten filter")
             return []
         self.cr_client.delete_receivers(
-            group_id=ALLE_MITGLIEDER_GROUP_ID, receivers=ids_to_remove
+            group_id=CR_ALLE_MITGLIEDER_GROUP_ID, receivers=ids_to_remove
         )
         return emails_to_remove
 
     def activate_inactive_receivers_in_cleverreach(self) -> list[str]:
         r = self.cr_client.get_receivers_for_group_complete(
-            group_id=ALLE_MITGLIEDER_GROUP_ID, type="inactive"
+            group_id=CR_ALLE_MITGLIEDER_GROUP_ID, type="inactive"
         )
         ids_to_activate = [receiver["id"] for receiver in r]
         emails_activated = [receiver["email"] for receiver in r]
@@ -216,7 +224,7 @@ class STVAdminExportClient:
             return []
         for receiver_id in ids_to_activate:
             self.cr_client.activate_receiver(
-                group_id=ALLE_MITGLIEDER_GROUP_ID, receiver_id=receiver_id
+                group_id=CR_ALLE_MITGLIEDER_GROUP_ID, receiver_id=receiver_id
             )
         return emails_activated
 
@@ -471,11 +479,11 @@ class STVAdminExportClient:
         )
 
     def _remove_mail_from_removelist(self):
-        if not FILENAME_REMOVE_LIST:
+        if not FILENAME_NEWSLETTER_BLACKLIST:
             logging.warning("No removelist provided!")
             return
         remove_from_mailinglist_db = Database(
-            os.path.join(self.path, FILENAME_REMOVE_LIST)
+            os.path.join(self.path, FILENAME_NEWSLETTER_BLACKLIST)
         )
         emails_to_remove = [
             person.email for person in remove_from_mailinglist_db.people

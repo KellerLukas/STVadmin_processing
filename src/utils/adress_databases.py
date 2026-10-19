@@ -25,8 +25,7 @@ class AdressDatabase:
         self.input_file = input_file
         assert xor(self._database is not None, self.input_file is not None)
         self.__create_from_database(self.database)
-        
-    
+
     def __add__(self, other):
         if not isinstance(other, AdressDatabase):
             raise ValueError("Can only sum with another AdressDatabase")
