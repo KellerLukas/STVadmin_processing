@@ -42,13 +42,13 @@ class MySTVHTTPError(MySTVAPIError):
         super().__init__(f"MySTV API returned HTTP {status_code}.")
 
 
-
 class MySTVClient:
     _BASE_URL = "https://my.stv-fsg.ch"
     _LOGIN_ORIGIN = "https://login.stv-fsg.ch"
 
     # Browser pages
     _MEMBERS_PAGE_PATH = "/club/members"
+    _MEMBER_PAGE_PATH = "/club/members/member"
     _GROUPS_PAGE_PATH = "/club/groups/"
     _GROUP_MEMBERS_PAGE_PATH = "/club/groups/group-members"
 
@@ -56,6 +56,8 @@ class MySTVClient:
     _MEMBERS_STREAM_PATH = "/backend/api/club/list-members/stream"
     _CLUB_ADDRESSES_PATH = "/backend/api/institutes/allAddressesInClub"
     _INSTITUTE_ADDRESS_CREATE_PATH = "/backend/api/institutes/addresses/create"
+
+    _MEMBERSHIP_PATH = "/backend/api/club/membership"
 
     def __init__(self, club_id: str):
         if not club_id:
@@ -261,6 +263,7 @@ class MySTVClient:
         method: str = "GET",
         json_body: Optional[Dict[str, Any]] = None,
         extra_headers: Optional[Dict[str, str]] = None,
+        files: Optional[Dict[str, Any]] = None,
     ):
         url = self._BASE_URL + path
         cookies = self._read_cookies([url])  # Fresh browser state before every request.
@@ -300,6 +303,7 @@ class MySTVClient:
                 headers=headers,
                 cookies=jar,
                 json=json_body,
+                files=files,
                 stream=stream,
                 timeout=(10, 120) if stream else (10, 60),
                 allow_redirects=False,
@@ -476,7 +480,6 @@ class MySTVClient:
                     "MySTV addresses response was not valid JSON."
                 ) from None
 
-
     def add_member_to_institute_with_function(
         self, member_id: str, institute_code: str, function_code: str
     ) -> dict:
@@ -516,11 +519,86 @@ class MySTVClient:
                     "MySTV returned success but the response was not valid JSON. "
                     "Check the institute assignment before retrying."
                 ) from None
-            
+
             if all(v is None for v in result.values()):
                 raise MySTVAPIError(
                     "MySTV returned all None values. It seems like something went wrong."
                 ) from None
 
-            logging.info(f"Added member {member_id} to institute {institute_code} with function {function_code}")
+            logging.info(
+                f"Added member {member_id} to institute {institute_code} with function {function_code}"
+            )
+            return result
+
+    def update_member_membership_unguarded(
+        self,
+        member_id: str,
+        subscription_group: str,
+        line_no: str,
+        entry_date: str,
+        type_of_disability: str = "",
+    ) -> None:
+        """Update one membership line. Successful responses have no body.
+        Warning - this probably overwrite whatever is there, so make sure entry_date etc. are set correctly!"""
+        if not member_id or not subscription_group or not line_no or not entry_date:
+            raise ValueError(
+                "member_id, subscription_group, line_no and entry_date are required."
+            )
+
+        referer_params = {"memberId": str(member_id), "clubId": self.club_id}
+        payload = {
+            "Subscription_Group": str(subscription_group),
+            "mySTVSection": self.club_id,
+            "Type_of_Disability": type_of_disability,
+            "No": str(member_id),
+            "Line_No": str(line_no),
+            "Entry_date": entry_date,
+        }
+        files = {
+            "data": (
+                "blob",
+                json.dumps(payload, separators=(",", ":")),
+                "application/json",
+            )
+        }
+        with self._request(
+            path=self._MEMBERSHIP_PATH,
+            params={},
+            referer=(
+                f"{self._BASE_URL}{self._MEMBER_PAGE_PATH}?{urlencode(referer_params)}"
+            ),
+            method="PUT",
+            files=files,
+            extra_headers={"Origin": self._BASE_URL},
+        ):
+            logging.info(
+                f"Updated member {member_id} to subscription group {subscription_group}"
+            )
+
+    def get_member_memberships_raw(
+        self, member_id: str, hide_former_memberships: bool = False
+    ) -> List[Dict[str, Any]]:
+        """Return the member's membership list unchanged."""
+        if not member_id:
+            raise ValueError("member_id is required.")
+
+        referer_params = {"memberId": str(member_id), "clubId": self.club_id}
+        with self._request(
+            path=self._MEMBERSHIP_PATH,
+            params={
+                **referer_params,
+                "hideFormerMemberships": str(hide_former_memberships).lower(),
+            },
+            referer=(
+                f"{self._BASE_URL}{self._MEMBER_PAGE_PATH}?{urlencode(referer_params)}"
+            ),
+        ) as response:
+            try:
+                result = response.json()
+            except ValueError:
+                raise MySTVAPIError(
+                    "MySTV memberships response was not valid JSON."
+                ) from None
+
+            logging.info(f"Retrieved memberships for member {member_id}")
             return result

@@ -8,9 +8,9 @@ from pathlib import Path
 from typing import Any, Dict
 
 
-
 from src.utils.utils import calculate_age_at_ts
 from src.mySTV.mystv_client import MySTVClient
+
 
 class MySTVConfigurationError(RuntimeError):
     """Errors caused by misconfiguration / metadata issues"""
@@ -27,12 +27,21 @@ class InternalCategory(StrEnum):
 
 
 class MembershipCategory(StrEnum):
-    ERWACHSENE_STANDARD = "Erwachsene Standard"
-    ERWACHSENE_LIGHT = "Erwachsene Light"
-    ERWACHSENE_INKLUSION = "Erwachsene Inklusion"  # unverified
-    PASSIVMITGLIEDER = "Passivmitglieder"
-    EHRENMIGLIED_NT = "Ehrenmitg. nturnend"
-    KINDER_JUGEND = "Kinder & Jugend"
+    code: str | None
+
+    def __new__(cls, label: str, code: str | None):
+        member = str.__new__(cls, label)
+        member._value_ = label
+        member.code = code
+        return member
+
+    ERWACHSENE_STANDARD = ("Erwachsene Standard", "101")
+    ERWACHSENE_LIGHT = ("Erwachsene Light", "102")
+    # ERWACHSENE_INKLUSION = ("Erwachsene Inklusion", None) # unverified
+    PASSIVMITGLIEDER = ("Passivmitglieder", "120")
+    EHRENMIGLIED_NT = ("Ehrenmitg. nturnend", "11")
+    KINDER_JUGEND = ("Kinder & Jugend", "105")
+    # KINDER_JUGEND_INKLUSION = ("Kinder & Jugend Inklusion", None) # unverified
 
 
 class MembershipAddition(StrEnum):
@@ -56,10 +65,6 @@ MAP_CATEGORY_TO_INTERNAL = {
         MembershipAddition.EMPTY,
     ): InternalCategory.AKTIVMITGLIED,
     (
-        MembershipCategory.ERWACHSENE_INKLUSION,
-        MembershipAddition.EMPTY,
-    ): InternalCategory.AKTIVMITGLIED,
-    (
         MembershipCategory.PASSIVMITGLIEDER,
         MembershipAddition.EMPTY,
     ): InternalCategory.PASSIVMITGLIED,
@@ -72,10 +77,6 @@ MAP_CATEGORY_TO_INTERNAL = {
         MembershipAddition.EHRENMITGLIED_T,
     ): InternalCategory.EHRENMITGLIED,
     (
-        MembershipCategory.ERWACHSENE_INKLUSION,
-        MembershipAddition.EHRENMITGLIED_T,
-    ): InternalCategory.EHRENMITGLIED,
-    (
         MembershipCategory.EHRENMIGLIED_NT,
         MembershipAddition.EMPTY,
     ): InternalCategory.EHRENMITGLIED_NT,
@@ -85,10 +86,6 @@ MAP_CATEGORY_TO_INTERNAL = {
     ): InternalCategory.FREIMITGLIED,
     (
         MembershipCategory.ERWACHSENE_LIGHT,
-        MembershipAddition.FREIMITGLIED_T,
-    ): InternalCategory.FREIMITGLIED,
-    (
-        MembershipCategory.ERWACHSENE_INKLUSION,
         MembershipAddition.FREIMITGLIED_T,
     ): InternalCategory.FREIMITGLIED,
     (
@@ -160,13 +157,13 @@ FEMALE_SALUTATION = "MS"
 class MySTVProcessor:
     def __init__(self, club_id: str):
         self.club_id = club_id
-    
+
     @cached_property
     def mystv_client(self):
         client = MySTVClient(club_id=self.club_id)
         client.login()
         return client
-        
+
     def _load_mapper(self, filename: str) -> Dict[str, Any]:
         """Load a JSON file from the same directory as this source file."""
         path = Path(__file__).parent / filename
@@ -174,14 +171,18 @@ class MySTVProcessor:
             with path.open("r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
-            raise MySTVConfigurationError(f"Could not load mapper file {path}.") from None
+            raise MySTVConfigurationError(
+                f"Could not load mapper file {path}."
+            ) from None
 
     @cache
     def _members_cached(self) -> pd.DataFrame:
         """Return a DataFrame of all members in the club."""
         raw_members = self.mystv_client.get_members_stream_raw()
         if not (len(raw_members) == 2 and raw_members[1] == ""):
-            raise MySTVConfigurationError("MySTV members stream did not return expected data.")
+            raise MySTVConfigurationError(
+                "MySTV members stream did not return expected data."
+            )
         members_df = pd.DataFrame(raw_members[0])
         return self._apply_member_data_enrichment(members_df)
 
@@ -331,6 +332,7 @@ class MySTVProcessor:
                 print(
                     f"  Function: {function_name} (Code: {function_code}): {len(member_ids)}"
                 )
+
     def add_member_to_institute_with_function(
         self, member_id: str, institute_code: str, function_code: str
     ) -> dict:
@@ -343,8 +345,59 @@ class MySTVProcessor:
             raise ValueError(
                 "member_id, institute_code and function_code are required."
             )
-        response = self.mystv_client.add_member_to_institute_with_function(member_id=member_id, institute_code=institute_code, function_code=function_code)
-        
+        response = self.mystv_client.add_member_to_institute_with_function(
+            member_id=member_id,
+            institute_code=institute_code,
+            function_code=function_code,
+        )
+
         # Refresh even if the server applied the change but the response failed.
         self._institutes_cached.cache_clear()  # ToDo: optimize this? allow running this in bulk and only clearing once?
         return response
+
+    def change_membership(
+        self, member_id: str, current: MembershipCategory, new: MembershipCategory
+    ) -> None:
+        """Verify the current category and change it, preserving membership details."""
+        if not member_id or not current or not new:
+            raise ValueError("member_id, current and new are required.")
+        if not isinstance(current, MembershipCategory) or not isinstance(
+            new, MembershipCategory
+        ):
+            raise ValueError("current and new must be MembershipCategory members.")
+
+        memberships = self.mystv_client.get_member_memberships_raw(member_id)
+        matches = [
+            membership
+            for membership in memberships
+            if membership["vereinsMitgliedschaft"] is True
+            and membership["active"] is True
+            and membership["verein"]["code"] == self.club_id
+            and membership["category"]["code"] == current.code
+        ]
+        if not matches:
+            raise ValueError(
+                f"Member {member_id} has no active membership with category "
+                f"{current} in club {self.club_id}. No change was made."
+            )
+        if len(matches) > 1:
+            raise ValueError(
+                f"Member {member_id} has multiple active memberships with category "
+                f"{current} in club {self.club_id}. No change was made."
+            )
+
+        if current == new:
+            return
+
+        membership = matches[0]
+        try:
+            self.mystv_client.update_member_membership_unguarded(
+                member_id=member_id,
+                subscription_group=new.code,
+                line_no=membership["lineNumber"],
+                entry_date=membership["entryDate"],
+                type_of_disability=membership["typeOfDisability"],
+            )
+        finally:
+            # Discard cached data even if the server changed it but the response failed.
+            self._members_cached.cache_clear()
