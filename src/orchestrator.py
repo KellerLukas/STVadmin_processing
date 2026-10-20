@@ -21,9 +21,7 @@ from src.config.paths import (
     FILENAME_NO_MAIL,
     FILENAME_RIEGENMATRIX,
     FOLDERNAME_RIEGENLISTEN,
-    OUTPUT_FOLDER,
 )
-import typing
 
 FUNCTION_COLUMN_NAME = "Function"
 INSTITUTE_COLUMN_NAME = "Institute"

@@ -13,11 +13,15 @@ from typing import Any, Dict, Iterable, Iterator, List, Optional
 from urllib.parse import unquote, urlencode, urlsplit
 from playwright.sync_api import sync_playwright
 
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from threading import get_ident
+
 import requests
 
 from src.config.constants import OP_MYSTV_ITEM_UUID
 from src.utils.credentials import CredentialsBase
-from src.utils.utils import calculate_age_at_ts
+from src.utils.utils import calculate_age_at_ts, on_browser_thread
 
 PROFILE_DIR = Path(".stv-browser")
 HEADLESS = True  # Keep the browser visible for any MFA or other manual prompts.
@@ -216,6 +220,17 @@ class MySTVClient:
         # This also disables automatic environment proxy configuration.
         self._session.trust_env = False
 
+        # Enables compatibility with both jupyter notebooks and scripts (sync vs async)
+        self._browser_worker = None
+        self._browser_thread_id = None
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            pass
+        else:
+            self._browser_worker = ThreadPoolExecutor(max_workers=1)
+            self._browser_thread_id = self._browser_worker.submit(get_ident).result()
+
     def __enter__(self):
         self._ensure_open()
         return self
@@ -251,6 +266,7 @@ class MySTVClient:
                 "profile is not open elsewhere. Error: " + str(error)
             ) from None
 
+    @on_browser_thread
     def login(self) -> None:
         """Reuse the saved session or submit email / password once.
 
@@ -344,6 +360,7 @@ class MySTVClient:
             # Do not retain credentials as client attributes.
             email = password = None
 
+    @on_browser_thread
     def _read_cookies(self, urls: List[str]) -> List[Dict[str, Any]]:
         self._ensure_open()
         if self._context is None:
@@ -523,7 +540,8 @@ class MySTVClient:
                     data = raw_data
                 yield data
 
-    def close(self) -> None:
+    @on_browser_thread
+    def _close_resources(self) -> None:
         """Close HTTP/browser resources. Safe to repeat; keeps the profile on disk."""
         session, context, playwright = self._session, self._context, self._playwright
         self._session = self._context = self._playwright = self._page = None
@@ -551,6 +569,18 @@ class MySTVClient:
                         playwright.stop()
                     except Exception:
                         logging.warning("Could not stop MySTV Playwright cleanly")
+
+    def close(self) -> None:
+        """Close client resources and stop the optional browser worker."""
+        worker = self._browser_worker
+        try:
+            self._close_resources()
+        finally:
+            self._browser_worker = None
+            if worker is not None:
+                # Startup failure can call close() from inside the worker.
+                worker.shutdown(wait=get_ident() != self._browser_thread_id)
+            self._browser_thread_id = None
 
     def get_members_stream_raw(self) -> List[Any]:
         """Collect raw SSE payloads into a list; one payload need not be one member."""
@@ -748,8 +778,8 @@ class MySTVClient:
         """Add an institute assignment and return response.json() unchanged."""
         if (
             not member_id
-            or not (institute_code in self.mapper_institute_code_to_name)
-            or not (function_code in self.mapper_function_code_to_name)
+            or institute_code not in self.mapper_institute_code_to_name
+            or function_code not in self.mapper_function_code_to_name
         ):
             raise ValueError(
                 "member_id, institute_code and function_code are required."
