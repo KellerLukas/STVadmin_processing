@@ -28,7 +28,7 @@ class InternalCategory(StrEnum):
 
 class MembershipCategory(StrEnum):
     ERWACHSENE_STANDARD = "Erwachsene Standard"
-    ERWACHSENE_LIGHT = "Erwachsene Light"  # unverified
+    ERWACHSENE_LIGHT = "Erwachsene Light"
     ERWACHSENE_INKLUSION = "Erwachsene Inklusion"  # unverified
     PASSIVMITGLIEDER = "Passivmitglieder"
     EHRENMIGLIED_NT = "Ehrenmitg. nturnend"

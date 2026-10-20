@@ -516,6 +516,11 @@ class MySTVClient:
                     "MySTV returned success but the response was not valid JSON. "
                     "Check the institute assignment before retrying."
                 ) from None
+            
+            if all(v is None for v in result.values()):
+                raise MySTVAPIError(
+                    "MySTV returned all None values. It seems like something went wrong."
+                ) from None
 
-            logging.info("Added member to institute with function")
+            logging.info(f"Added member {member_id} to institute {institute_code} with function {function_code}")
             return result
