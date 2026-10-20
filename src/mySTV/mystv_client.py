@@ -253,7 +253,14 @@ class MySTVClient:
 
     @contextmanager
     def _request(
-        self, path: str, params: Dict[str, str], referer: str, stream: bool = False
+        self,
+        path: str,
+        params: Dict[str, str],
+        referer: str,
+        stream: bool = False,
+        method: str = "GET",
+        json_body: Optional[Dict[str, Any]] = None,
+        extra_headers: Optional[Dict[str, str]] = None,
     ):
         url = self._BASE_URL + path
         cookies = self._read_cookies([url])  # Fresh browser state before every request.
@@ -267,6 +274,8 @@ class MySTVClient:
             "Authorization": f"Bearer {token}",
             "Referer": referer,
         }
+        if extra_headers:
+            headers.update(extra_headers)
         xsrf = self._cookie_value(cookies, "XSRF-TOKEN")
         if xsrf:
             headers["X-XSRF-TOKEN"] = unquote(xsrf)
@@ -284,11 +293,13 @@ class MySTVClient:
         session = self._session
         session.cookies.clear()
         try:
-            with session.get(
-                url,
+            with session.request(
+                method=method,
+                url=url,
                 params=params,
                 headers=headers,
                 cookies=jar,
+                json=json_body,
                 stream=stream,
                 timeout=(10, 120) if stream else (10, 60),
                 allow_redirects=False,
@@ -303,13 +314,20 @@ class MySTVClient:
                         "MySTV redirected the API request. Check login(); API redirects are disabled."
                     )
                 if not 200 <= response.status_code < 300:
-                    print(f"message: {response.text}")
                     raise MySTVHTTPError(response.status_code)
                 yield response
         except requests.RequestException:
-            raise MySTVAPIError(
-                "MySTV request failed or timed out. A stream may be incomplete; no retry was attempted."
-            ) from None
+            if stream:
+                message = (
+                    "MySTV stream failed or timed out and may be incomplete; "
+                    "no retry was attempted."
+                )
+            else:
+                message = (
+                    "MySTV request failed or timed out. The outcome may be "
+                    "unknown; verify it before retrying."
+                )
+            raise MySTVAPIError(message) from None
         finally:
             self._response = None
             session.cookies.clear()
@@ -468,39 +486,7 @@ class MySTVClient:
                 "member_id, institute_code and function_code are required."
             )
 
-        url = self._BASE_URL + self._INSTITUTE_ADDRESS_CREATE_PATH
-        cookies = self._read_cookies([url])
-        token = self._cookie_value(cookies, "kc_token")
-        if not token:
-            raise MySTVAuthenticationError(
-                "No kc_token cookie. Complete login() first."
-            )
-
         referer_params = {"clubId": self.club_id, "code": institute_code}
-        headers = {
-            "Accept": "application/json",
-            "Authorization": f"Bearer {token}",
-            "Origin": self._BASE_URL,
-            "Referer": (
-                f"{self._BASE_URL}{self._GROUP_MEMBERS_PAGE_PATH}"
-                f"?{urlencode(referer_params)}"
-            ),
-        }
-        xsrf = self._cookie_value(cookies, "XSRF-TOKEN")
-        if xsrf:
-            headers["X-XSRF-TOKEN"] = unquote(xsrf)
-
-        jar = requests.cookies.RequestsCookieJar()
-        for cookie in cookies:
-            expires = cookie.get("expires", -1)
-            jar.set(
-                cookie["name"],
-                cookie["value"],
-                domain=cookie["domain"],
-                path=cookie.get("path", "/"),
-                secure=cookie.get("secure", False),
-                expires=int(expires) if expires >= 0 else None,
-            )
         empty_date = "0001-01-01T00:00:00"
         payload = {
             "Entry_No": "23795",  # I don't know what this number means
@@ -512,49 +498,24 @@ class MySTVClient:
             "Start_date": empty_date,
             "End_Date": empty_date,
         }
+        with self._request(
+            path=self._INSTITUTE_ADDRESS_CREATE_PATH,
+            params={},
+            referer=(
+                f"{self._BASE_URL}{self._GROUP_MEMBERS_PAGE_PATH}"
+                f"?{urlencode(referer_params)}"
+            ),
+            method="POST",
+            json_body=payload,
+            extra_headers={"Origin": self._BASE_URL},
+        ) as response:
+            try:
+                result = response.json()
+            except ValueError:
+                raise MySTVAPIError(
+                    "MySTV returned success but the response was not valid JSON. "
+                    "Check the institute assignment before retrying."
+                ) from None
 
-        session = self._session
-        session.cookies.clear()
-        try:
-            with session.post(
-                url,
-                json=payload,
-                headers=headers,
-                cookies=jar,
-                timeout=(10, 60),
-                allow_redirects=False,
-            ) as response:
-                self._response = response
-                if response.status_code == 401:
-                    raise MySTVAuthenticationError(
-                        "MySTV rejected authentication (HTTP 401). "
-                        "Call login() and retry."
-                    )
-                if 300 <= response.status_code < 400:
-                    raise MySTVAPIError(
-                        "MySTV redirected the API request. Check login(); "
-                        "API redirects are disabled."
-                    )
-                if not 200 <= response.status_code < 300:
-                    raise MySTVHTTPError(response.status_code)
-
-                try:
-                    result = response.json()
-                except ValueError:
-                    raise MySTVAPIError(
-                        "MySTV returned success but the response was not valid JSON. "
-                        "Check the institute assignment before retrying."
-                    ) from None
-
-                logging.info("Added member to institute with function")
-                return result
-        except requests.RequestException:
-            raise MySTVAPIError(
-                "MySTV request failed or timed out. The assignment may have been "
-                "created; check the institute before retrying."
-            ) from None
-        finally:
-            self._response = None
-            session.cookies.clear()
-
-
+            logging.info("Added member to institute with function")
+            return result
