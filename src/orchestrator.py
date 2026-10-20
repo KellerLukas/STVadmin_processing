@@ -13,9 +13,16 @@ from src.mySTV.mystv_client import (
 )
 from src.utils.utils import sanitize_filename, OUTPUT_FOLDER_PATH
 from src.config.constants import HARDCODED_HOUSEMATES, MYSTV_CLUB_ID
-from src.config.paths import (FILENAME_INFOHEFT, FILENAME_JUBILARE, FILENAME_JUGENDUEBERTRITT,
-    FILENAME_NEUMITGLIEDER, FILENAME_NO_MAIL, FILENAME_RIEGENMATRIX, FOLDERNAME_RIEGENLISTEN,
-    OUTPUT_FOLDER)
+from src.config.paths import (
+    FILENAME_INFOHEFT,
+    FILENAME_JUBILARE,
+    FILENAME_JUGENDUEBERTRITT,
+    FILENAME_NEUMITGLIEDER,
+    FILENAME_NO_MAIL,
+    FILENAME_RIEGENMATRIX,
+    FOLDERNAME_RIEGENLISTEN,
+    OUTPUT_FOLDER,
+)
 import typing
 
 FUNCTION_COLUMN_NAME = "Function"
@@ -60,7 +67,7 @@ class Orchestrator:
                 members_df=institute_members_df,
                 filename=filename,
                 required_columns=required_columns,
-                subfolder=FOLDERNAME_RIEGENLISTEN
+                subfolder=FOLDERNAME_RIEGENLISTEN,
             )
 
     def export_coach_lists_to_excel(self):
@@ -113,11 +120,13 @@ class Orchestrator:
             MembersColumns.POST_CODE,
             MembersColumns.CITY,
             MembersColumns.BIRTHDAY,
-            MembersColumns.MEMBERSHIP_ENTRY_DATES
+            MembersColumns.MEMBERSHIP_ENTRY_DATES,
         ]
 
         def joined_in_year(row, year: int):
-            if row[MembersColumns.MEMBER_ID] == "599086": # person has no entry date ToDo: remove once fixed
+            if (
+                row[MembersColumns.MEMBER_ID] == "599086"
+            ):  # person has no entry date ToDo: remove once fixed
                 return False
             return pd.Timestamp(row[MembersColumns.MEMBERSHIP_ENTRY_DATES]).year == year
 
@@ -138,9 +147,7 @@ class Orchestrator:
         for milestone in milestones:
             year = gv_year - milestone
             milestoners = self.mystv_client.members.loc[
-                self.mystv_client.members.apply(
-                    joined_in_year, axis=1, year=year
-                )
+                self.mystv_client.members.apply(joined_in_year, axis=1, year=year)
             ]
             self._export_members_to_excel(
                 members_df=milestoners,
@@ -237,7 +244,9 @@ class Orchestrator:
         }
         riegen = {}
         for institute in adult_institutes.values():
-            coach_member_lists = [institute.get(code,[]) for code in COACH_FUNCTION_CODES]
+            coach_member_lists = [
+                institute.get(code, []) for code in COACH_FUNCTION_CODES
+            ]
             coach_members = list(itertools.chain.from_iterable(coach_member_lists))
             for function_code, members in institute.items():
                 if function_code in COACH_FUNCTION_CODES:
@@ -262,7 +271,8 @@ class Orchestrator:
         min_age = min(members[MembersColumns._AGE])
 
         adults = members.loc[
-            members[MembersColumns._INTERNAL_CATEGORY]!= InternalCategory.JUGENDMITGLIED
+            members[MembersColumns._INTERNAL_CATEGORY]
+            != InternalCategory.JUGENDMITGLIED
         ]
         num_of_adults = len(adults)
 
@@ -278,7 +288,9 @@ class Orchestrator:
         ]
         num_of_kids = len(kids)
         num_of_boys = len(kids.loc[kids[MembersColumns.SALUTATION] == MALE_SALUTATION])
-        num_of_girls = len(kids.loc[kids[MembersColumns.SALUTATION] == FEMALE_SALUTATION])
+        num_of_girls = len(
+            kids.loc[kids[MembersColumns.SALUTATION] == FEMALE_SALUTATION]
+        )
 
         res = f"""
 
@@ -359,7 +371,11 @@ class Orchestrator:
         )
 
     def _export_members_to_excel(
-        self, members_df: pd.DataFrame, filename: str, required_columns: list[str], subfolder: str | None = None
+        self,
+        members_df: pd.DataFrame,
+        filename: str,
+        required_columns: list[str],
+        subfolder: str | None = None,
     ):
         members_df = members_df[required_columns]
         filename = sanitize_filename(filename)

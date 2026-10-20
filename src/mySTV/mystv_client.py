@@ -200,6 +200,7 @@ class MySTVClient:
     # API endpoints
     _MEMBERS_STREAM_PATH = "/backend/api/club/list-members/stream"
     _CLUB_ADDRESSES_PATH = "/backend/api/institutes/allAddressesInClub"
+    _INSTITUTE_ADDRESS_CREATE_PATH = "/backend/api/institutes/addresses/create"
 
     def __init__(self, club_id: str):
         if not club_id:
@@ -740,3 +741,107 @@ class MySTVClient:
                 print(
                     f"  Function: {function_name} (Code: {function_code}): {len(member_ids)}"
                 )
+
+    def add_member_to_institute_with_function(
+        self, member_id: str, institute_code: str, function_code: str
+    ) -> dict:
+        """Add an institute assignment and return response.json() unchanged."""
+        if (
+            not member_id
+            or not (institute_code in self.mapper_institute_code_to_name)
+            or not (function_code in self.mapper_function_code_to_name)
+        ):
+            raise ValueError(
+                "member_id, institute_code and function_code are required."
+            )
+
+        url = self._BASE_URL + self._INSTITUTE_ADDRESS_CREATE_PATH
+        cookies = self._read_cookies([url])
+        token = self._cookie_value(cookies, "kc_token")
+        if not token:
+            raise MySTVAuthenticationError(
+                "No kc_token cookie. Complete login() first."
+            )
+
+        referer_params = {"clubId": self.club_id, "code": institute_code}
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {token}",
+            "Origin": self._BASE_URL,
+            "Referer": (
+                f"{self._BASE_URL}{self._GROUP_MEMBERS_PAGE_PATH}"
+                f"?{urlencode(referer_params)}"
+            ),
+        }
+        xsrf = self._cookie_value(cookies, "XSRF-TOKEN")
+        if xsrf:
+            headers["X-XSRF-TOKEN"] = unquote(xsrf)
+
+        jar = requests.cookies.RequestsCookieJar()
+        for cookie in cookies:
+            expires = cookie.get("expires", -1)
+            jar.set(
+                cookie["name"],
+                cookie["value"],
+                domain=cookie["domain"],
+                path=cookie.get("path", "/"),
+                secure=cookie.get("secure", False),
+                expires=int(expires) if expires >= 0 else None,
+            )
+        empty_date = "0001-01-01T00:00:00"
+        payload = {
+            "Entry_No": "23795",  # I don't know what this number means
+            "@odata.etag": None,
+            "Club_No": self.club_id,
+            "Institute_Code": str(institute_code),
+            "Contact_No": str(member_id),
+            "Institute_Function_Code": str(function_code),
+            "Start_date": empty_date,
+            "End_Date": empty_date,
+        }
+
+        session = self._session
+        session.cookies.clear()
+        try:
+            with session.post(
+                url,
+                json=payload,
+                headers=headers,
+                cookies=jar,
+                timeout=(10, 60),
+                allow_redirects=False,
+            ) as response:
+                self._response = response
+                if response.status_code == 401:
+                    raise MySTVAuthenticationError(
+                        "MySTV rejected authentication (HTTP 401). "
+                        "Call login() and retry."
+                    )
+                if 300 <= response.status_code < 400:
+                    raise MySTVAPIError(
+                        "MySTV redirected the API request. Check login(); "
+                        "API redirects are disabled."
+                    )
+                if not 200 <= response.status_code < 300:
+                    raise MySTVHTTPError(response.status_code)
+
+                try:
+                    result = response.json()
+                except ValueError:
+                    raise MySTVAPIError(
+                        "MySTV returned success but the response was not valid JSON. "
+                        "Check the institute assignment before retrying."
+                    ) from None
+
+                logging.info("Added member to institute with function")
+                return result
+        except requests.RequestException:
+            raise MySTVAPIError(
+                "MySTV request failed or timed out. The assignment may have been "
+                "created; check the institute before retrying."
+            ) from None
+        finally:
+            self._response = None
+            session.cookies.clear()
+            # Refresh even if the server applied the change but the response failed.
+            self._institutes_cached.cache_clear()  # ToDo: optimize this? allow running this in bulk and only clearing once?
