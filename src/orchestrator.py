@@ -2,13 +2,13 @@ import pandas as pd
 from functools import cached_property
 import itertools
 from src.cleverreach.cleverreach_processor import CleverreachProcessor
-from src.mySTV.mystv_client import (
+from src.mySTV.mystv_processor import (
     COACH_FUNCTION_CODES,
     FEMALE_SALUTATION,
     InternalCategory,
     MALE_SALUTATION,
     MembersColumns,
-    MySTVClient,
+    MySTVProcessor,
     YOUTH_INSTITUTE_CODES,
 )
 from src.utils.utils import sanitize_filename, OUTPUT_FOLDER_PATH
@@ -32,8 +32,8 @@ class Orchestrator:
         self.cr_processor = CleverreachProcessor()
 
     @cached_property
-    def mystv_client(self) -> MySTVClient:
-        client = MySTVClient(MYSTV_CLUB_ID)
+    def mystv_client(self) -> MySTVProcessor:
+        client = MySTVProcessor(MYSTV_CLUB_ID)
         client.login()
         return client
 

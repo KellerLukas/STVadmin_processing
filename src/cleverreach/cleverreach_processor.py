@@ -1,7 +1,7 @@
 import logging
 from enum import StrEnum
 import pandas as pd
-from src.mySTV.mystv_client import (
+from src.mySTV.mystv_processor import (
     MembersColumns,
     InternalCategory,
     MALE_SALUTATION,
