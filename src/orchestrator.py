@@ -306,30 +306,29 @@ class Orchestrator:
             kids.loc[kids[MembersColumns.SALUTATION] == FEMALE_SALUTATION]
         )
 
-        res = f"""
+        stats = [
+            f"**Total Number of Members:** {num_of_members}",
+            "",
+            f"**Number of Adults:** {num_of_adults}",
+            f"- Men: {num_of_men}",
+            f"- Women: {num_of_women}",
+            "",
+            f"**Number of Children:** {num_of_kids}",
+            f"- Boys: {num_of_boys}",
+            f"- Girls: {num_of_girls}",
+            "",
+            f"**Oldest Member:** {max_age} years old",
+            "",
+            f"**Youngest Member:** {min_age} years old",
+            "",
+            "**Categories:**",
+        ]
 
-
-            **Total Number of Members:** {str(num_of_members)}  
-
-            **Number of Adults:** {str(num_of_adults)}  
-                Men: {str(num_of_men)}  
-                Women: {str(num_of_women)}  
-                
-            **Number of Children:** {str(num_of_kids)}  
-                Boys: {str(num_of_boys)}  
-                Girls: {str(num_of_girls)}  
-
-
-            **Oldest Member:** {str(max_age)} years old  
-            **Youngest Member:** {str(min_age)} years old
-            
-            **Categories:**
-
-            """
-
-        for cat in InternalCategory:
-            res += f"            {cat}: {len(members.loc[members[MembersColumns._INTERNAL_CATEGORY] == cat])}\n"
-        return res
+        stats.extend(
+            f"- {cat}: {len(members.loc[members[MembersColumns._INTERNAL_CATEGORY] == cat])}"
+            for cat in InternalCategory
+        )
+        return "\n".join(stats)
 
     def _export_function_list_to_excel(
         self, function_ids: list[int], output_filename: str
