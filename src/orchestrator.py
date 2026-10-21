@@ -3,11 +3,14 @@ from functools import cached_property
 import itertools
 from src.cleverreach.cleverreach_processor import CleverreachProcessor
 from src.mySTV.mystv_processor import (
+    ADMIN_INSTITUTE_CODES,
     COACH_FUNCTION_CODES,
     FEMALE_SALUTATION,
+    INFOHEFT_DIGITAL_INSTITUTE_CODE,
     InternalCategory,
     MALE_SALUTATION,
     MembersColumns,
+    MySTVConfigurationError,
     MySTVProcessor,
     YOUTH_INSTITUTE_CODES,
 )
@@ -34,7 +37,6 @@ class Orchestrator:
     @cached_property
     def mystv_client(self) -> MySTVProcessor:
         client = MySTVProcessor(MYSTV_CLUB_ID)
-        client.login()
         return client
 
     def export_each_institute_to_excel(self):
@@ -180,7 +182,22 @@ class Orchestrator:
             MembersColumns.CITY,
             PEOPLE_COLUMN,
         ]
-        # ToDo: filter out Non-infoheft people
+        function_codes = list(
+            self.mystv_client.institutes[INFOHEFT_DIGITAL_INSTITUTE_CODE].keys()
+        )
+        if len(function_codes) != 1:
+            raise MySTVConfigurationError(
+                f"Expected only one function code in Infoheft Digital institute but got: {function_codes}"
+            )
+        function_code = function_codes[0]
+        members_without_printed_infoheft = self.mystv_client.institutes[
+            INFOHEFT_DIGITAL_INSTITUTE_CODE
+        ][function_code]
+
+        members = self.mystv_client.members
+        members = members.loc[
+            ~members[MembersColumns.MEMBER_ID].isin(members_without_printed_infoheft)
+        ]
 
         def clean_street_name(street: str) -> str:
             return street.lower().replace("str.", "strasse")
@@ -201,7 +218,6 @@ class Orchestrator:
             )
 
         CHECK_COLUMN = "address_check"
-        members = self.mystv_client.members
         members[CHECK_COLUMN] = members.apply(build_address_check_col, axis=1)
 
         result = []
@@ -238,7 +254,7 @@ class Orchestrator:
         adult_institutes = {
             k: v
             for k, v in self.mystv_client.institutes.items()
-            if k not in YOUTH_INSTITUTE_CODES
+            if k not in YOUTH_INSTITUTE_CODES + ADMIN_INSTITUTE_CODES
         }
         riegen = {}
         for institute in adult_institutes.values():

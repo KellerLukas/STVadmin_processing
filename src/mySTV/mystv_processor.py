@@ -37,11 +37,11 @@ class MembershipCategory(StrEnum):
 
     ERWACHSENE_STANDARD = ("Erwachsene Standard", "101")
     ERWACHSENE_LIGHT = ("Erwachsene Light", "102")
-    # ERWACHSENE_INKLUSION = ("Erwachsene Inklusion", None) # unverified
+    ERWACHSENE_INKLUSION = ("Erwachsene Inklusion", "110")
     PASSIVMITGLIEDER = ("Passivmitglieder", "120")
     EHRENMIGLIED_NT = ("Ehrenmitg. nturnend", "11")
     KINDER_JUGEND = ("Kinder & Jugend", "105")
-    # KINDER_JUGEND_INKLUSION = ("Kinder & Jugend Inklusion", None) # unverified
+    KINDER_JUGEND_INKLUSION = ("Kinder & Jugend Inklusion", "115")
 
 
 class MembershipAddition(StrEnum):
@@ -148,6 +148,10 @@ class MembersColumns(StrEnum):
 
 
 YOUTH_INSTITUTE_CODES = ["3", "4", "8", "9", "10", "24", "25", "26"]
+INFOHEFT_DIGITAL_INSTITUTE_CODE = "29"
+ADMIN_INSTITUTE_CODES = [
+    INFOHEFT_DIGITAL_INSTITUTE_CODE
+]  # institutes that do not represent actual groups
 COACH_FUNCTION_CODES = ["3", "4"]
 
 MALE_SALUTATION = "MR"
@@ -333,8 +337,27 @@ class MySTVProcessor:
                     f"  Function: {function_name} (Code: {function_code}): {len(member_ids)}"
                 )
 
+    def add_members_to_institute_with_function(
+        self, member_ids: list[str], institute_code: str, function_code: str
+    ):
+        """Add multiple members to the same institute and clear cache only at the end"""
+        try:
+            for member_id in member_ids:
+                self.add_member_to_institute_with_function(
+                    member_id=member_id,
+                    institute_code=institute_code,
+                    function_code=function_code,
+                    clear_cache=False,
+                )
+        finally:
+            self._institutes_cached.cache_clear()
+
     def add_member_to_institute_with_function(
-        self, member_id: str, institute_code: str, function_code: str
+        self,
+        member_id: str,
+        institute_code: str,
+        function_code: str,
+        clear_cache: bool = True,
     ) -> dict:
         """Add an institute assignment and return response.json() unchanged."""
         if (
@@ -352,11 +375,31 @@ class MySTVProcessor:
         )
 
         # Refresh even if the server applied the change but the response failed.
-        self._institutes_cached.cache_clear()  # ToDo: optimize this? allow running this in bulk and only clearing once?
+        if clear_cache:
+            self._institutes_cached.cache_clear()
         return response
 
+    def change_memberships(
+        self,
+        member_ids: list[str],
+        current: MembershipCategory,
+        new: MembershipCategory,
+    ) -> None:
+        try:
+            for member_id in member_ids:
+                self.change_membership(
+                    member_id=member_id, current=current, new=new, clear_cache=False
+                )
+        finally:
+            # Discard cached data even if the server changed it but the response failed.
+            self._members_cached.cache_clear()
+
     def change_membership(
-        self, member_id: str, current: MembershipCategory, new: MembershipCategory
+        self,
+        member_id: str,
+        current: MembershipCategory,
+        new: MembershipCategory,
+        clear_cache: bool = True,
     ) -> None:
         """Verify the current category and change it, preserving membership details."""
         if not member_id or not current or not new:
@@ -399,5 +442,6 @@ class MySTVProcessor:
                 type_of_disability=membership["typeOfDisability"],
             )
         finally:
-            # Discard cached data even if the server changed it but the response failed.
-            self._members_cached.cache_clear()
+            if clear_cache:
+                # Discard cached data even if the server changed it but the response failed.
+                self._members_cached.cache_clear()

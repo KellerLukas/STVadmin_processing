@@ -576,7 +576,7 @@ class MySTVClient:
             )
 
     def get_member_memberships_raw(
-        self, member_id: str, hide_former_memberships: bool = False
+        self, member_id: str, hide_former_memberships: bool = True
     ) -> List[Dict[str, Any]]:
         """Return the member's membership list unchanged."""
         if not member_id:
