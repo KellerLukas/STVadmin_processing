@@ -70,7 +70,7 @@ class Orchestrator:
                 subfolder=FOLDERNAME_RIEGENLISTEN,
             )
 
-    def export_coach_lists_to_excel(self):
+    def export_coach_list_to_excel(self):
         COACH_FUNCTION_IDS = ["3", "4"]
         today = pd.Timestamp.now()
         filename = f"coaches_export_{today.strftime('%d.%m.%Y')}.xlsx"
