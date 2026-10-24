@@ -2,6 +2,7 @@ from enum import StrEnum
 from functools import cache, cached_property
 import copy
 import json
+import logging
 from src.config.paths import FILENAME_NEWSLETTER_BLACKLIST, WORKING_DIR_PATH
 import pandas as pd
 from pathlib import Path
@@ -165,8 +166,23 @@ class MySTVProcessor:
     @cached_property
     def mystv_client(self):
         client = MySTVClient(club_id=self.club_id)
-        client.login()
+        try:
+            client.login()
+        except BaseException:
+            try:
+                client.close()
+            except BaseException:
+                logging.warning(
+                    "Could not fully clean up a MySTV client after initialization failed."
+                )
+            raise
         return client
+
+    def close(self) -> None:
+        """Close the cached client; call before replacing this processor in a notebook."""
+        client = self.__dict__.get("mystv_client")
+        if client is not None:
+            client.close()
 
     def _load_mapper(self, filename: str) -> Dict[str, Any]:
         """Load a JSON file from the same directory as this source file."""

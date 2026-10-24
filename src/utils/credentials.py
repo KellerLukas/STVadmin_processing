@@ -26,9 +26,14 @@ class CredentialsBase:
     def get_client_secret(self):
         return self.get_field("credential")
 
-    def get_field(self, label):
-        item = self.op.get_item(uuid=self.item_uuid)
-        fields = item["fields"]
+    def get_client_credentials(self):
+        fields = self.op.get_item(uuid=self.item_uuid)["fields"]
+        return (
+            self._get_field_value(fields, "username"),
+            self._get_field_value(fields, "credential"),
+        )
+
+    def _get_field_value(self, fields, label):
         for field in fields:
             if field["id"] == label:
                 if "value" in field:
@@ -36,3 +41,7 @@ class CredentialsBase:
                 if "reference" in field:
                     return self.op.read(field["reference"])
         raise ValueError(f"Field with label {label} not found in item {self.item_uuid}")
+
+    def get_field(self, label):
+        item = self.op.get_item(uuid=self.item_uuid)
+        return self._get_field_value(item["fields"], label)
