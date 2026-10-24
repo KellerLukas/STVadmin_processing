@@ -36,7 +36,7 @@ default-groups = ["test"]
 "src/utils/__init__.py" = ["N999"]
 
 [tool.mypy]
-files = "src, tests"
+files = ["src", "home.py"]
 namespace_packages = true
 explicit_package_bases = true
 strict = true

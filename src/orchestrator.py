@@ -80,8 +80,8 @@ class Orchestrator:
         filename = f"coaches_export_{today.strftime('%d.%m.%Y')}.xlsx"
         self._export_function_list_to_excel(COACH_FUNCTION_IDS, filename)
 
-    def sync_to_cleverreach(self) -> None:
-        self.cr_processor.sync_members_to_cleverreach(self.mystv_client.members)
+    def sync_to_cleverreach(self) -> tuple[list[str], list[str]]:
+        return self.cr_processor.sync_members_to_cleverreach(self.mystv_client.members)
 
     def export_cleverreach_csv(self) -> None:
         self.cr_processor.export_cleverreach_data_to_csv(self.mystv_client.members)
