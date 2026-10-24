@@ -4,13 +4,15 @@ import logging
 from enum import StrEnum
 from functools import cache, cached_property
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 import pandas as pd
 
 from src.config.paths import FILENAME_NEWSLETTER_BLACKLIST, WORKING_DIR_PATH
 from src.mySTV.mystv_client_v2 import MySTVClientV2
 from src.utils.utils import calculate_age_at_ts
+
+logger = logging.getLogger(__name__)
 
 
 class MySTVConfigurationError(RuntimeError):
@@ -30,7 +32,7 @@ class InternalCategory(StrEnum):
 class MembershipCategory(StrEnum):
     code: str | None
 
-    def __new__(cls, label: str, code: str | None):
+    def __new__(cls, label: str, code: str | None) -> Self:
         member = str.__new__(cls, label)
         member._value_ = label
         member.code = code
@@ -164,7 +166,7 @@ class MySTVProcessor:
         self.club_id = club_id
 
     @cached_property
-    def mystv_client(self):
+    def mystv_client(self) -> MySTVClientV2:
         client = MySTVClientV2(club_id=self.club_id)
         try:
             client.login()
@@ -172,7 +174,7 @@ class MySTVProcessor:
             try:
                 client.close()
             except BaseException:
-                logging.warning(
+                logger.warning(
                     "Could not fully clean up a MySTV client after initialization failed."
                 )
             raise
@@ -189,11 +191,21 @@ class MySTVProcessor:
         path = Path(__file__).parent / filename
         try:
             with path.open("r", encoding="utf-8") as f:
-                return json.load(f)
+                data: object = json.load(f)
         except Exception:
             raise MySTVConfigurationError(
                 f"Could not load mapper file {path}."
             ) from None
+        if not isinstance(data, dict):
+            raise MySTVConfigurationError(f"Mapper file {path} must contain an object.")
+        mapper: dict[str, str] = {}
+        for code, name in data.items():
+            if not isinstance(code, str) or not isinstance(name, str):
+                raise MySTVConfigurationError(
+                    f"Mapper file {path} must contain string codes and names."
+                )
+            mapper[code] = name
+        return mapper
 
     @cache
     def _members_cached(self) -> pd.DataFrame:
@@ -213,16 +225,35 @@ class MySTVProcessor:
     @cache
     def _institutes_cached(self) -> dict[str, dict[str, list[str]]]:
         raw_groups = self.mystv_client.get_institute_members_raw()
-        unique_institute_codes = {group["instituteCode"] for group in raw_groups}
-
-        groups = {code: {} for code in unique_institute_codes}
+        if not isinstance(raw_groups, list):
+            raise MySTVConfigurationError(
+                "MySTV institute response must contain a list of assignments."
+            )
+        groups: dict[str, dict[str, list[str]]] = {}
         for group in raw_groups:
-            institute_code = group["instituteCode"]
-            function_code = group["instituteFunctionCode"]
-            member_id = group["memberId"]
-            if function_code not in groups[institute_code]:
-                groups[institute_code][function_code] = []
-            groups[institute_code][function_code].append(member_id)
+            if not isinstance(group, dict):
+                raise MySTVConfigurationError(
+                    "MySTV institute response contains an invalid assignment."
+                )
+            institute_code = group.get("instituteCode")
+            function_code = group.get("instituteFunctionCode")
+            member_id = group.get("memberId")
+            if not isinstance(institute_code, str):
+                raise MySTVConfigurationError(
+                    "MySTV institute assignment has an invalid institute code."
+                )
+            if not isinstance(function_code, str):
+                raise MySTVConfigurationError(
+                    "MySTV institute assignment has an invalid function code."
+                )
+            if not isinstance(member_id, str):
+                raise MySTVConfigurationError(
+                    "MySTV institute assignment has an invalid member ID."
+                )
+            assignments = groups.setdefault(institute_code, {})
+            if function_code not in assignments:
+                assignments[function_code] = []
+            assignments[function_code].append(member_id)
         return groups
 
     @property
@@ -249,13 +280,13 @@ class MySTVProcessor:
             MembersColumns.EMAIL_VERBAND,
         ]
 
-        def combine_emails(row):
+        def combine_emails(row: pd.Series[Any]) -> str | float:
             emails = [
-                row[col]
+                value
                 for col in email_columns
-                if pd.notnull(row[col]) and row[col].strip()
+                if isinstance((value := row[col]), str) and value.strip()
             ]
-            return "; ".join(emails) if emails else None
+            return "; ".join(emails) if emails else float("nan")
 
         members_df[MembersColumns._COMBINED_EMAILS] = members_df.apply(
             combine_emails, axis=1
@@ -270,11 +301,12 @@ class MySTVProcessor:
             MembersColumns.EMAIL_VERBAND,
         ]
 
-        def get_primary_email(row):
+        def get_primary_email(row: pd.Series[Any]) -> str | float:
             for col in email_columns:
-                if pd.notnull(row[col]) and row[col].strip():
-                    return row[col]
-            return None
+                value = row[col]
+                if isinstance(value, str) and value.strip():
+                    return value
+            return float("nan")
 
         members_df[MembersColumns._PRIMARY_EMAIL] = members_df.apply(
             get_primary_email, axis=1
@@ -282,13 +314,13 @@ class MySTVProcessor:
         return members_df
 
     def _build_internal_category_col(self, members_df: pd.DataFrame) -> pd.DataFrame:
-        def get_internal_cat(row):
+        def get_internal_cat(row: pd.Series[Any]) -> InternalCategory:
             membership_cat = row[MembersColumns.MEMBERSHIP_CATEGORIES]
             membership_addition = row[MembersColumns.MEMBERSHIP_ADDITIONS]
             category_tuple = (membership_cat, membership_addition)
 
             internal_cat = MAP_CATEGORY_TO_INTERNAL.get(category_tuple)
-            if internal_cat:
+            if internal_cat is not None:
                 return internal_cat
             raise MySTVConfigurationError(
                 f"Unable to map category tuple to internal category: {category_tuple}"
@@ -302,7 +334,7 @@ class MySTVProcessor:
     def _build_age_col(self, members_df: pd.DataFrame) -> pd.DataFrame:
         ts = pd.Timestamp.now()
 
-        def get_age(row):
+        def get_age(row: pd.Series[Any]) -> int:
             birthday = pd.Timestamp(row[MembersColumns.BIRTHDAY])
             return calculate_age_at_ts(birthday=birthday, ts=ts)
 
@@ -320,14 +352,14 @@ class MySTVProcessor:
         return members_df
 
     @cached_property
-    def mapper_institute_code_to_name(self) -> dict[int, str]:
+    def mapper_institute_code_to_name(self) -> dict[str, str]:
         mapper_institute_code_to_name = self._load_mapper(
             "mySTV_mapper_institute_code_to_name.json"
         )
         return {code: name for code, name in mapper_institute_code_to_name.items()}
 
     @cached_property
-    def mapper_function_code_to_name(self) -> dict[int, str]:
+    def mapper_function_code_to_name(self) -> dict[str, str]:
         mapper_function_code_to_name = self._load_mapper(
             "mySTV_mapper_function_code_to_name.json"
         )
@@ -343,7 +375,7 @@ class MySTVProcessor:
             function_code, f"Unknown Function Code {function_code}"
         )
 
-    def pretty_print_institutes(self, groups):
+    def pretty_print_institutes(self, groups: dict[str, dict[str, list[str]]]) -> None:
         for institute_code, functions in groups.items():
             institute_name = self.institute_id_to_name(institute_code)
             print(f"Institute: {institute_name} (Code: {institute_code})")
@@ -355,7 +387,7 @@ class MySTVProcessor:
 
     def add_members_to_institute_with_function(
         self, member_ids: list[str], institute_code: str, function_code: str
-    ):
+    ) -> None:
         """Add multiple members to the same institute and clear cache only at the end"""
         try:
             for member_id in member_ids:
@@ -374,7 +406,7 @@ class MySTVProcessor:
         institute_code: str,
         function_code: str,
         clear_cache: bool = True,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Add an institute assignment and return response.json() unchanged."""
         if (
             not member_id
@@ -418,12 +450,16 @@ class MySTVProcessor:
         clear_cache: bool = True,
     ) -> None:
         """Verify the current category and change it, preserving membership details."""
-        if not member_id or not current or not new:
+        if not member_id:
             raise ValueError("member_id, current and new are required.")
-        if not isinstance(current, MembershipCategory) or not isinstance(
-            new, MembershipCategory
+        if (
+            type(current) is not MembershipCategory
+            or type(new) is not MembershipCategory
         ):
-            raise ValueError("current and new must be MembershipCategory members.")
+            raise TypeError("current and new must be MembershipCategory members.")
+        new_code = new.code
+        if new_code is None:
+            raise ValueError("The new membership category has no API code.")
 
         memberships = self.mystv_client.get_member_memberships_raw(member_id)
         matches = [
@@ -452,7 +488,7 @@ class MySTVProcessor:
         try:
             self.mystv_client.update_member_membership_unguarded(
                 member_id=member_id,
-                subscription_group=new.code,
+                subscription_group=new_code,
                 line_no=membership["lineNumber"],
                 entry_date=membership["entryDate"],
                 type_of_disability=membership["typeOfDisability"],

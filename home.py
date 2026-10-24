@@ -186,5 +186,6 @@ def run_home():
     configure_export_buttons()
     configure_stop()
 
+
 if __name__ == "__main__":
     run_home()

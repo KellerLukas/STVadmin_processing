@@ -14,6 +14,8 @@ from src.mySTV.mystv_processor import (
 )
 from src.utils.utils import OUTPUT_FOLDER_PATH, concatenate_unique_values_to_string
 
+logger = logging.getLogger(__name__)
+
 
 class CRAttributes(StrEnum):
     EMAIL = "Email"
@@ -26,7 +28,7 @@ class CRAttributes(StrEnum):
 
 
 class CleverreachProcessor:
-    def __init__(self):
+    def __init__(self) -> None:
         self.cr_client = CleverreachClient()
 
     def sync_members_to_cleverreach(
@@ -38,26 +40,29 @@ class CleverreachProcessor:
         activated_emails = self._activate_inactive_receivers_in_cleverreach()
         return removed_emails, activated_emails
 
-    def export_cleverreach_data_to_csv(self, members: pd.DataFrame):
+    def export_cleverreach_data_to_csv(self, members: pd.DataFrame) -> None:
         receivers = self._create_receivers_from_members(members)
         self._export_receivers_to_csv(receivers)
 
-    def _export_receivers_to_csv(self, receivers: list[Receiver]):
-        rows = []
+    def _export_receivers_to_csv(self, receivers: list[Receiver]) -> None:
+        rows: list[dict[str, str | bool]] = []
         for receiver in receivers:
             rows.append(
-                {CRAttributes.EMAIL: receiver.email, **receiver.global_attributes}
+                {
+                    CRAttributes.EMAIL.value: receiver.email,
+                    **receiver.global_attributes,
+                }
             )
         data = pd.DataFrame(rows)
         data.to_csv(OUTPUT_FOLDER_PATH / FILENAME_CLEVERREACH_DATA, index=False)
 
-    def _push_members_to_cleverreach(self, members: pd.DataFrame):
+    def _push_members_to_cleverreach(self, members: pd.DataFrame) -> None:
         receivers = self._create_receivers_from_members(members)
         self.cr_client.update_receivers_for_group(
             group_id=CR_ALLE_MITGLIEDER_GROUP_ID, receivers=receivers
         )
 
-    def _update_ausgetreten_filter_in_cleverreach(self, date: pd.Timestamp):
+    def _update_ausgetreten_filter_in_cleverreach(self, date: pd.Timestamp) -> None:
         filter_template = {
             "id": CR_AUSGETRETEN_FILTER_ID,
             "name": "Ausgetreten",
@@ -88,10 +93,21 @@ class CleverreachProcessor:
         r = self.cr_client.get_receivers_for_group_filtered_complete(
             group_id=CR_ALLE_MITGLIEDER_GROUP_ID, filter_id=CR_AUSGETRETEN_FILTER_ID
         )
-        ids_to_remove = [receiver["id"] for receiver in r]
-        emails_to_remove = [receiver["email"] for receiver in r]
+        ids_to_remove: list[str | int] = []
+        emails_to_remove: list[str] = []
+        for receiver in r:
+            receiver_id = receiver.get("id")
+            email = receiver.get("email")
+            if not isinstance(receiver_id, (str, int)) or isinstance(receiver_id, bool):
+                raise TypeError("CleverReach returned a receiver with an invalid ID.")
+            if not isinstance(email, str):
+                raise TypeError(
+                    "CleverReach returned a receiver with an invalid email."
+                )
+            ids_to_remove.append(receiver_id)
+            emails_to_remove.append(email)
         if len(ids_to_remove) == 0:
-            logging.info("No receivers to remove from ausgetreten filter")
+            logger.info("No receivers to remove from ausgetreten filter")
             return []
         self.cr_client.delete_receivers(
             group_id=CR_ALLE_MITGLIEDER_GROUP_ID, receivers=ids_to_remove
@@ -102,10 +118,21 @@ class CleverreachProcessor:
         r = self.cr_client.get_receivers_for_group_complete(
             group_id=CR_ALLE_MITGLIEDER_GROUP_ID, type="inactive"
         )
-        ids_to_activate = [receiver["id"] for receiver in r]
-        emails_activated = [receiver["email"] for receiver in r]
+        ids_to_activate: list[str | int] = []
+        emails_activated: list[str] = []
+        for receiver in r:
+            receiver_id = receiver.get("id")
+            email = receiver.get("email")
+            if not isinstance(receiver_id, (str, int)) or isinstance(receiver_id, bool):
+                raise TypeError("CleverReach returned a receiver with an invalid ID.")
+            if not isinstance(email, str):
+                raise TypeError(
+                    "CleverReach returned a receiver with an invalid email."
+                )
+            ids_to_activate.append(receiver_id)
+            emails_activated.append(email)
         if len(ids_to_activate) == 0:
-            logging.info("No inactive receivers to activate")
+            logger.info("No inactive receivers to activate")
             return []
         for receiver_id in ids_to_activate:
             self.cr_client.activate_receiver(
@@ -119,10 +146,14 @@ class CleverreachProcessor:
         members = members.loc[members[MembersColumns._GETS_NEWSLETTER]]
         email_groups = members.groupby(MembersColumns._PRIMARY_EMAIL)
         for email, group in email_groups:
-            if pd.isna(email) or email.strip() == "":
+            if pd.isna(email):
                 continue  # Skip members without an email address
+            if not isinstance(email, str):
+                raise TypeError("Member email values must be strings.")
+            if not email.strip():
+                continue
 
-            global_attributes = {}
+            global_attributes: dict[str, str | bool] = {}
             global_attributes[CRAttributes.FIRST_NAME] = (
                 concatenate_unique_values_to_string(group[MembersColumns.FIRST_NAME])
             )

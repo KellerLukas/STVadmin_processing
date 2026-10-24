@@ -13,6 +13,7 @@ from types import TracebackType
 from typing import (
     Any,
     Literal,
+    Self,
     cast,
 )
 from urllib.parse import parse_qsl, unquote, urlencode, urljoin, urlsplit, urlunsplit
@@ -26,6 +27,8 @@ from joserfc.jws import JWSRegistry
 
 from src.config.constants import OP_MYSTV_ITEM_UUID
 from src.utils.credentials import CredentialsBase
+
+logger = logging.getLogger(__name__)
 
 HTTP_CONNECT_TIMEOUT_S = 10
 HTTP_READ_TIMEOUT_S = 60
@@ -121,7 +124,7 @@ class MySTVClientV2:
         self._nonce: str | None = None
         self._subject: str | None = None
 
-    def __enter__(self) -> MySTVClientV2:
+    def __enter__(self) -> Self:
         self._ensure_open()
         return self
 
@@ -136,7 +139,7 @@ class MySTVClientV2:
             try:
                 self.close()
             except BaseException:
-                logging.warning(
+                logger.warning(
                     "Could not fully close the MySTV client while preserving "
                     "the original operation error."
                 )
@@ -345,7 +348,9 @@ class MySTVClientV2:
                 raise MySTVAuthenticationError(
                     "Could not retrieve the MySTV password-login page."
                 ) from None
-        raise MySTVAuthenticationError("Could not retrieve the MySTV password-login page.")
+        raise MySTVAuthenticationError(
+            "Could not retrieve the MySTV password-login page."
+        )
 
     def _read_password_login_context(self, html: str) -> tuple[str, str]:
         parser = _LoginScriptParser()
@@ -437,9 +442,7 @@ class MySTVClientV2:
             )
         values = dict(parameters)
         if "error" in values or "error_description" in values:
-            raise MySTVAuthenticationError(
-                "MySTV rejected the authorization request."
-            )
+            raise MySTVAuthenticationError("MySTV rejected the authorization request.")
         if (
             values.get("state") != state
             or not values.get("code")
@@ -471,12 +474,11 @@ class MySTVClientV2:
                 raise MySTVAuthenticationError(
                     "MySTV returned an incomplete token response."
                 )
-        if not isinstance(token.get("token_type"), str) or token[
-            "token_type"
-        ].lower() != "bearer":
-            raise MySTVAuthenticationError(
-                "MySTV returned an unsupported token type."
-            )
+        if (
+            not isinstance(token.get("token_type"), str)
+            or token["token_type"].lower() != "bearer"
+        ):
+            raise MySTVAuthenticationError("MySTV returned an unsupported token type.")
 
         expires_in = token.get("expires_in")
         _, expires_at = self._access_token_state(token)
@@ -557,7 +559,9 @@ class MySTVClientV2:
 
         subject = claims.get("sub")
         if not isinstance(subject, str) or not subject:
-            raise MySTVAuthenticationError("MySTV returned an invalid ID-token subject.")
+            raise MySTVAuthenticationError(
+                "MySTV returned an invalid ID-token subject."
+            )
         if is_refresh:
             if self._subject is None or subject != self._subject:
                 raise MySTVAuthenticationError(
@@ -728,7 +732,9 @@ class MySTVClientV2:
     @staticmethod
     def _access_token_state(token: Any) -> tuple[str, float]:
         if not isinstance(token, dict):
-            raise MySTVAuthenticationError("MySTV authentication is missing or invalid.")
+            raise MySTVAuthenticationError(
+                "MySTV authentication is missing or invalid."
+            )
         access_token = token.get("access_token")
         expires_at = token.get("expires_at")
         if (
@@ -738,7 +744,9 @@ class MySTVClientV2:
             or isinstance(expires_at, bool)
             or not math.isfinite(expires_at)
         ):
-            raise MySTVAuthenticationError("MySTV authentication is missing or invalid.")
+            raise MySTVAuthenticationError(
+                "MySTV authentication is missing or invalid."
+            )
         return access_token, float(expires_at)
 
     @contextmanager
@@ -947,7 +955,7 @@ class MySTVClientV2:
             except Exception:
                 errors.append("application session")
         if errors:
-            logging.warning(
+            logger.warning(
                 "Could not release all MySTV resources: %s", ", ".join(errors)
             )
             raise MySTVAPIError(
@@ -957,7 +965,7 @@ class MySTVClientV2:
     def get_members_stream_raw(self) -> list[Any]:
         """Collect raw SSE payloads into a list; one payload need not be one member."""
         with closing(self.iter_members_stream()) as events:
-            logging.info("Retrieved members raw")
+            logger.info("Retrieved members raw")
             return list(events)
 
     def get_institute_members_raw(self) -> Any:
@@ -972,7 +980,7 @@ class MySTVClientV2:
             referer=referer,
         ) as response:
             try:
-                logging.info("Retrieved institute members raw")
+                logger.info("Retrieved institute members raw")
                 return response.json()
             except ValueError:
                 raise MySTVAPIError(
@@ -1027,7 +1035,7 @@ class MySTVClientV2:
                 raise MySTVAPIError(
                     "MySTV returned all None values. It seems like something went wrong."
                 ) from None
-            logging.info(
+            logger.info(
                 "Added member %s to institute %s with function %s",
                 member_id,
                 institute_code,
@@ -1069,14 +1077,13 @@ class MySTVClientV2:
             path=self._MEMBERSHIP_PATH,
             params={},
             referer=(
-                f"{self._BASE_URL}{self._MEMBER_PAGE_PATH}?"
-                f"{urlencode(referer_params)}"
+                f"{self._BASE_URL}{self._MEMBER_PAGE_PATH}?{urlencode(referer_params)}"
             ),
             method="PUT",
             files=files,
             extra_headers={"Origin": self._BASE_URL},
         ):
-            logging.info(
+            logger.info(
                 "Updated member %s to subscription group %s",
                 member_id,
                 subscription_group,
@@ -1097,8 +1104,7 @@ class MySTVClientV2:
                 "hideFormerMemberships": str(hide_former_memberships).lower(),
             },
             referer=(
-                f"{self._BASE_URL}{self._MEMBER_PAGE_PATH}?"
-                f"{urlencode(referer_params)}"
+                f"{self._BASE_URL}{self._MEMBER_PAGE_PATH}?{urlencode(referer_params)}"
             ),
         ) as response:
             try:
@@ -1114,5 +1120,5 @@ class MySTVClientV2:
                     "MySTV memberships response had an unexpected structure."
                 )
 
-            logging.info("Retrieved memberships for member %s", member_id)
+            logger.info("Retrieved memberships for member %s", member_id)
             return result

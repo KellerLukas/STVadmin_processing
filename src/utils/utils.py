@@ -1,6 +1,7 @@
 import os
 import re
 import unicodedata
+from collections.abc import Iterable
 from pathlib import Path
 
 import pandas as pd
@@ -49,7 +50,7 @@ def sanitize_filename(filename: str) -> str:
     return name
 
 
-def concatenate_unique_values_to_string(values: list) -> str:
+def concatenate_unique_values_to_string(values: Iterable[object]) -> str:
     unique = list({str(value) for value in values})
     unique.sort()
     return " & ".join(unique)

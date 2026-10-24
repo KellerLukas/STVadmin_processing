@@ -31,6 +31,10 @@ test = [
 [tool.uv]
 default-groups = ["test"]
 
+[tool.ruff.lint.per-file-ignores]
+"src/__init__.py" = ["N999"]
+"src/utils/__init__.py" = ["N999"]
+
 [tool.mypy]
 files = "src, tests"
 namespace_packages = true

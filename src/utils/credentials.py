@@ -49,7 +49,9 @@ class CredentialsBase:
         typed_fields: list[dict[str, Any]] = []
         for field in fields:
             if not isinstance(field, dict):
-                raise TypeError("The configured 1Password item contains an invalid field.")
+                raise TypeError(
+                    "The configured 1Password item contains an invalid field."
+                )
             typed_fields.append(field)
         return typed_fields
 

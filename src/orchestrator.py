@@ -1,5 +1,7 @@
 import itertools
+from collections.abc import Sequence
 from functools import cached_property
+from typing import Any
 
 import pandas as pd
 
@@ -33,7 +35,7 @@ INSTITUTE_COLUMN_NAME = "Institute"
 
 
 class Orchestrator:
-    def __init__(self):
+    def __init__(self) -> None:
         self.cr_processor = CleverreachProcessor()
 
     @cached_property
@@ -41,7 +43,7 @@ class Orchestrator:
         client = MySTVProcessor(MYSTV_CLUB_ID)
         return client
 
-    def export_each_institute_to_excel(self):
+    def export_each_institute_to_excel(self) -> None:
         required_columns = [
             FUNCTION_COLUMN_NAME,
             MembersColumns.MEMBER_ID,
@@ -72,19 +74,19 @@ class Orchestrator:
                 subfolder=FOLDERNAME_RIEGENLISTEN,
             )
 
-    def export_coach_list_to_excel(self):
+    def export_coach_list_to_excel(self) -> None:
         COACH_FUNCTION_IDS = ["3", "4"]
         today = pd.Timestamp.now()
         filename = f"coaches_export_{today.strftime('%d.%m.%Y')}.xlsx"
         self._export_function_list_to_excel(COACH_FUNCTION_IDS, filename)
 
-    def sync_to_cleverreach(self):
+    def sync_to_cleverreach(self) -> None:
         self.cr_processor.sync_members_to_cleverreach(self.mystv_client.members)
 
-    def export_cleverreach_csv(self):
+    def export_cleverreach_csv(self) -> None:
         self.cr_processor.export_cleverreach_data_to_csv(self.mystv_client.members)
 
-    def export_no_mail_excel(self):
+    def export_no_mail_excel(self) -> None:
         required_columns = [
             MembersColumns.MEMBER_ID,
             MembersColumns.FIRST_NAME,
@@ -110,7 +112,7 @@ class Orchestrator:
             required_columns=required_columns,
         )
 
-    def export_gv_lists(self, gv_year: int):
+    def export_gv_lists(self, gv_year: int) -> None:
         required_columns = [
             MembersColumns.MEMBER_ID,
             MembersColumns.FIRST_NAME,
@@ -125,7 +127,7 @@ class Orchestrator:
             MembersColumns.MEMBERSHIP_ENTRY_DATES,
         ]
 
-        def joined_in_year(row, year: int):
+        def joined_in_year(row: pd.Series[Any], year: int) -> bool:
             if (
                 row[MembersColumns.MEMBER_ID] == "599086"
             ):  # person has no entry date ToDo: remove once fixed
@@ -157,7 +159,7 @@ class Orchestrator:
                 required_columns=required_columns,
             )
 
-        def born_in_or_before_year(row, year: int):
+        def born_in_or_before_year(row: pd.Series[Any], year: int) -> bool:
             return pd.Timestamp(row[MembersColumns.BIRTHDAY]).year <= year
 
         conversion_year = gv_year - 17
@@ -174,7 +176,7 @@ class Orchestrator:
             required_columns=required_columns,
         )
 
-    def export_infoheft_address_list(self):
+    def export_infoheft_address_list(self) -> None:
         PEOPLE_COLUMN = "Personen"
         NAME_COLUMN = "Name"
         required_columns = [
@@ -204,7 +206,9 @@ class Orchestrator:
         def clean_street_name(street: str) -> str:
             return street.lower().replace("str.", "strasse")
 
-        def build_address_check_col(row):
+        def build_address_check_col(
+            row: pd.Series[Any],
+        ) -> str:
             # some people share no last name -> we cannot know if they live in the same apartment or are just neighbors.
             # -> we hardcode known housemates as HARDCODED_HOUSEMATES: list[tuple[str]] where each str is a member id
             for group in HARDCODED_HOUSEMATES:
@@ -212,20 +216,23 @@ class Orchestrator:
                     continue
                 return str(group)
 
-            return (
+            address_key = (
                 clean_street_name(row[MembersColumns.ADDRESS]).lower(),
                 row[MembersColumns.POST_CODE].lower(),
                 row[MembersColumns.CITY].lower(),
                 row[MembersColumns.SURNAME].lower(),
             )
+            return str(address_key)
 
         CHECK_COLUMN = "address_check"
-        members[CHECK_COLUMN] = members.apply(build_address_check_col, axis=1)
+        members[CHECK_COLUMN] = members.apply(
+            build_address_check_col, axis=1, result_type="reduce"
+        )
 
-        result = []
+        result: list[dict[str, object]] = []
         address_groups = members.groupby(CHECK_COLUMN)
         for _, group in address_groups:
-            entry = {}
+            entry: dict[str, object] = {}
             if len(group) > 1:
                 last_names = list(group[MembersColumns.SURNAME].unique())
                 entry[NAME_COLUMN] = "Fam. " + " & ".join(sorted(last_names))
@@ -252,7 +259,7 @@ class Orchestrator:
             required_columns=required_columns,
         )
 
-    def create_riegenmatrix(self):
+    def create_riegenmatrix(self) -> None:
         adult_institutes = {
             k: v
             for k, v in self.mystv_client.institutes.items()
@@ -269,12 +276,11 @@ class Orchestrator:
                     continue
                 name = self.mystv_client.mapper_function_code_to_name[function_code]
                 riegen[name] = members + coach_members
-        matrix = pd.DataFrame(columns=riegen.keys(), index=riegen.keys())
-        for x_riege in riegen:
-            for y_riege in riegen:
-                common_members = [
-                    member for member in riegen[x_riege] if member in riegen[y_riege]
-                ]
+        categories = list(riegen)
+        matrix = pd.DataFrame(columns=categories, index=categories)
+        for x_riege, x_members in riegen.items():
+            for y_riege, y_members in riegen.items():
+                common_members = [member for member in x_members if member in y_members]
 
                 matrix.loc[x_riege, y_riege] = len(common_members)
         matrix.to_excel(OUTPUT_FOLDER_PATH / FILENAME_RIEGENMATRIX, index=False)
@@ -334,7 +340,7 @@ class Orchestrator:
 
     def _export_function_list_to_excel(
         self, function_ids: list[str], output_filename: str
-    ):
+    ) -> None:
         required_columns = [
             FUNCTION_COLUMN_NAME,
             INSTITUTE_COLUMN_NAME,
@@ -355,7 +361,7 @@ class Orchestrator:
                             candidate_ids[member_id] = []
                         candidate_ids[member_id].append((institute_id, function_id))
 
-        members = {}
+        members: dict[str, dict[str, Any]] = {}
         for member_id, function_tuples in candidate_ids.items():
             institute_ids = {id for id, _ in function_tuples}
             member_function_ids = {id for _, id in function_tuples}
@@ -374,10 +380,15 @@ class Orchestrator:
                 raise ValueError(
                     f"Member ID {member_id} not found or not unique in members DataFrame."
                 )
-            member_data = member_data.iloc[0].to_dict()
-            member_data[FUNCTION_COLUMN_NAME] = ", ".join(function_names)
-            member_data[INSTITUTE_COLUMN_NAME] = ", ".join(institute_names)
-            members[member_id] = member_data
+            raw_record = member_data.iloc[0].to_dict()
+            member_record: dict[str, Any] = {}
+            for key, value in raw_record.items():
+                if not isinstance(key, str):
+                    raise TypeError("Member row contains a non-string column name.")
+                member_record[key] = value
+            member_record[FUNCTION_COLUMN_NAME] = ", ".join(function_names)
+            member_record[INSTITUTE_COLUMN_NAME] = ", ".join(institute_names)
+            members[member_id] = member_record
         result_df = pd.DataFrame.from_dict(members, orient="index")
         self._export_members_to_excel(
             members_df=result_df,
@@ -389,9 +400,9 @@ class Orchestrator:
         self,
         members_df: pd.DataFrame,
         filename: str,
-        required_columns: list[str],
+        required_columns: Sequence[str],
         subfolder: str | None = None,
-    ):
+    ) -> None:
         members_df = members_df[required_columns]
         filename = sanitize_filename(filename)
         path = OUTPUT_FOLDER_PATH
