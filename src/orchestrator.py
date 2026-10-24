@@ -333,7 +333,7 @@ class Orchestrator:
         return "\n".join(stats)
 
     def _export_function_list_to_excel(
-        self, function_ids: list[int], output_filename: str
+        self, function_ids: list[str], output_filename: str
     ):
         required_columns = [
             FUNCTION_COLUMN_NAME,
@@ -358,10 +358,10 @@ class Orchestrator:
         members = {}
         for member_id, function_tuples in candidate_ids.items():
             institute_ids = {id for id, _ in function_tuples}
-            function_ids = {id for _, id in function_tuples}
+            member_function_ids = {id for _, id in function_tuples}
             function_names = [
                 self.mystv_client.function_id_to_name(func_id)
-                for func_id in function_ids
+                for func_id in member_function_ids
             ]
             institute_names = [
                 self.mystv_client.institute_id_to_name(inst_id)

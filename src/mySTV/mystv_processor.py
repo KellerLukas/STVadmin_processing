@@ -333,12 +333,12 @@ class MySTVProcessor:
         )
         return {code: name for code, name in mapper_function_code_to_name.items()}
 
-    def institute_id_to_name(self, institute_code: int) -> str:
+    def institute_id_to_name(self, institute_code: str) -> str:
         return self.mapper_institute_code_to_name.get(
             institute_code, f"Unknown Institute Code {institute_code}"
         )
 
-    def function_id_to_name(self, function_code: int) -> str:
+    def function_id_to_name(self, function_code: str) -> str:
         return self.mapper_function_code_to_name.get(
             function_code, f"Unknown Function Code {function_code}"
         )
