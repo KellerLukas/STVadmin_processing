@@ -5,19 +5,14 @@ import math
 import re
 import secrets
 import time
+from collections.abc import Generator, Iterable, Iterator
 from contextlib import closing, contextmanager
 from html.parser import HTMLParser
 from http.cookiejar import Cookie
 from types import TracebackType
 from typing import (
     Any,
-    Dict,
-    Generator,
-    Iterable,
-    Iterator,
-    List,
     Literal,
-    Optional,
     cast,
 )
 from urllib.parse import parse_qsl, unquote, urlencode, urljoin, urlsplit, urlunsplit
@@ -62,11 +57,11 @@ class MySTVHTTPError(MySTVAPIError):
 class _LoginScriptParser(HTMLParser):
     def __init__(self) -> None:
         super().__init__()
-        self.scripts: List[str] = []
-        self._script_parts: List[str] = []
+        self.scripts: list[str] = []
+        self._script_parts: list[str] = []
         self._in_inline_script = False
 
-    def handle_starttag(self, tag: str, attrs: List[tuple[str, Optional[str]]]) -> None:
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if tag.lower() != "script":
             return
         self._script_parts = []
@@ -111,7 +106,7 @@ class MySTVClientV2:
         self.club_id = club_id
         self.creds = CredentialsBase(item_uuid=OP_MYSTV_ITEM_UUID)
 
-        self._oauth: Optional[OAuth2Session] = OAuth2Session(
+        self._oauth: OAuth2Session | None = OAuth2Session(
             client_id=self._CLIENT_ID,
             token_endpoint_auth_method="none",
             redirect_uri=self._REDIRECT_URI,
@@ -120,13 +115,13 @@ class MySTVClientV2:
             leeway=0,
         )
         self._oauth.trust_env = False
-        self._session: Optional[requests.Session] = requests.Session()
+        self._session: requests.Session | None = requests.Session()
         self._session.trust_env = False
-        self._response: Optional[requests.Response] = None
-        self._nonce: Optional[str] = None
-        self._subject: Optional[str] = None
+        self._response: requests.Response | None = None
+        self._nonce: str | None = None
+        self._subject: str | None = None
 
-    def __enter__(self) -> "MySTVClientV2":
+    def __enter__(self) -> MySTVClientV2:
         self._ensure_open()
         return self
 
@@ -245,8 +240,8 @@ class MySTVClientV2:
             page_html, login_page_url = self._get_login_page(authorization_url)
             action, credential_id = self._read_password_login_context(page_html)
 
-            username: Optional[str] = None
-            password: Optional[str] = None
+            username: str | None = None
+            password: str | None = None
             try:
                 username, password = self.creds.get_client_credentials()
             except Exception:
@@ -663,11 +658,11 @@ class MySTVClientV2:
                 ) from None
             raise
 
-    def _applicable_cookies(self, url: str) -> List[Cookie]:
+    def _applicable_cookies(self, url: str) -> list[Cookie]:
         self._ensure_open()
         probe = requests.Session()
         probe.trust_env = False
-        applicable: List[Cookie] = []
+        applicable: list[Cookie] = []
         try:
             for cookie in self._api_session.cookies:
                 probe.cookies.clear()
@@ -679,7 +674,7 @@ class MySTVClientV2:
             probe.close()
         return applicable
 
-    def _xsrf_headers(self, url: str) -> Dict[str, str]:
+    def _xsrf_headers(self, url: str) -> dict[str, str]:
         matches = [
             cookie.value
             for cookie in self._applicable_cookies(url)
@@ -691,10 +686,10 @@ class MySTVClientV2:
             return {}
         return {"X-XSRF-TOKEN": unquote(matches[0])}
 
-    def get_cookies(self) -> List[Dict[str, Any]]:
+    def get_cookies(self) -> list[dict[str, Any]]:
         """Return applicable application cookies with available scope metadata."""
         self._ensure_open()
-        cookies: List[Dict[str, Any]] = []
+        cookies: list[dict[str, Any]] = []
         seen = set()
         for path in (
             self._MEMBERS_STREAM_PATH,
@@ -750,14 +745,14 @@ class MySTVClientV2:
     def _request(
         self,
         path: str,
-        params: Dict[str, str],
+        params: dict[str, str],
         referer: str,
         stream: bool = False,
         method: str = "GET",
-        json_body: Optional[Dict[str, Any]] = None,
-        extra_headers: Optional[Dict[str, str]] = None,
-        files: Optional[Dict[str, Any]] = None,
-    ) -> Generator[requests.Response, None, None]:
+        json_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
+        files: dict[str, Any] | None = None,
+    ) -> Generator[requests.Response]:
         self._ensure_open()
         self._ensure_no_active_response()
         self._ensure_usable_authentication()
@@ -771,7 +766,7 @@ class MySTVClientV2:
         if extra_headers:
             headers.update(extra_headers)
         headers.update(self._xsrf_headers(url))
-        response: Optional[requests.Response] = None
+        response: requests.Response | None = None
         try:
             response = self._api_session.request(
                 method=method,
@@ -822,7 +817,7 @@ class MySTVClientV2:
     def _sse_lines(chunks: Iterable[bytes]) -> Iterator[str]:
         """Handle UTF-8, an optional BOM, and CR/LF/CRLF across read boundaries."""
         decoder = codecs.getincrementaldecoder("utf-8-sig")(errors="replace")
-        pending: List[str] = []
+        pending: list[str] = []
         skip_lf = False
         for chunk in chunks:
             for char in decoder.decode(chunk):
@@ -842,7 +837,7 @@ class MySTVClientV2:
 
     @staticmethod
     def _sse_data(lines: Iterable[str]) -> Iterator[str]:
-        data: List[str] = []
+        data: list[str] = []
         for line in lines:
             if line == "":
                 if data:
@@ -876,7 +871,7 @@ class MySTVClientV2:
                 "The result is incomplete."
             )
 
-    def iter_members_stream(self) -> Generator[Any, None, None]:
+    def iter_members_stream(self) -> Generator[Any]:
         """Yield raw SSE payloads; deadline checks cannot preempt a blocked socket read.
 
         The Requests read timeout remains an inactivity limit, not a total deadline.
@@ -959,7 +954,7 @@ class MySTVClientV2:
                 "Could not release all MySTV resources; cleanup is incomplete."
             ) from None
 
-    def get_members_stream_raw(self) -> List[Any]:
+    def get_members_stream_raw(self) -> list[Any]:
         """Collect raw SSE payloads into a list; one payload need not be one member."""
         with closing(self.iter_members_stream()) as events:
             logging.info("Retrieved members raw")
@@ -986,7 +981,7 @@ class MySTVClientV2:
 
     def add_member_to_institute_with_function(
         self, member_id: str, institute_code: str, function_code: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Add an institute assignment and return response.json() unchanged."""
         if not member_id or not institute_code or not function_code:
             raise ValueError(
@@ -1089,7 +1084,7 @@ class MySTVClientV2:
 
     def get_member_memberships_raw(
         self, member_id: str, hide_former_memberships: bool = True
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Return the member's membership list unchanged."""
         if not member_id:
             raise ValueError("member_id is required.")

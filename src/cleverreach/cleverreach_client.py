@@ -1,10 +1,12 @@
-from typing import Any, Dict, List, Optional
-import requests
-import time
 import logging
+import time
 from dataclasses import dataclass, field
-from src.utils.credentials import CredentialsBase
+from typing import Any
+
+import requests
+
 from src.config.constants import OP_CLEVERREACH_ITEM_UUID
+from src.utils.credentials import CredentialsBase
 
 
 @dataclass
@@ -18,17 +20,17 @@ class Receiver:
 
     Omission of all of those fields leads to an activated receiver, if new ('registered' and 'activated' to current time)!
     """
-    registered: Optional[str] = None  # timestamp
-    activated: Optional[str] = None  # timestamp
-    deactivated: Optional[str] = None  # timestamp
+    registered: str | None = None  # timestamp
+    activated: str | None = None  # timestamp
+    deactivated: str | None = None  # timestamp
 
     source: str = "User Import"
-    attributes: Dict[str, str] = field(default_factory=dict)
-    global_attributes: Dict[str, str] = field(default_factory=dict)
-    tags: List[str] = field(default_factory=list)
-    orders: List[Dict[str, Any]] = field(default_factory=list)
+    attributes: dict[str, str] = field(default_factory=dict)
+    global_attributes: dict[str, str] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
+    orders: list[dict[str, Any]] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {k: v for k, v in self.__dict__.items() if v is not None}
 
 
@@ -42,7 +44,7 @@ class CleverreachClient:
         self._token_expiry = None
 
     @property
-    def headers(self) -> Dict[str, str]:
+    def headers(self) -> dict[str, str]:
         return self._get_headers()
 
     def _get_token(self) -> str:
@@ -65,7 +67,7 @@ class CleverreachClient:
         logging.info("Successfully retrieved new CleverReach access token")
         return self._token
 
-    def _get_headers(self) -> Dict[str, str]:
+    def _get_headers(self) -> dict[str, str]:
         return {"Authorization": f"Bearer {self._get_token()}"}
 
     def update_receivers_for_group(
@@ -97,9 +99,9 @@ class CleverreachClient:
     def get_receivers_for_group(
         self,
         group_id: int,
-        pagesize: Optional[int] = None,
-        page: Optional[int] = None,
-        type: Optional[str] = None,
+        pagesize: int | None = None,
+        page: int | None = None,
+        type: str | None = None,
     ) -> list:
         if type and type not in ["active", "inactive", "all", "bounce"]:
             raise ValueError(
@@ -125,7 +127,7 @@ class CleverreachClient:
         return receivers
 
     def get_receivers_for_group_complete(
-        self, group_id: int, type: Optional[str] = None
+        self, group_id: int, type: str | None = None
     ) -> list:
         stats = self.get_group_stats(group_id)
         if type is None or type == "all":
@@ -224,8 +226,8 @@ class CleverreachClient:
         self,
         group_id: int,
         filter_id: int,
-        pagesize: Optional[int] = None,
-        page: Optional[int] = None,
+        pagesize: int | None = None,
+        page: int | None = None,
     ) -> list:
         logging.info(
             f"Retrieving filtered receivers for group {group_id} with filter {filter_id}, page {page}, pagesize {pagesize}"

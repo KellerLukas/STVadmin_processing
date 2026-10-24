@@ -21,7 +21,7 @@ dependencies = [
 test = [
     "pytest",
     "jupyter",
-    "ruff",
+    "ruff>0.16",
     "mypy",
     "types-requests>=2.33.0.20261006",
     "types-authlib>=1.8.0.20260911",

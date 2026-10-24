@@ -1,16 +1,18 @@
 import logging
 from enum import StrEnum
+
 import pandas as pd
-from src.mySTV.mystv_processor import (
-    MembersColumns,
-    InternalCategory,
-    MALE_SALUTATION,
-    FEMALE_SALUTATION,
-)
+
 from src.cleverreach.cleverreach_client import CleverreachClient, Receiver
-from src.utils.utils import concatenate_unique_values_to_string, OUTPUT_FOLDER_PATH
 from src.config.constants import CR_ALLE_MITGLIEDER_GROUP_ID, CR_AUSGETRETEN_FILTER_ID
 from src.config.paths import FILENAME_CLEVERREACH_DATA
+from src.mySTV.mystv_processor import (
+    FEMALE_SALUTATION,
+    MALE_SALUTATION,
+    InternalCategory,
+    MembersColumns,
+)
+from src.utils.utils import OUTPUT_FOLDER_PATH, concatenate_unique_values_to_string
 
 
 class CRAttributes(StrEnum):

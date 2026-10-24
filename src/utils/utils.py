@@ -2,9 +2,10 @@ import os
 import re
 import unicodedata
 from pathlib import Path
+
 import pandas as pd
 
-from src.config.paths import WORKING_DIR_PATH, OUTPUT_FOLDER
+from src.config.paths import OUTPUT_FOLDER, WORKING_DIR_PATH
 
 OUTPUT_FOLDER_PATH = Path(os.path.join(WORKING_DIR_PATH, OUTPUT_FOLDER))
 OUTPUT_FOLDER_PATH.mkdir(parents=True, exist_ok=True)

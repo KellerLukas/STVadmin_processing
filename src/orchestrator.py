@@ -1,20 +1,9 @@
-import pandas as pd
-from functools import cached_property
 import itertools
+from functools import cached_property
+
+import pandas as pd
+
 from src.cleverreach.cleverreach_processor import CleverreachProcessor
-from src.mySTV.mystv_processor import (
-    ADMIN_INSTITUTE_CODES,
-    COACH_FUNCTION_CODES,
-    FEMALE_SALUTATION,
-    INFOHEFT_DIGITAL_INSTITUTE_CODE,
-    InternalCategory,
-    MALE_SALUTATION,
-    MembersColumns,
-    MySTVConfigurationError,
-    MySTVProcessor,
-    YOUTH_INSTITUTE_CODES,
-)
-from src.utils.utils import sanitize_filename, OUTPUT_FOLDER_PATH
 from src.config.constants import HARDCODED_HOUSEMATES, MYSTV_CLUB_ID
 from src.config.paths import (
     FILENAME_INFOHEFT,
@@ -25,6 +14,19 @@ from src.config.paths import (
     FILENAME_RIEGENMATRIX,
     FOLDERNAME_RIEGENLISTEN,
 )
+from src.mySTV.mystv_processor import (
+    ADMIN_INSTITUTE_CODES,
+    COACH_FUNCTION_CODES,
+    FEMALE_SALUTATION,
+    INFOHEFT_DIGITAL_INSTITUTE_CODE,
+    MALE_SALUTATION,
+    YOUTH_INSTITUTE_CODES,
+    InternalCategory,
+    MembersColumns,
+    MySTVConfigurationError,
+    MySTVProcessor,
+)
+from src.utils.utils import OUTPUT_FOLDER_PATH, sanitize_filename
 
 FUNCTION_COLUMN_NAME = "Function"
 INSTITUTE_COLUMN_NAME = "Institute"

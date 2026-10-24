@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import codecs
 import hashlib
@@ -5,18 +6,17 @@ import json
 import logging
 import math
 import time
+from collections.abc import Iterable, Iterator
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from contextlib import closing, contextmanager
 from functools import wraps
 from pathlib import Path
-from typing import Any, Dict, Iterable, Iterator, List, Optional
-from urllib.parse import unquote, urlencode, urlsplit
-from playwright.sync_api import sync_playwright
-
-import asyncio
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from threading import Event, Lock, get_ident
+from typing import Any
+from urllib.parse import unquote, urlencode, urlsplit
 
 import requests
+from playwright.sync_api import sync_playwright
 
 from src.config.constants import OP_MYSTV_ITEM_UUID
 from src.utils.credentials import CredentialsBase
@@ -396,13 +396,13 @@ class MySTVClient:
     def _token_fingerprint(token: str) -> str:
         return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
-    def _token_is_usable(self, token: Optional[str]) -> bool:
+    def _token_is_usable(self, token: str | None) -> bool:
         if not token or self._access_token_has_expired(token):
             return False
         fingerprint = self._token_fingerprint(token)
         return fingerprint != self._rejected_token_fingerprint
 
-    def _accept_authenticated_token(self, token: Optional[str]) -> bool:
+    def _accept_authenticated_token(self, token: str | None) -> bool:
         if not self._token_is_usable(token):
             return False
         if self._rejected_token_fingerprint is not None:
@@ -441,7 +441,7 @@ class MySTVClient:
             email = password = None
 
     @on_browser_thread
-    def _read_cookies(self, urls: List[str]) -> List[Dict[str, Any]]:
+    def _read_cookies(self, urls: list[str]) -> list[dict[str, Any]]:
         self._ensure_open()
         if self._context is None:
             raise MySTVAPIError("Call login() before using the API.")
@@ -452,7 +452,7 @@ class MySTVClient:
                 "Could not read browser cookies. Check that the browser is open."
             ) from None
 
-    def get_cookies(self) -> List[Dict[str, Any]]:
+    def get_cookies(self) -> list[dict[str, Any]]:
         """Return current API cookies with scope metadata. Do not log their values."""
         return self._read_cookies(
             [
@@ -462,7 +462,7 @@ class MySTVClient:
         )
 
     @staticmethod
-    def _cookie_value(cookies: List[Dict[str, Any]], name: str) -> Optional[str]:
+    def _cookie_value(cookies: list[dict[str, Any]], name: str) -> str | None:
         # Playwright already filters by URL and expiry. Prefer the longest path
         # if multiple applicable cookies have the same name.
         matches = [cookie for cookie in cookies if cookie["name"] == name]
@@ -471,7 +471,7 @@ class MySTVClient:
         return max(matches, key=lambda cookie: len(cookie.get("path", "/")))["value"]
 
     @staticmethod
-    def _access_token_has_expired(token: Optional[str]) -> bool:
+    def _access_token_has_expired(token: str | None) -> bool:
         """Assess local expiry without treating decoding as authentication verification."""
         if not token:
             return True
@@ -510,7 +510,7 @@ class MySTVClient:
         return token
 
     @on_browser_thread(timeout_s=AUTHENTICATION_BROWSER_OPERATION_TIMEOUT_S)
-    def _request_cookies(self, url: str) -> List[Dict[str, Any]]:
+    def _request_cookies(self, url: str) -> list[dict[str, Any]]:
         """Recover browser authentication before returning one fresh cookie snapshot."""
         self._ensure_open()
         if self._context is None:
@@ -529,13 +529,13 @@ class MySTVClient:
     def _request(
         self,
         path: str,
-        params: Dict[str, str],
+        params: dict[str, str],
         referer: str,
         stream: bool = False,
         method: str = "GET",
-        json_body: Optional[Dict[str, Any]] = None,
-        extra_headers: Optional[Dict[str, str]] = None,
-        files: Optional[Dict[str, Any]] = None,
+        json_body: dict[str, Any] | None = None,
+        extra_headers: dict[str, str] | None = None,
+        files: dict[str, Any] | None = None,
     ):
         url = self._BASE_URL + path
         cookies = self._request_cookies(url)
@@ -796,7 +796,7 @@ class MySTVClient:
         if worker is not None:
             worker.shutdown(wait=False, cancel_futures=True)
 
-    def get_members_stream_raw(self) -> List[Any]:
+    def get_members_stream_raw(self) -> list[Any]:
         """Collect raw SSE payloads into a list; one payload need not be one member."""
         with closing(self.iter_members_stream()) as events:
             logging.info("Retrieved members raw")
@@ -918,7 +918,7 @@ class MySTVClient:
 
     def get_member_memberships_raw(
         self, member_id: str, hide_former_memberships: bool = True
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Return the member's membership list unchanged."""
         if not member_id:
             raise ValueError("member_id is required.")

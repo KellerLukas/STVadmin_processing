@@ -1,17 +1,16 @@
-from enum import StrEnum
-from functools import cache, cached_property
 import copy
 import json
 import logging
-from src.config.paths import FILENAME_NEWSLETTER_BLACKLIST, WORKING_DIR_PATH
-import pandas as pd
+from enum import StrEnum
+from functools import cache, cached_property
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
+import pandas as pd
 
-from src.utils.utils import calculate_age_at_ts
-from src.mySTV.mystv_client import MySTVClient
+from src.config.paths import FILENAME_NEWSLETTER_BLACKLIST, WORKING_DIR_PATH
 from src.mySTV.mystv_client_v2 import MySTVClientV2
+from src.utils.utils import calculate_age_at_ts
 
 
 class MySTVConfigurationError(RuntimeError):
@@ -185,7 +184,7 @@ class MySTVProcessor:
         if client is not None:
             client.close()
 
-    def _load_mapper(self, filename: str) -> Dict[str, Any]:
+    def _load_mapper(self, filename: str) -> dict[str, Any]:
         """Load a JSON file from the same directory as this source file."""
         path = Path(__file__).parent / filename
         try:
@@ -321,14 +320,14 @@ class MySTVProcessor:
         return members_df
 
     @cached_property
-    def mapper_institute_code_to_name(self) -> Dict[int, str]:
+    def mapper_institute_code_to_name(self) -> dict[int, str]:
         mapper_institute_code_to_name = self._load_mapper(
             "mySTV_mapper_institute_code_to_name.json"
         )
         return {code: name for code, name in mapper_institute_code_to_name.items()}
 
     @cached_property
-    def mapper_function_code_to_name(self) -> Dict[int, str]:
+    def mapper_function_code_to_name(self) -> dict[int, str]:
         mapper_function_code_to_name = self._load_mapper(
             "mySTV_mapper_function_code_to_name.json"
         )
