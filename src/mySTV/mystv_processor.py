@@ -11,6 +11,7 @@ from typing import Any, Dict
 
 from src.utils.utils import calculate_age_at_ts
 from src.mySTV.mystv_client import MySTVClient
+from src.mySTV.mystv_client_v2 import MySTVClientV2
 
 
 class MySTVConfigurationError(RuntimeError):
@@ -165,7 +166,7 @@ class MySTVProcessor:
 
     @cached_property
     def mystv_client(self):
-        client = MySTVClient(club_id=self.club_id)
+        client = MySTVClientV2(club_id=self.club_id)
         try:
             client.login()
         except BaseException:
