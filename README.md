@@ -1,21 +1,54 @@
 # STVAdmin Processing
-**A tool that makes life easier when trying to work with the very limited and old [STV Admin Database](https://www.stv-fsg.ch/de/mitglied-verein/stv-admin.html) (Microsoft Dynamics)**
 
-Note: This tool is made specifically to work with the setup of one particular sports club. It handles some very strange workarounds that were put in place many years ago to make their setup of various groups and categories work with the limitations of the STV Admin Database. Hence many translations & special cases had to me made which probably makes this unusable for any other sports club, sorry :wink:
+A Streamlit app for managing membership data for one sports club. It retrieves
+member and group information from mySTV, prepares club-specific exports, and
+can synchronize newsletter data with CleverReach.
 
-### Functionality:
-- Simple streamlit UI to interact with the tool
-- Automatic retrieval of an up-to-date database snapshot from the STV Admin Database using Selenium webdriver (I do not have access to any APIs!) resulting in two csv files containing personal data as well as group membership information.
-- Convert the exported csv into a class based database.
-- Export a special csv file used to import the recipients into some newsletter tool (where duplicate email addresses are combined in a specific way)
-- Export lists containing members of each group (a very tedious task in the original database)
-- Export special lists and statistics used for various tasks throughout the year.
-- Use CleverReach API to push data to its database automatically
+The app includes club-specific mappings and rules, so it is not intended to
+work for other clubs without modification. But the base client classes should contain no club-specific content.
 
-### Note
-The custom database used is far from optimal, but it was fun implementing. As the size of the database is limited naturally by the local population, there is no real reason to improve performance with a proper database (e.g. SQL or even keeping everything as a simple dataframe).
+## Features
 
-For privacy reasons two directories are not commited to this repositoriy:
+- Retrieve and process member and group data from mySTV.
+- View membership statistics.
+- Export institute (Riegen) lists, coach lists, an Infoheft address list (grouped by Household),
+  no-mail lists, and annual general meeting (GV) lists.
+- Export CleverReach data as CSV or synchronize members directly with
+  CleverReach.
 
-- demo folder: containing jupyter notebooks and other files used to manually extract statistics and other information not used regularly
-- config folder: containing local paths used
+## Requirements and setup
+
+- Python 3.14 or newer
+- [uv](https://docs.astral.sh/uv/)
+- Access to the club's mySTV account and the configured 1Password items for
+  mySTV and CleverReach
+
+Before starting the app, provide the deployment-specific configuration modules
+`src/config/constants.py` and `src/config/paths.py`. They are intentionally
+ignored by Git and are not included in this repository. They contain club and
+integration identifiers, local/shared-folder paths, and export filenames; use
+the club's secure configuration rather than committing these values.
+
+Install the Python dependencies and Chromium:
+
+```bash
+uv sync
+```
+
+Start the app with:
+
+```bash
+uv run streamlit run home.py
+```
+
+The app retrieves data from mySTV when an export or statistics action is
+selected. Generated files are written to the configured working directory's
+`OUT` folder.
+
+
+## Privacy
+
+Member data and generated exports contain personal information. Keep them in
+the club's approved storage and do not commit them. The `demo` directory and
+the deployment-specific files in `src/config` are excluded from version
+control.
