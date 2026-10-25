@@ -7,11 +7,9 @@ requires-python = ">=3.14"
 dependencies = [
     "pandas",
     "1password",
-    "selenium",
     "numpy",
     "openpyxl",
     "streamlit",
-    "playwright>=1.64.0", # uv run playwright install chromium
     "authlib>=1.9.1",
     "requests>=2.32.5",
     "joserfc>=1.7.7",

@@ -33,7 +33,6 @@ Install the Python dependencies and Chromium:
 
 ```bash
 uv sync
-uv run playwright install chromium
 ```
 
 Start the app with:
@@ -46,25 +45,6 @@ The app retrieves data from mySTV when an export or statistics action is
 selected. Generated files are written to the configured working directory's
 `OUT` folder.
 
-## Experimental MySTV HTTP client
-
-`MySTVClientV2` is available separately from the application's existing client
-while its HTTP-only authentication flow is reviewed. It is not yet used by the
-Streamlit app and has not been runtime-verified against mySTV. Use it only when
-you are ready to make live requests:
-
-```python
-from src.mySTV.mystv_client_v2 import MySTVClientV2
-from src.config.constants import MYSTV_CLUB_ID
-
-with MySTVClientV2(club_id=MYSTV_CLUB_ID) as client:
-    client.login()
-    members = client.get_members_stream_raw()
-```
-
-The client requires an interactive 1Password credential item and supports the
-observed password-based authorization-code flow; additional login challenges
-such as MFA are not handled automatically.
 
 ## Privacy
 
