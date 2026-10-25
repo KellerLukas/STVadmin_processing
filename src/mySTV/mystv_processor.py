@@ -2,7 +2,7 @@ import copy
 import json
 import logging
 from enum import StrEnum
-from functools import cache, cached_property
+from functools import cached_property
 from pathlib import Path
 from typing import Any, Self
 
@@ -173,7 +173,8 @@ class MySTVProcessor:
         except BaseException:
             try:
                 client.close()
-            except BaseException:
+            except BaseException:  # noqa: BLE001
+                # Preserve the original login error if secondary cleanup fails.
                 logger.warning(
                     "Could not fully clean up a MySTV client after initialization failed."
                 )
@@ -192,7 +193,7 @@ class MySTVProcessor:
         try:
             with path.open("r", encoding="utf-8") as f:
                 data: object = json.load(f)
-        except Exception:
+        except OSError, UnicodeDecodeError, json.JSONDecodeError:
             raise MySTVConfigurationError(
                 f"Could not load mapper file {path}."
             ) from None
@@ -207,7 +208,8 @@ class MySTVProcessor:
             mapper[code] = name
         return mapper
 
-    @cache
+    # Cache on this processor instance; public properties return defensive copies.
+    @cached_property
     def _members_cached(self) -> pd.DataFrame:
         """Return a DataFrame of all members in the club."""
         raw_members = self.mystv_client.get_members_stream_raw()
@@ -220,9 +222,9 @@ class MySTVProcessor:
 
     @property
     def members(self) -> pd.DataFrame:
-        return copy.deepcopy(self._members_cached())
+        return copy.deepcopy(self._members_cached)
 
-    @cache
+    @cached_property
     def _institutes_cached(self) -> dict[str, dict[str, list[str]]]:
         raw_groups = self.mystv_client.get_institute_members_raw()
         if not isinstance(raw_groups, list):
@@ -258,7 +260,7 @@ class MySTVProcessor:
 
     @property
     def institutes(self) -> dict[str, dict[str, list[str]]]:
-        return copy.deepcopy(self._institutes_cached())
+        return copy.deepcopy(self._institutes_cached)
 
     def _apply_member_data_enrichment(self, members_df: pd.DataFrame) -> pd.DataFrame:
         """Add any additional columns or transformations to the members DataFrame."""
@@ -398,7 +400,7 @@ class MySTVProcessor:
                     clear_cache=False,
                 )
         finally:
-            self._institutes_cached.cache_clear()
+            self.__dict__.pop("_institutes_cached", None)
 
     def add_member_to_institute_with_function(
         self,
@@ -416,16 +418,16 @@ class MySTVProcessor:
             raise ValueError(
                 "member_id, institute_code and function_code are required."
             )
-        response = self.mystv_client.add_member_to_institute_with_function(
-            member_id=member_id,
-            institute_code=institute_code,
-            function_code=function_code,
-        )
-
-        # Refresh even if the server applied the change but the response failed.
-        if clear_cache:
-            self._institutes_cached.cache_clear()
-        return response
+        try:
+            return self.mystv_client.add_member_to_institute_with_function(
+                member_id=member_id,
+                institute_code=institute_code,
+                function_code=function_code,
+            )
+        finally:
+            if clear_cache:
+                # The server may have applied the change before the response failed.
+                self.__dict__.pop("_institutes_cached", None)
 
     def change_memberships(
         self,
@@ -440,7 +442,7 @@ class MySTVProcessor:
                 )
         finally:
             # Discard cached data even if the server changed it but the response failed.
-            self._members_cached.cache_clear()
+            self.__dict__.pop("_members_cached", None)
 
     def change_membership(
         self,
@@ -496,4 +498,4 @@ class MySTVProcessor:
         finally:
             if clear_cache:
                 # Discard cached data even if the server changed it but the response failed.
-                self._members_cached.cache_clear()
+                self.__dict__.pop("_members_cached", None)

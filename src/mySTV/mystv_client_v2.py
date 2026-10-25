@@ -138,7 +138,8 @@ class MySTVClientV2:
         if exc_type is not None:
             try:
                 self.close()
-            except BaseException:
+            except BaseException:  # noqa: BLE001
+                # Preserve the original operation error if secondary cleanup fails.
                 logger.warning(
                     "Could not fully close the MySTV client while preserving "
                     "the original operation error."
@@ -247,7 +248,8 @@ class MySTVClientV2:
             password: str | None = None
             try:
                 username, password = self.creds.get_client_credentials()
-            except Exception:
+            except Exception:  # noqa: BLE001
+                # Do not expose credential-provider details in UI errors or tracebacks.
                 raise MySTVAuthenticationError(
                     "Unable to retrieve MySTV credentials. Check the configured credential item."
                 ) from None
@@ -298,7 +300,8 @@ class MySTVClientV2:
                     timeout=self._request_timeout(),
                     allow_redirects=False,
                 )
-            except Exception:
+            except Exception:  # noqa: BLE001
+                # Do not expose token-endpoint details in UI errors or tracebacks.
                 raise MySTVAuthenticationError(
                     "MySTV authorization-code exchange failed."
                 ) from None
@@ -552,7 +555,8 @@ class MySTVClientV2:
             claims.validate(leeway=OIDC_CLOCK_SKEW_S)
         except MySTVAPIError:
             raise
-        except Exception:
+        except Exception:  # noqa: BLE001
+            # Convert JWT/key/claim failures to a sanitized authentication error.
             raise MySTVAuthenticationError(
                 "MySTV returned an invalid or unverifiable ID token."
             ) from None
@@ -927,32 +931,33 @@ class MySTVClientV2:
         self._subject = None
         errors = []
 
+        # Attempt remaining cleanup even if a resource fails; report labels only.
         if response is not None:
             try:
                 response.close()
-            except Exception:
+            except Exception:  # noqa: BLE001
                 errors.append("response")
         if oauth is not None:
             try:
                 oauth.token = {}
-            except Exception:
+            except Exception:  # noqa: BLE001
                 errors.append("identity-provider token")
             try:
                 oauth.cookies.clear()
-            except Exception:
+            except Exception:  # noqa: BLE001
                 errors.append("identity-provider cookies")
             try:
                 oauth.close()
-            except Exception:
+            except Exception:  # noqa: BLE001
                 errors.append("identity-provider session")
         if session is not None:
             try:
                 session.cookies.clear()
-            except Exception:
+            except Exception:  # noqa: BLE001
                 errors.append("application cookies")
             try:
                 session.close()
-            except Exception:
+            except Exception:  # noqa: BLE001
                 errors.append("application session")
         if errors:
             logger.warning(
