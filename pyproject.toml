@@ -7,26 +7,34 @@ requires-python = ">=3.14"
 dependencies = [
     "pandas",
     "1password",
-    "selenium",
     "numpy",
     "openpyxl",
     "streamlit",
-    "playwright>=1.64.0", # uv run playwright install chromium
+    "authlib>=1.9.1",
+    "requests>=2.32.5",
+    "joserfc>=1.7.7",
+    "pandas-stubs>=3.0.5.260914",
 ]
 
 [dependency-groups]
 test = [
     "pytest",
     "jupyter",
-    "ruff",
+    "ruff>0.16",
     "mypy",
+    "types-requests>=2.33.0.20261006",
+    "types-authlib>=1.8.0.20260911",
 ]
 
 [tool.uv]
 default-groups = ["test"]
 
+[tool.ruff.lint.per-file-ignores]
+"src/__init__.py" = ["N999"]
+"src/utils/__init__.py" = ["N999"]
+
 [tool.mypy]
-files = "src, tests"
+files = ["src", "home.py"]
 namespace_packages = true
 explicit_package_bases = true
 strict = true
@@ -40,4 +48,3 @@ exclude = [
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-

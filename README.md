@@ -33,7 +33,6 @@ Install the Python dependencies and Chromium:
 
 ```bash
 uv sync
-uv run playwright install chromium
 ```
 
 Start the app with:
@@ -45,6 +44,7 @@ uv run streamlit run home.py
 The app retrieves data from mySTV when an export or statistics action is
 selected. Generated files are written to the configured working directory's
 `OUT` folder.
+
 
 ## Privacy
 
