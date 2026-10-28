@@ -1160,6 +1160,27 @@ class MySTVClientV2:
                 subscription_group,
             )
 
+    def delete_member_membership_unguarded(self, member_id: str, line_no: str) -> None:
+        """Delete one membership line without checking it first; response has no body."""
+        if not member_id or not line_no:
+            raise ValueError("member_id and line_no are required.")
+
+        referer_params = {"memberId": str(member_id), "clubId": self.club_id}
+        with self._request(
+            path=self._MEMBERSHIP_PATH,
+            params={"memberId": str(member_id), "lineNumber": str(line_no)},
+            referer=(
+                f"{self._BASE_URL}{self._MEMBER_PAGE_PATH}?{urlencode(referer_params)}"
+            ),
+            method="DELETE",
+            extra_headers={"Origin": self._BASE_URL},
+        ):
+            logger.info(
+                "Deleted membership line %s for member %s",
+                line_no,
+                member_id,
+            )
+
     def get_member_memberships_raw(
         self, member_id: str, hide_former_memberships: bool = True
     ) -> list[dict[str, Any]]:

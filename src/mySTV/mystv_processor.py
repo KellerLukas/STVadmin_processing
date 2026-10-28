@@ -159,7 +159,11 @@ COACH_FUNCTION_CODES = ["3", "4"]
 
 MALE_SALUTATION = "MR"
 FEMALE_SALUTATION = "MS"
-
+EXPECTED_DATE_FORMAT_PER_COL = {
+    MembersColumns.BIRTHDAY: "%Y-%m-%d",
+    MembersColumns.MEMBERSHIP_ENTRY_DATES: "%d.%m.%Y",
+}
+EMPTY_DATE_STR = "-"
 
 class MySTVProcessor:
     def __init__(self, club_id: str):
@@ -274,6 +278,7 @@ class MySTVProcessor:
             self._build_combined_emails_col,
             self._build_primary_email_col,
             self._build_internal_category_col,
+            self._parse_dates,
             self._build_age_col,
             self._build_gets_newsletter_col,
         ]:
@@ -338,12 +343,21 @@ class MySTVProcessor:
             get_internal_cat, axis=1
         )
         return members_df
+    
+    def _parse_dates(self, members_df: pd.DataFrame) -> pd.DataFrame:
+        def _to_datetime(date: str, expected_format: str):
+            if date == EMPTY_DATE_STR:
+                return pd.NA
+            return pd.to_datetime(date, format=expected_format)
+        for col, expected_format in EXPECTED_DATE_FORMAT_PER_COL.items():
+            members_df[col] = members_df[col].apply(_to_datetime, args=(expected_format,))
+        return members_df
 
     def _build_age_col(self, members_df: pd.DataFrame) -> pd.DataFrame:
         ts = pd.Timestamp.now()
 
         def get_age(row: pd.Series[Any]) -> int:
-            birthday = pd.Timestamp(row[MembersColumns.BIRTHDAY])
+            birthday = row[MembersColumns.BIRTHDAY]
             return calculate_age_at_ts(birthday=birthday, ts=ts)
 
         members_df[MembersColumns._AGE] = members_df.apply(get_age, axis=1)
@@ -459,7 +473,7 @@ class MySTVProcessor:
     ) -> None:
         """Verify the current category and change it, preserving membership details."""
         if not member_id:
-            raise ValueError("member_id, current and new are required.")
+            raise ValueError("member_id is required.")
         if (
             type(current) is not MembershipCategory
             or type(new) is not MembershipCategory
@@ -500,6 +514,55 @@ class MySTVProcessor:
                 line_no=membership["lineNumber"],
                 entry_date=membership["entryDate"],
                 type_of_disability=membership["typeOfDisability"],
+            )
+        finally:
+            if clear_cache:
+                # Discard cached data even if the server changed it but the response failed.
+                self.__dict__.pop("_members_cached", None)
+
+    def delete_memberships(self,
+        member_ids: list[str],
+        current: MembershipCategory,
+    ) -> None:
+        try:
+            for member_id in member_ids:
+                self.delete_membership(
+                    member_id=member_id, current=current, clear_cache=False
+                )
+        finally:
+            # Discard cached data even if the server changed it but the response failed.
+            self.__dict__.pop("_members_cached", None)
+
+    def delete_membership(self, member_id: str, current: MembershipCategory, clear_cache: bool = True):
+        if not member_id:
+            raise ValueError("member_id is required.")
+        if type(current) is not MembershipCategory:
+            raise TypeError("current must be MembershipCategory member.")
+        memberships = self.mystv_client.get_member_memberships_raw(member_id)
+        matches = [
+            membership
+            for membership in memberships
+            if membership["vereinsMitgliedschaft"] is True
+            and membership["active"] is True
+            and membership["verein"]["code"] == self.club_id
+            and membership["category"]["code"] == current.code
+        ]
+        if not matches:
+            raise ValueError(
+                f"Member {member_id} has no active membership with category "
+                f"{current} in club {self.club_id}. No change was made."
+            )
+        if len(matches) > 1:
+            raise ValueError(
+                f"Member {member_id} has multiple active memberships with category "
+                f"{current} in club {self.club_id}. No change was made."
+            )
+            
+        membership = matches[0]
+        try:
+            self.mystv_client.delete_member_membership_unguarded(
+                member_id=member_id,
+                line_no=membership["lineNumber"]
             )
         finally:
             if clear_cache:
