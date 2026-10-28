@@ -187,6 +187,12 @@ class MySTVProcessor:
         if client is not None:
             client.close()
 
+    def clear_cached_data(self) -> None:
+        """Discard local member and institute data; keep the authenticated client."""
+        self.__dict__.pop("_members_cached", None)
+        self.__dict__.pop("_institutes_cached", None)
+        logger.info("Cleared cached MySTV member and institute data")
+
     def _load_mapper(self, filename: str) -> dict[str, Any]:
         """Load a JSON file from the same directory as this source file."""
         path = Path(__file__).parent / filename

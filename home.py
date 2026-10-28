@@ -5,6 +5,7 @@ import subprocess
 from collections import deque
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
+from datetime import datetime
 from threading import Lock
 from typing import Any
 
@@ -16,7 +17,13 @@ from src.utils.utils import OUTPUT_FOLDER_PATH
 
 # Set logging level to INFO
 logging.basicConfig(level=logging.INFO)
-BACKGROUND_TASK_EXECUTOR = ThreadPoolExecutor(max_workers=1)
+logger = logging.getLogger(__name__)
+
+
+@st.cache_resource
+def get_background_task_executor() -> ThreadPoolExecutor:
+    """Reuse one worker across reruns; a MySTV client must be used sequentially."""
+    return ThreadPoolExecutor(max_workers=1)
 
 
 class ConsoleLogHandler(logging.Handler):
@@ -50,12 +57,54 @@ def get_console_log_handler() -> ConsoleLogHandler:
 
 
 def start_background_task(label: str, action: Callable[..., Any], *args: Any) -> None:
-    current_task = st.session_state.get("background_task")
-    if isinstance(current_task, Future) and not current_task.done():
+    if is_background_task_running():
         return
     st.session_state.background_task_label = label
     st.session_state.background_task_completion_rerun = False
-    st.session_state.background_task = BACKGROUND_TASK_EXECUTOR.submit(action, *args)
+    st.session_state.background_task = get_background_task_executor().submit(
+        action, *args
+    )
+
+
+def start_members_refresh_task(*, start_refresh: bool = False) -> None:
+    """Check or start a server refresh on the same worker as exports."""
+    if is_background_task_running():
+        return
+    orchestrator: Orchestrator = st.session_state.orch
+    action = (
+        orchestrator.start_members_refresh
+        if start_refresh
+        else orchestrator.is_members_refresh_running
+    )
+    st.session_state.members_refresh_running = None
+    st.session_state.members_refresh_error = None
+    st.session_state.members_refresh_starting = start_refresh
+    st.session_state.members_refresh_task = get_background_task_executor().submit(
+        action
+    )
+
+
+def collect_members_refresh_result() -> None:
+    """Apply a finished background result on the UI thread, without another request."""
+    task = st.session_state.get("members_refresh_task")
+    if not isinstance(task, Future) or not task.done():
+        return
+    if (error := task.exception()) is not None:
+        action = (
+            "refresh start"
+            if st.session_state.get("members_refresh_starting")
+            else "status request"
+        )
+        logger.error("MySTV %s failed: %s", action, error)
+        st.session_state.members_refresh_running = None
+        st.session_state.members_refresh_error = str(error)
+    else:
+        st.session_state.members_refresh_running = task.result()
+        st.session_state.members_refresh_checked_at = (
+            datetime.now().astimezone().strftime("%d.%m.%Y %H:%M:%S")
+        )
+    del st.session_state.members_refresh_task
+    st.session_state.members_refresh_starting = False
 
 
 def setup_page() -> None:
@@ -123,6 +172,36 @@ def setup_page() -> None:
             outline-offset: 2px;
         }
 
+        /* Scope the compact status button through Streamlit's widget keys. */
+        .st-key-btn_members_refresh_status button {
+            min-height: 1.75rem;
+            padding: 0.15rem 0.65rem;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            background: var(--status-background);
+            color: var(--status-color);
+            box-shadow: none;
+            transform: none;
+        }
+
+        .st-key-btn_members_refresh_status button p {
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .st-key-btn_members_refresh_status button:hover:not(:disabled) {
+            border-color: var(--status-color);
+            background: var(--status-background);
+            color: var(--status-color);
+            box-shadow: none;
+            transform: none;
+        }
+
+        .st-key-btn_members_refresh_status button:focus-visible {
+            outline: 2px solid var(--status-color);
+            outline-offset: 2px;
+        }
+
         .hero {
             margin-bottom: 2rem;
             padding: 2.25rem 2.5rem;
@@ -186,6 +265,45 @@ def configure_title() -> None:
         """,
         unsafe_allow_html=True,
     )
+
+
+def configure_members_refresh_status() -> None:
+    running = st.session_state.get("members_refresh_running")
+    if running is True:
+        label, background, foreground = "Updating...", "#e8f1ff", "#145cb1"
+    elif running is False:
+        label, background, foreground = "Bereit", "#e6f4ea", "#176b35"
+    else:
+        background, foreground = "#f0f1f3", "#505766"
+        pending = "members_refresh_task" in st.session_state
+        label = "Wird geprüft …" if pending else "Status unbekannt"
+        if st.session_state.get("members_refresh_starting"):
+            label = "Wird gestartet …"
+    tooltip = "Klicken, um den Status zu aktualisieren."
+    if checked_at := st.session_state.get("members_refresh_checked_at"):
+        tooltip += f"\n\nLetzte erfolgreiche Statusabfrage: {checked_at}"
+    if error := st.session_state.get("members_refresh_error"):
+        tooltip += f"\n\nStatus konnte nicht bestätigt werden: {error}"
+    # Style-only HTML takes no layout space; both colors come from fixed states above.
+    st.html(
+        f"""
+        <style>
+        .st-key-btn_members_refresh_status {{
+            --status-background: {background};
+            --status-color: {foreground};
+        }}
+        </style>
+        """
+    )
+    if st.button(
+        label,
+        key="btn_members_refresh_status",
+        icon=":material/refresh:",
+        help=tooltip,
+        disabled=is_background_task_running(),
+    ):
+        start_members_refresh_task()
+        st.rerun()
 
 
 def configure_statistics() -> None:
@@ -369,12 +487,21 @@ def reset_client() -> None:
 
 
 def is_background_task_running() -> bool:
+    """Check local worker activity, independently of the server's refresh status."""
+    # Keep actions blocked until a completed status result has been applied too.
+    if "members_refresh_task" in st.session_state:
+        return True
     task = st.session_state.get("background_task")
     return isinstance(task, Future) and not task.done()
 
 
 @st.fragment(run_every=1)
 def configure_console() -> None:
+    refresh_task = st.session_state.get("members_refresh_task")
+    if isinstance(refresh_task, Future) and refresh_task.done():
+        # Redraw the completed result only; this never polls the MySTV API.
+        st.rerun(scope="app")
+    st.markdown("#### Console")
     task = st.session_state.get("background_task")
     task_label = st.session_state.get("background_task_label")
     if isinstance(task, Future):
@@ -394,31 +521,72 @@ def configure_console() -> None:
     st.code("\n".join(log_messages) or "No logs yet.", language=None, height=260)
 
 
-def configure_stop() -> None:
-    st.markdown("#### Console")
-    configure_console()
+def configure_application_actions() -> None:
     st.markdown('<hr class="danger-zone-divider">', unsafe_allow_html=True)
     st.markdown("#### Anwendung")
-    st.caption("Öffne exportierte Dateien oder beende die Anwendung.")
-    if st.button("Open output folder in Finder", key="btn_open_output_folder"):
-        try:
-            subprocess.run(["open", str(OUTPUT_FOLDER_PATH)], check=True)
-        except (OSError, subprocess.CalledProcessError) as error:
-            st.error(f"Could not open the output folder: {error}")
-        else:
-            st.toast("Opened output folder in Finder")
-    if st.button("Shut down", type="secondary"):
-        os.kill(os.getpid(), signal.SIGTERM)
+    reload_col, cache_col = st.columns(2)
+    with reload_col, st.container(border=True):
+        st.caption("Startet die Aktualisierung der Mitgliederdaten auf dem Server.")
+        if st.button(
+            "Datenbank neu laden",
+            icon=":material/sync:",
+            width="stretch",
+            disabled=is_background_task_running(),
+        ):
+            start_members_refresh_task(start_refresh=True)
+            st.rerun()
+    with cache_col, st.container(border=True):
+        st.caption(
+            "Leert die lokalen Mitglieder- und Riegendaten. "
+            "Der nächste Abruf lädt sie erneut."
+        )
+        if st.button(
+            "Reset cache",
+            icon=":material/delete_sweep:",
+            width="stretch",
+            disabled=is_background_task_running(),
+        ):
+            start_background_task(
+                "Lokalen Cache leeren", st.session_state.orch.clear_mystv_cache
+            )
+            st.rerun()
+    folder_col, shutdown_col = st.columns(2)
+    with folder_col, st.container(border=True):
+        st.caption("Öffnet den Ordner mit den exportierten Dateien.")
+        if st.button(
+            "Open output folder in Finder",
+            key="btn_open_output_folder",
+            icon=":material/folder_open:",
+            width="stretch",
+        ):
+            try:
+                subprocess.run(["open", str(OUTPUT_FOLDER_PATH)], check=True)
+            except (OSError, subprocess.CalledProcessError) as error:
+                st.error(f"Could not open the output folder: {error}")
+            else:
+                st.toast("Opened output folder in Finder")
+    with shutdown_col, st.container(border=True):
+        st.caption("Beendet die Anwendung auf diesem Computer.")
+        if st.button(
+            "Shut down", icon=":material/power_settings_new:", width="stretch"
+        ):
+            os.kill(os.getpid(), signal.SIGTERM)
 
 
 def run_home() -> None:
     setup_page()
+    get_console_log_handler()
     if "orch" not in st.session_state:
         st.session_state.orch = Orchestrator()
+    collect_members_refresh_result()
+    if "members_refresh_running" not in st.session_state:
+        start_members_refresh_task()
     configure_title()
+    configure_members_refresh_status()
     configure_statistics()
     configure_export_buttons()
-    configure_stop()
+    configure_console()
+    configure_application_actions()
 
 
 if __name__ == "__main__":
