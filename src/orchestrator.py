@@ -43,6 +43,19 @@ class Orchestrator:
         client = MySTVProcessor(MYSTV_CLUB_ID)
         return client
 
+    def is_members_refresh_running(self) -> bool:
+        """Read server status without changing the local data cache."""
+        return self.mystv_client.mystv_client.is_members_refresh_running()
+
+    def start_members_refresh(self) -> bool:
+        """Confirm a running server refresh without changing the local data cache."""
+        self.mystv_client.mystv_client.start_members_refresh()
+        return True
+
+    def clear_mystv_cache(self) -> None:
+        """Clear local data without starting a server refresh or another login."""
+        self.mystv_client.clear_cached_data()
+
     def export_each_institute_to_excel(self) -> None:
         required_columns = [
             FUNCTION_COLUMN_NAME,

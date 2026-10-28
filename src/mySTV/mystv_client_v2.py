@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 HTTP_CONNECT_TIMEOUT_S = 10
 HTTP_READ_TIMEOUT_S = 60
 HTTP_STREAM_READ_TIMEOUT_S = 120
+REFRESH_START_READ_TIMEOUT_S = 2
 MEMBERS_STREAM_TIMEOUT_S = 300
 TOKEN_REFRESH_MARGIN_S = 30
 OIDC_CLOCK_SKEW_S = 60
@@ -49,6 +50,10 @@ class MySTVAPIError(RuntimeError):
 
 class MySTVAuthenticationError(MySTVAPIError):
     """Authentication is missing, expired, or rejected."""
+
+
+class MySTVReadTimeoutError(MySTVAPIError):
+    """The HTTP response did not arrive within the read timeout."""
 
 
 class MySTVHTTPError(MySTVAPIError):
@@ -99,6 +104,7 @@ class MySTVClientV2:
     _GROUP_MEMBERS_PAGE_PATH = "/club/groups/group-members"
 
     _MEMBERS_STREAM_PATH = "/backend/api/club/list-members/stream"
+    _MEMBERS_STREAM_STATUS_PATH = _MEMBERS_STREAM_PATH + "/status"
     _CLUB_ADDRESSES_PATH = "/backend/api/institutes/allAddressesInClub"
     _INSTITUTE_ADDRESS_CREATE_PATH = "/backend/api/institutes/addresses/create"
     _MEMBERSHIP_PATH = "/backend/api/club/membership"
@@ -764,6 +770,7 @@ class MySTVClientV2:
         json_body: dict[str, Any] | None = None,
         extra_headers: dict[str, str] | None = None,
         files: dict[str, Any] | None = None,
+        read_timeout: int | None = None,
     ) -> Generator[requests.Response]:
         self._ensure_open()
         self._ensure_no_active_response()
@@ -778,6 +785,8 @@ class MySTVClientV2:
         if extra_headers:
             headers.update(extra_headers)
         headers.update(self._xsrf_headers(url))
+        if read_timeout is None:
+            read_timeout = HTTP_STREAM_READ_TIMEOUT_S if stream else HTTP_READ_TIMEOUT_S
         response: requests.Response | None = None
         try:
             response = self._api_session.request(
@@ -788,9 +797,7 @@ class MySTVClientV2:
                 json=json_body,
                 files=files,
                 stream=stream,
-                timeout=self._request_timeout(
-                    HTTP_STREAM_READ_TIMEOUT_S if stream else HTTP_READ_TIMEOUT_S
-                ),
+                timeout=self._request_timeout(read_timeout),
                 allow_redirects=False,
             )
             self._response = response
@@ -806,7 +813,7 @@ class MySTVClientV2:
             if not 200 <= response.status_code < 300:
                 raise MySTVHTTPError(response.status_code)
             yield response
-        except requests.RequestException:
+        except requests.RequestException as error:
             if stream:
                 message = (
                     "MySTV stream failed or timed out and may be incomplete; "
@@ -817,6 +824,8 @@ class MySTVClientV2:
                     "MySTV request failed or timed out. The outcome may be unknown; "
                     "verify it before retrying."
                 )
+            if isinstance(error, requests.ReadTimeout):
+                raise MySTVReadTimeoutError(message) from None
             raise MySTVAPIError(message) from None
         finally:
             if response is not None:
@@ -883,6 +892,76 @@ class MySTVClientV2:
                 "The result is incomplete."
             )
 
+    def _members_stream_params(self, *, overwrite: bool = False) -> dict[str, str]:
+        return {
+            "clubId": self.club_id,
+            "clubMembershipsOnly": "true",
+            "activeMembersOnly": "false",
+            "language": "de",
+            "overwrite": str(overwrite).lower(),
+        }
+
+    @staticmethod
+    def _validate_members_stream_response(response: requests.Response) -> None:
+        content_type = (
+            response.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+        )
+        if content_type != "text/event-stream":
+            raise MySTVAPIError("Expected Content-Type text/event-stream.")
+
+    def is_members_refresh_running(self) -> bool:
+        """Return the server's running flag; it does not report success or freshness."""
+        logger.info("Retrieving MySTV refresh status")
+        with self._request(
+            path=self._MEMBERS_STREAM_STATUS_PATH,
+            params={"clubId": self.club_id},
+            referer=self._members_referer(),
+        ) as response:
+            try:
+                running = response.json()
+            except ValueError:
+                raise MySTVAPIError(
+                    "MySTV refresh status was not valid JSON."
+                ) from None
+        if not isinstance(running, bool):
+            raise MySTVAPIError("MySTV refresh status was not a JSON boolean.")
+        logger.info("Retrieved MySTV refresh status: running=%s", running)
+        return running
+
+    def start_members_refresh(self) -> None:
+        """Start at most one refresh and confirm running status without reading SSE.
+
+        Return once a running refresh is observed, including an existing one.
+        The server exposes no job identifier or completion guarantee. A failed
+        confirmation leaves the outcome unknown; never retry the trigger here.
+        """
+        if self.is_members_refresh_running():
+            logger.info("MySTV refresh already running; no additional refresh started")
+            return
+        logger.info("Starting MySTV members refresh")
+        try:
+            with self._request(
+                path=self._MEMBERS_STREAM_PATH,
+                params=self._members_stream_params(overwrite=True),
+                referer=self._members_referer(),
+                stream=True,
+                read_timeout=REFRESH_START_READ_TIMEOUT_S,
+            ) as response:
+                self._validate_members_stream_response(response)
+                # Leaving the context closes the stream without consuming its body.
+        except MySTVReadTimeoutError:
+            # Status can become active before headers arrive. Requests closes the
+            # timed-out connection; only the separate status check confirms a start.
+            logger.info("MySTV refresh response timed out; checking server status")
+        else:
+            logger.info("MySTV refresh connection closed without reading SSE data")
+        if not self.is_members_refresh_running():
+            raise MySTVAPIError(
+                "MySTV refresh start could not be confirmed. Check status before "
+                "trying again; the trigger was not retried."
+            )
+        logger.info("MySTV members refresh confirmed running")
+
     def iter_members_stream(self) -> Generator[Any]:
         """Yield raw SSE payloads; deadline checks cannot preempt a blocked socket read.
 
@@ -891,24 +970,11 @@ class MySTVClientV2:
         deadline = time.monotonic() + MEMBERS_STREAM_TIMEOUT_S
         with self._request(
             path=self._MEMBERS_STREAM_PATH,
-            params={
-                "clubId": self.club_id,
-                "clubMembershipsOnly": "true",
-                "activeMembersOnly": "false",
-                "language": "de",
-                "overwrite": "false",
-            },
+            params=self._members_stream_params(),
             referer=self._members_referer(),
             stream=True,
         ) as response:
-            content_type = (
-                response.headers.get("Content-Type", "")
-                .split(";", 1)[0]
-                .strip()
-                .lower()
-            )
-            if content_type != "text/event-stream":
-                raise MySTVAPIError("Expected Content-Type text/event-stream.")
+            self._validate_members_stream_response(response)
             lines = self._sse_lines(
                 self._stream_chunks_before_deadline(response, deadline)
             )
@@ -1092,6 +1158,27 @@ class MySTVClientV2:
                 "Updated member %s to subscription group %s",
                 member_id,
                 subscription_group,
+            )
+
+    def delete_member_membership_unguarded(self, member_id: str, line_no: str) -> None:
+        """Delete one membership line without checking it first; response has no body."""
+        if not member_id or not line_no:
+            raise ValueError("member_id and line_no are required.")
+
+        referer_params = {"memberId": str(member_id), "clubId": self.club_id}
+        with self._request(
+            path=self._MEMBERSHIP_PATH,
+            params={"memberId": str(member_id), "lineNumber": str(line_no)},
+            referer=(
+                f"{self._BASE_URL}{self._MEMBER_PAGE_PATH}?{urlencode(referer_params)}"
+            ),
+            method="DELETE",
+            extra_headers={"Origin": self._BASE_URL},
+        ):
+            logger.info(
+                "Deleted membership line %s for member %s",
+                line_no,
+                member_id,
             )
 
     def get_member_memberships_raw(
