@@ -1,7 +1,8 @@
 import itertools
 from collections.abc import Sequence
 from functools import cached_property
-from typing import Any
+from pathlib import Path
+from typing import Any, BinaryIO
 
 import pandas as pd
 
@@ -17,9 +18,11 @@ from src.config.paths import (
     FOLDERNAME_RIEGENLISTEN,
 )
 from src.fairgate.fairgate_processor import (
+    MAP_MYSTV_TO_FAIRGATE_COLUMN,
     FairgateColumns,
     FairgateProcessor,
     compare_dbs,
+    get_diff_summary,
 )
 from src.mySTV.mystv_processor import (
     ADMIN_INSTITUTE_CODES,
@@ -429,17 +432,34 @@ class Orchestrator:
             path.mkdir(parents=True, exist_ok=True)
         members_df.to_excel(path / filename, index=False)
 
-    def compare_to_fairgate_export(self):
-        fg_data = (
-            pd.DataFrame()
-        )  # implement uploading, use FairgateProcessor.from_excel if possible
-        fg = FairgateProcessor(fg_data=fg_data)
+    def compare_to_fairgate_export(
+        self, filename: str | Path | BinaryIO
+    ) -> tuple[str, pd.DataFrame, pd.DataFrame]:
+        """Return the diff summary and members missing in MySTV and Fairgate."""
+        fg = FairgateProcessor.from_excel(filename)
         diffs, ids_missing_in_mystv, ids_missing_in_fg = compare_dbs(
             mystv=self.mystv, fg=fg
         )
-        missing_in_mystv = self.mystv.members.loc[
-            self.mystv.members[MembersColumns.MEMBER_ID].isin(ids_missing_in_mystv)
+        missing_in_mystv = fg.members.loc[
+            fg.members[FairgateColumns.STV_NUMBER].isin(ids_missing_in_mystv),
+            [
+                FairgateColumns.STV_NUMBER,
+                FairgateColumns.FIRST_NAME,
+                FairgateColumns.SURNAME,
+                FairgateColumns.ASSOCIATION_ENTRY_DATE,
+            ],
         ]
-        missing_in_fg = fg.members.loc[
-            fg.members.loc[FairgateColumns.STV_NUMBER].isin(ids_missing_in_fg)
-        ]
+        missing_in_fg = self.mystv.members.loc[
+            self.mystv.members[MembersColumns.MEMBER_ID].isin(ids_missing_in_fg),
+            [
+                MembersColumns.MEMBER_ID,
+                MembersColumns.FIRST_NAME,
+                MembersColumns.SURNAME,
+                MembersColumns.MEMBERSHIP_ENTRY_DATES,
+            ],
+        ].rename(columns=MAP_MYSTV_TO_FAIRGATE_COLUMN)
+        return (
+            get_diff_summary(diffs, mystv=self.mystv, fg=fg),
+            missing_in_mystv,
+            missing_in_fg,
+        )

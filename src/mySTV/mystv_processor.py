@@ -550,7 +550,7 @@ class MySTVProcessor:
 
     def delete_membership(
         self, member_id: str, current: MembershipCategory, clear_cache: bool = True
-    ):
+    ) -> None:
         if not member_id:
             raise ValueError("member_id is required.")
         if type(current) is not MembershipCategory:

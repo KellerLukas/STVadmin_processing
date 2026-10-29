@@ -1,4 +1,6 @@
 from enum import StrEnum
+from pathlib import Path
+from typing import Any, BinaryIO
 
 import pandas as pd
 
@@ -103,9 +105,6 @@ FAIRGATE_DATE_COLS = [
     FairgateColumns.LAST_MODIFIED,
     FairgateColumns.CREATED_AT,
     FairgateColumns.ASSOCIATION_WITHDRAWAL_DATE,
-    FairgateColumns.LAST_LOGIN,
-    FairgateColumns.LAST_MODIFIED,
-    FairgateColumns.CREATED_AT,
 ]
 
 MAP_MYSTV_TO_FAIRGATE_COLUMN = {
@@ -151,17 +150,19 @@ EXPECTED_DATE_FORMAT_PER_COL = {
 
 
 class FairgateProcessor:
-    def __init__(self, fg_data: pd.DataFrame):
+    def __init__(self, fg_data: pd.DataFrame) -> None:
         self.fg_data = self._preprocess_data(fg_data)
 
     def _preprocess_data(self, fg_data: pd.DataFrame) -> pd.DataFrame:
-        def _to_datetime(date: str):
+        def _to_datetime(date: Any) -> pd.Timestamp | None:
             expected_date_formats = ["%d.%m.%Y", "%Y-%m-%d %H:%M:%S"]
-            if date == EMPTY_DATE_STR or pd.isna(date):
-                return pd.NA
+            if pd.isna(date) or date == EMPTY_DATE_STR or date == "":
+                return None
             for expected_date_format in expected_date_formats:
                 try:
-                    return pd.to_datetime(date, format=expected_date_format)
+                    return pd.Timestamp(
+                        pd.to_datetime(date, format=expected_date_format)
+                    )
                 except ValueError:
                     pass
             raise FairgateConfigurationError(f"Unknown date format: {date}")
@@ -171,10 +172,9 @@ class FairgateProcessor:
         return fg_data
 
     @classmethod
-    def from_excel(cls, filename: str) -> FairgateProcessor:
-        fg_data = pd.read_excel(
-            filename, dtype=str
-        )  # no not parse Member numbers as int due to leading zeros
+    def from_excel(cls, filename: str | Path | BinaryIO) -> FairgateProcessor:
+        # Keep identifiers as strings to preserve leading zeros.
+        fg_data = pd.read_excel(filename, dtype=str)
         return cls(fg_data)
 
     @property
@@ -197,7 +197,7 @@ class FairgateProcessor:
     def other_members(self) -> pd.DataFrame:
         return self.fg_data.loc[pd.isna(self.fg_data[FairgateColumns.WEBSITE])]
 
-    def get_member(self, member_id: str) -> pd.Series:
+    def get_member(self, member_id: str) -> pd.Series[Any]:
         matches = self.members.loc[
             self.members[FairgateColumns.STV_NUMBER] == member_id
         ]
@@ -210,65 +210,19 @@ class FairgateProcessor:
         return matches.iloc[0]
 
 
-def find_db_row_diffs(
-    mystv_row: pd.Series, fg_row: pd.Series
-) -> list[InternalCategory]:
-    MAP_GENDER_TO_SALUTATION = {"Männlich": "Er", "Weiblich": "Sie"}
-    diffs = []
-    for mystv_col, fg_col in MAP_MYSTV_TO_FAIRGATE_COLUMN.items():
-        if mystv_row[mystv_col] != fg_row[fg_col]:
-            diffs.append(mystv_col)
-    if (
-        MAP_WEBSITE_TO_INTERNAL_CAT[fg_row[FairgateColumns.WEBSITE]]
-        != mystv_row[MembersColumns._INTERNAL_CATEGORY]
-    ):
-        diffs.append(MembersColumns._INTERNAL_CATEGORY)
-    if (
-        MAP_GENDER_TO_SALUTATION[fg_row[FairgateColumns.GENDER]]
-        != mystv_row[MembersColumns.SALUTATION]
-    ):
-        diffs.append(MembersColumns.SALUTATION)
-    return diffs
-
-
-def compare_dbs(
-    mystv_members: pd.DataFrame, fg_members: pd.DataFrame
-) -> dict[str, list[str]]:
-    diffs = {}
-    not_found = []
-    for _, mystv_row in mystv_members.iterrows():
-        member_number = mystv_row[MembersColumns.MEMBER_ID]
-        matches = fg_members.loc[
-            fg_members[FairgateColumns.STV_NUMBER] == member_number
-        ]
-        if len(matches) > 1:
-            raise FairgateConfigurationError(
-                f"Found multiple entries for member id {member_number}"
-            )
-        if len(matches) == 0:
-            not_found.append(member_number)
-            continue
-        diffs[member_number] = find_db_row_diffs(
-            mystv_row=mystv_row, fg_row=matches.iloc[0, :]
-        )
-    return diffs
-
-
 def _values_equal(mystv_val: Any, fg_value: Any) -> bool:
-    if mystv_val == fg_value:
-        return True
-    if ((mystv_val is None) or pd.isna(mystv_val) or mystv_val == "") and (
-        (fg_value is None) or pd.isna(fg_value) or fg_value == ""
-    ):
-        return True
-    return False
+    mystv_empty = pd.isna(mystv_val) or mystv_val == "" or mystv_val is None
+    fg_empty = pd.isna(fg_value) or fg_value == "" or fg_value is None
+    if mystv_empty or fg_empty:
+        return bool(mystv_empty and fg_empty)
+    return bool(mystv_val == fg_value)
 
 
 def find_db_row_diffs(
-    mystv_row: pd.Series, fg_row: pd.Series
-) -> list[InternalCategory]:
-    MAP_GENDER_TO_SALUTATION = {"Männlich": "Er", "Weiblich": "Sie"}
-    diffs = []
+    mystv_row: pd.Series[Any], fg_row: pd.Series[Any]
+) -> list[MembersColumns]:
+    MAP_GENDER_TO_SALUTATION = {"Männlich": "MR", "Weiblich": "MS"}
+    diffs: list[MembersColumns] = []
     ignore = [
         MembersColumns.REGIONAL_ABO,
         MembersColumns.GYM_LIVE_ABO,
@@ -301,7 +255,7 @@ def find_db_row_diffs(
 
 def compare_dbs(
     mystv: MySTVProcessor, fg: FairgateProcessor
-) -> tuple[dict[str, list[str]], list[str], list[str]]:
+) -> tuple[dict[str, list[MembersColumns]], list[str], list[str]]:
     diffs = {}
     ids_missing_in_fg = []
     ids_missing_in_mystv = [
@@ -323,7 +277,7 @@ def compare_dbs(
 
 
 def get_diff_summary(
-    diffs: dict[str, list[str]], mystv: MySTVProcessor, fg: FairgateProcessor
+    diffs: dict[str, list[MembersColumns]], mystv: MySTVProcessor, fg: FairgateProcessor
 ) -> str:
     summary = []
     for member_id, cols in diffs.items():

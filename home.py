@@ -6,6 +6,7 @@ from collections import deque
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
 from datetime import datetime
+from io import BytesIO
 from threading import Lock
 from typing import Any
 
@@ -573,6 +574,74 @@ def configure_application_actions() -> None:
             os.kill(os.getpid(), signal.SIGTERM)
 
 
+def clear_fairgate_comparison() -> None:
+    st.session_state.pop("fairgate_comparison_task", None)
+
+
+def configure_fairgate_comparison() -> None:
+    st.markdown("## Fairgate Vergleich")
+    with st.container(border=True):
+        st.caption(
+            "Vergleiche einen Fairgate-Excel-Export mit den geladenen mySTV-Daten."
+        )
+        upload = st.file_uploader(
+            "Fairgate-Excel-Datei",
+            type=["xlsx"],
+            key="fairgate_upload",
+            on_change=clear_fairgate_comparison,
+            disabled=is_background_task_running(),
+        )
+        if (
+            st.button(
+                "Vergleichen",
+                key="btn_fairgate_comparison",
+                icon=":material/compare_arrows:",
+                disabled=upload is None or is_background_task_running(),
+            )
+            and upload is not None
+        ):
+            start_background_task(
+                "Fairgate Comparison",
+                st.session_state.orch.compare_to_fairgate_export,
+                BytesIO(upload.getvalue()),
+            )
+            # Retain the result when other actions replace the shared background task.
+            st.session_state.fairgate_comparison_task = st.session_state.background_task
+            st.rerun()
+
+        task = st.session_state.get("fairgate_comparison_task")
+        if not isinstance(task, Future):
+            return
+        if not task.done():
+            st.info("Fairgate-Export wird verglichen …")
+            return
+        if (error := task.exception()) is not None:
+            st.error(f"Vergleich konnte nicht durchgeführt werden: {error}")
+            return
+
+        summary, missing_in_mystv, missing_in_fairgate = task.result()
+        st.markdown("### Unterschiede")
+        st.caption("Werte je Feld: mySTV – Fairgate. Es werden keine Daten verändert.")
+        if summary:
+            st.markdown(summary)
+        else:
+            st.success(
+                "Keine Unterschiede in den verglichenen Feldern gemeinsamer Mitglieder."
+            )
+
+        mystv_col, fairgate_col = st.columns(2)
+        for column, title, members in (
+            (mystv_col, "Fehlt in mySTV", missing_in_mystv),
+            (fairgate_col, "Fehlt in Fairgate", missing_in_fairgate),
+        ):
+            with column:
+                st.markdown(f"### {title} ({len(members)})")
+                if members.empty:
+                    st.caption("Keine fehlenden Mitglieder.")
+                else:
+                    st.dataframe(members, hide_index=True, width="stretch")
+
+
 def run_home() -> None:
     setup_page()
     get_console_log_handler()
@@ -587,6 +656,7 @@ def run_home() -> None:
     configure_export_buttons()
     configure_console()
     configure_application_actions()
+    configure_fairgate_comparison()
 
 
 if __name__ == "__main__":
