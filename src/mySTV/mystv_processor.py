@@ -165,6 +165,7 @@ EXPECTED_DATE_FORMAT_PER_COL = {
 }
 EMPTY_DATE_STR = "-"
 
+
 class MySTVProcessor:
     def __init__(self, club_id: str):
         self.club_id = club_id
@@ -272,6 +273,16 @@ class MySTVProcessor:
     def institutes(self) -> dict[str, dict[str, list[str]]]:
         return copy.deepcopy(self._institutes_cached)
 
+    def get_member(self, member_id: str) -> pd.Series:
+        matches = self.members.loc[self.members[MembersColumns.MEMBER_ID] == member_id]
+        if len(matches) > 1:
+            raise MySTVConfigurationError(
+                f"Found multiple members with id {member_id}!"
+            )
+        if len(matches) == 0:
+            raise ValueError(f"Could not find member with id {member_id}")
+        return matches.iloc[0]
+
     def _apply_member_data_enrichment(self, members_df: pd.DataFrame) -> pd.DataFrame:
         """Add any additional columns or transformations to the members DataFrame."""
         for method in [
@@ -343,14 +354,17 @@ class MySTVProcessor:
             get_internal_cat, axis=1
         )
         return members_df
-    
+
     def _parse_dates(self, members_df: pd.DataFrame) -> pd.DataFrame:
         def _to_datetime(date: str, expected_format: str):
             if date == EMPTY_DATE_STR:
                 return pd.NA
             return pd.to_datetime(date, format=expected_format)
+
         for col, expected_format in EXPECTED_DATE_FORMAT_PER_COL.items():
-            members_df[col] = members_df[col].apply(_to_datetime, args=(expected_format,))
+            members_df[col] = members_df[col].apply(
+                _to_datetime, args=(expected_format,)
+            )
         return members_df
 
     def _build_age_col(self, members_df: pd.DataFrame) -> pd.DataFrame:
@@ -520,7 +534,8 @@ class MySTVProcessor:
                 # Discard cached data even if the server changed it but the response failed.
                 self.__dict__.pop("_members_cached", None)
 
-    def delete_memberships(self,
+    def delete_memberships(
+        self,
         member_ids: list[str],
         current: MembershipCategory,
     ) -> None:
@@ -533,7 +548,9 @@ class MySTVProcessor:
             # Discard cached data even if the server changed it but the response failed.
             self.__dict__.pop("_members_cached", None)
 
-    def delete_membership(self, member_id: str, current: MembershipCategory, clear_cache: bool = True):
+    def delete_membership(
+        self, member_id: str, current: MembershipCategory, clear_cache: bool = True
+    ):
         if not member_id:
             raise ValueError("member_id is required.")
         if type(current) is not MembershipCategory:
@@ -557,12 +574,11 @@ class MySTVProcessor:
                 f"Member {member_id} has multiple active memberships with category "
                 f"{current} in club {self.club_id}. No change was made."
             )
-            
+
         membership = matches[0]
         try:
             self.mystv_client.delete_member_membership_unguarded(
-                member_id=member_id,
-                line_no=membership["lineNumber"]
+                member_id=member_id, line_no=membership["lineNumber"]
             )
         finally:
             if clear_cache:
