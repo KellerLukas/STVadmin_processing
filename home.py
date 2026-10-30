@@ -2,10 +2,13 @@ import logging
 import os
 import signal
 import subprocess
+import unicodedata
 from collections import deque
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
 from datetime import datetime
+from difflib import SequenceMatcher
+from html import escape
 from io import BytesIO
 from threading import Lock
 from typing import Any
@@ -110,7 +113,7 @@ def collect_members_refresh_result() -> None:
 
 def setup_page() -> None:
     st.set_page_config(page_title="mySTV Manager", page_icon="🏅", layout="wide")
-    st.markdown(
+    st.html(
         """
         <style>
         :root {
@@ -119,61 +122,69 @@ def setup_page() -> None:
             --stv-white: #ffffff;
         }
 
-        [data-testid="stAppViewContainer"] {
-            background: var(--stv-white);
-            color: var(--stv-grey);
-        }
+        [data-testid="stHeader"] { background: transparent; }
 
-        [data-testid="stHeader"] {
-            background: transparent;
-        }
-
-        .main .block-container {
-            max-width: 1180px;
-            padding-top: 2.5rem;
+        [data-testid="stMainBlockContainer"], .main .block-container {
+            max-width: 1280px;
+            padding-top: 2rem;
             padding-bottom: 3rem;
         }
 
-        h1, h2, h3 {
-            color: var(--stv-grey);
-            letter-spacing: -0.025em;
+        h1, h2, h3, h4 { letter-spacing: -0.025em; }
+
+        h2 {
+            color: var(--stv-red);
         }
 
-        [data-testid="stCaptionContainer"] {
-            color: var(--stv-grey);
-        }
+        h3, h4, [data-testid="stCaptionContainer"] { color: var(--stv-grey); }
 
-        [data-testid="stVerticalBlockBorderWrapper"] {
-            background: var(--stv-white);
-            border: 1px solid rgba(135, 135, 135, 0.3);
-            border-radius: 16px;
-            box-shadow: 0 5px 18px rgba(135, 135, 135, 0.12);
+        hr {
+            border: 0;
+            border-top: 1px solid rgba(135, 135, 135, 0.25);
+            margin: 1.5rem 0;
         }
 
         .stButton > button {
             min-height: 2.75rem;
-            border: 1px solid var(--stv-grey);
-            border-radius: 10px;
-            background: var(--stv-white);
-            color: var(--stv-grey);
             font-weight: 600;
-            transition: border-color 150ms ease, color 150ms ease,
-                box-shadow 150ms ease, transform 150ms ease;
+            transition: border-color 150ms ease, box-shadow 150ms ease;
         }
 
-        .stButton > button:hover {
+        .stButton > button:hover:not(:disabled) {
             border-color: var(--stv-red);
-            color: var(--stv-red);
-            box-shadow: 0 4px 12px rgba(135, 135, 135, 0.2);
-            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(167, 53, 58, 0.12);
         }
 
         .stButton > button:focus-visible {
-            outline: 3px solid var(--stv-red);
-            outline-offset: 2px;
+            outline: 2px solid var(--stv-red);
+            outline-offset: 3px;
         }
 
-        /* Scope the compact status button through Streamlit's widget keys. */
+        [data-testid="stMetric"] {
+            padding: 0.75rem 0;
+            border-bottom: 2px solid rgba(167, 53, 58, 0.18);
+        }
+
+        [data-testid="stMetricValue"] { color: var(--stv-red); }
+        [data-testid="stMetricLabel"] { color: var(--stv-grey); }
+
+        .character-diff {
+            font-family: monospace;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            padding: 0.8rem;
+            border: 1px solid rgba(135, 135, 135, 0.25);
+            border-radius: 0.5rem;
+        }
+
+        .character-diff mark {
+            background: rgba(167, 53, 58, 0.12);
+            color: var(--stv-red);
+            text-decoration: underline;
+            text-decoration-thickness: 2px;
+        }
+
+        /* The status pill keeps its semantic colors and compact size. */
         .st-key-btn_members_refresh_status button {
             min-height: 1.75rem;
             padding: 0.15rem 0.65rem;
@@ -182,7 +193,6 @@ def setup_page() -> None:
             background: var(--status-background);
             color: var(--status-color);
             box-shadow: none;
-            transform: none;
         }
 
         .st-key-btn_members_refresh_status button p {
@@ -195,64 +205,50 @@ def setup_page() -> None:
             background: var(--status-background);
             color: var(--status-color);
             box-shadow: none;
-            transform: none;
         }
 
         .st-key-btn_members_refresh_status button:focus-visible {
-            outline: 2px solid var(--status-color);
-            outline-offset: 2px;
+            outline-color: var(--status-color);
         }
 
         .hero {
-            margin-bottom: 2rem;
-            padding: 2.25rem 2.5rem;
-            border-radius: 22px;
+            padding: 2rem 2.25rem;
+            border-radius: 16px;
             background: var(--stv-red);
             color: var(--stv-white);
-            box-shadow: 0 14px 32px rgba(135, 135, 135, 0.2);
         }
 
         .hero-eyebrow {
-            margin: 0 0 0.75rem;
+            margin: 0 0 0.6rem;
             color: var(--stv-white);
             font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 0.14em;
+            font-weight: 600;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
         }
 
         .hero-title {
             margin: 0;
+            padding: 0;
             color: var(--stv-white);
-            font-size: clamp(2rem, 4vw, 2.8rem);
-            font-weight: 750;
-            letter-spacing: -0.045em;
-            line-height: 1.1;
-        }
-
-        .section-intro {
-            margin: 0 0 1rem;
-            color: var(--stv-grey);
-        }
-
-        .danger-zone-divider {
-            margin-top: 2.5rem;
-            border-top: 1px solid var(--stv-grey);
+            font-size: clamp(2rem, 4vw, 2.75rem);
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            line-height: 1.15;
         }
 
         @media (max-width: 640px) {
-            .main .block-container {
+            [data-testid="stMainBlockContainer"], .main .block-container {
                 padding: 1rem 1rem 2rem;
             }
+            .hero { padding: 1.5rem; }
+        }
 
-            .hero {
-                padding: 1.6rem 1.4rem;
-                border-radius: 16px;
-            }
+        @media (prefers-reduced-motion: reduce) {
+            .stButton > button { transition: none; }
         }
         </style>
-        """,
-        unsafe_allow_html=True,
+        """
     )
 
 
@@ -308,13 +304,15 @@ def configure_members_refresh_status() -> None:
 
 
 def configure_statistics() -> None:
+    st.header("Mitgliederstatistik", anchor=False)
     with st.container(border=True):
-        st.markdown("### Mitgliederstatistik")
         st.caption("Aktuelle Kennzahlen aus mySTV auf Abruf.")
         statistics_output = st.empty()
         if st.button(
             "Statistik abrufen",
             key="btn_statistics",
+            type="primary",
+            icon=":material/bar_chart:",
             disabled=is_background_task_running(),
         ):
             start_background_task(
@@ -340,10 +338,10 @@ def configure_statistics() -> None:
                         column.metric(label, value if value is not None else "—")
                     demographics_col, categories_col = st.columns([1, 1.4])
                     with demographics_col:
-                        st.markdown("#### Geschlechterverteilung")
+                        st.markdown("### Geschlechterverteilung")
                         st.dataframe(demographics, hide_index=True, width="stretch")
                     with categories_col:
-                        st.markdown("#### Mitgliedskategorien")
+                        st.markdown("### Mitgliedskategorien")
                         st.dataframe(
                             categories,
                             hide_index=True,
@@ -363,34 +361,32 @@ def configure_statistics() -> None:
 
 
 def configure_export_buttons() -> None:
-    st.markdown("## Exporte")
-    st.markdown(
-        '<p class="section-intro">Wähle eine Liste oder Aktion aus.</p>',
-        unsafe_allow_html=True,
-    )
+    st.header("Exporte", anchor=False)
 
     st.markdown("### CleverReach")
     cleverreach_col1, cleverreach_col2 = st.columns(2)
-    with cleverreach_col1, st.container(border=True):
+    with cleverreach_col1, st.container(border=True, height="stretch"):
         st.markdown("#### Empfänger synchronisieren")
         st.caption("Mitglieder mit CleverReach abgleichen.")
+        st.space("stretch")
         if st.button(
             "Sync to CleverReach",
             key="btn_cleverreach_sync",
-            use_container_width=True,
+            width="stretch",
             disabled=is_background_task_running(),
         ):
             start_background_task(
                 "CleverReach-Synchronisierung",
                 st.session_state.orch.sync_to_cleverreach,
             )
-    with cleverreach_col2, st.container(border=True):
+    with cleverreach_col2, st.container(border=True, height="stretch"):
         st.markdown("#### CleverReach-Daten")
         st.caption("Die CleverReach-Daten als CSV exportieren.")
+        st.space("stretch")
         if st.button(
             "Export CleverReach Data",
             key="btn_cleverreach_export",
-            use_container_width=True,
+            width="stretch",
             disabled=is_background_task_running(),
         ):
             start_background_task(
@@ -400,39 +396,42 @@ def configure_export_buttons() -> None:
 
     st.markdown("### Mitgliederlisten")
     member_cols = st.columns(3)
-    with member_cols[0], st.container(border=True):
+    with member_cols[0], st.container(border=True, height="stretch"):
         st.markdown("#### Riegenlisten")
         st.caption("Listen nach Institut exportieren.")
+        st.space("stretch")
         if st.button(
             "Riegenlisten",
             key="btn_riegenlisten",
-            use_container_width=True,
+            width="stretch",
             disabled=is_background_task_running(),
         ):
             start_background_task(
                 "Riegenlisten-Export",
                 st.session_state.orch.export_each_institute_to_excel,
             )
-    with member_cols[1], st.container(border=True):
+    with member_cols[1], st.container(border=True, height="stretch"):
         st.markdown("#### Infoheft")
         st.caption("Adressliste für das Infoheft erstellen.")
+        st.space("stretch")
         if st.button(
             "Infoheft Liste",
             key="btn_infoheft",
-            use_container_width=True,
+            width="stretch",
             disabled=is_background_task_running(),
         ):
             start_background_task(
                 "Infoheft-Export",
                 st.session_state.orch.export_infoheft_address_list,
             )
-    with member_cols[2], st.container(border=True):
+    with member_cols[2], st.container(border=True, height="stretch"):
         st.markdown("#### Coaches")
         st.caption("Aktuelle Coachliste exportieren.")
+        st.space("stretch")
         if st.button(
             "Coachliste",
             key="btn_coachliste",
-            use_container_width=True,
+            width="stretch",
             disabled=is_background_task_running(),
         ):
             start_background_task(
@@ -441,23 +440,25 @@ def configure_export_buttons() -> None:
             )
 
     no_mail_col, gv_col = st.columns(2)
-    with no_mail_col, st.container(border=True):
+    with no_mail_col, st.container(border=True, height="stretch"):
         st.markdown("#### Kein E-Mail-Versand")
         st.caption("Mitglieder ohne Mail oder Newsletter-Einwilligung.")
+        st.space("stretch")
         if st.button(
             "No Mail",
             key="btn_no_mail",
-            use_container_width=True,
+            width="stretch",
             disabled=is_background_task_running(),
         ):
             start_background_task(
                 "No-Mail-Export",
                 st.session_state.orch.export_no_mail_excel,
             )
-    with gv_col, st.container(border=True):
+    with gv_col, st.container(border=True, height="stretch"):
         st.markdown("#### GV-Listen nach Jahr")
         st.caption("Jahreslisten für eine Generalversammlung exportieren.")
-        input_col, button_col = st.columns([3, 1])
+        st.space("stretch")
+        input_col, button_col = st.columns([2, 1])
         with input_col:
             gv_year = st.text_input(
                 "GV lists for year:",
@@ -470,7 +471,7 @@ def configure_export_buttons() -> None:
             if st.button(
                 "Export",
                 key="export_gv_button",
-                use_container_width=True,
+                width="stretch",
                 disabled=is_background_task_running(),
             ):
                 if gv_year.isdigit() and len(gv_year) == 4:
@@ -526,7 +527,7 @@ def configure_console() -> None:
     if isinstance(refresh_task, Future) and refresh_task.done():
         # Redraw the completed result only; this never polls the MySTV API.
         st.rerun(scope="app")
-    st.markdown("#### Console")
+    st.header("Console", anchor=False)
     task = st.session_state.get("background_task")
     task_label = st.session_state.get("background_task_label")
     if isinstance(task, Future):
@@ -541,17 +542,17 @@ def configure_console() -> None:
             else:
                 st.success(f"{task_label} completed.")
 
-    st.caption("Recent application logs")
     log_messages = get_console_log_handler().get_messages()
     st.code("\n".join(log_messages) or "No logs yet.", language=None, height=260)
 
 
 def configure_application_actions() -> None:
-    st.markdown('<hr class="danger-zone-divider">', unsafe_allow_html=True)
-    st.markdown("#### Anwendung")
+    st.header("Anwendung", anchor=False)
     reload_col, cache_col = st.columns(2)
-    with reload_col, st.container(border=True):
+    with reload_col, st.container(border=True, height="stretch"):
+        st.markdown("### Serverdaten")
         st.caption("Startet die Aktualisierung der Mitgliederdaten auf dem Server.")
+        st.space("stretch")
         if st.button(
             "Datenbank neu laden",
             icon=":material/sync:",
@@ -560,11 +561,13 @@ def configure_application_actions() -> None:
         ):
             start_members_refresh_task(start_refresh=True)
             st.rerun()
-    with cache_col, st.container(border=True):
+    with cache_col, st.container(border=True, height="stretch"):
+        st.markdown("### Lokaler Cache")
         st.caption(
             "Leert die lokalen Mitglieder- und Riegendaten. "
             "Der nächste Abruf lädt sie erneut."
         )
+        st.space("stretch")
         if st.button(
             "Reset cache",
             icon=":material/delete_sweep:",
@@ -576,8 +579,10 @@ def configure_application_actions() -> None:
             )
             st.rerun()
     folder_col, shutdown_col = st.columns(2)
-    with folder_col, st.container(border=True):
+    with folder_col, st.container(border=True, height="stretch"):
+        st.markdown("### Exportordner")
         st.caption("Öffnet den Ordner mit den exportierten Dateien.")
+        st.space("stretch")
         if st.button(
             "Open output folder in Finder",
             key="btn_open_output_folder",
@@ -590,20 +595,96 @@ def configure_application_actions() -> None:
                 st.error(f"Could not open the output folder: {error}")
             else:
                 st.toast("Opened output folder in Finder")
-    with shutdown_col, st.container(border=True):
+    with shutdown_col, st.container(border=True, height="stretch"):
+        st.markdown("### Anwendung beenden")
         st.caption("Beendet die Anwendung auf diesem Computer.")
+        st.space("stretch")
         if st.button(
             "Shut down", icon=":material/power_settings_new:", width="stretch"
         ):
             os.kill(os.getpid(), signal.SIGTERM)
 
 
+def show_invisible_characters(value: str) -> str:
+    markers = {
+        " ": "·",
+        "\u00a0": "[NBSP]",
+        "\t": "[TAB]",
+        "\n": "[LF]",
+        "\r": "[CR]",
+        "\u200b": "[ZWSP]",
+    }
+    visible = []
+    for character in value:
+        if character in markers:
+            visible.append(markers[character])
+        elif (
+            not character.isprintable()
+            or character.isspace()
+            or unicodedata.category(character) in {"Mn", "Me"}
+        ):
+            visible.append(
+                f"[U+{ord(character):04X} {unicodedata.name(character, 'UNNAMED')}]"
+            )
+        else:
+            visible.append(character)
+    return "".join(visible)
+
+
+def configure_difference_details(mystv_value: str, fairgate_value: str) -> None:
+    fragments: dict[str, list[str]] = {"mySTV": [], "Fairgate": []}
+    characters: list[dict[str, str | int]] = []
+    matcher = SequenceMatcher(None, mystv_value, fairgate_value, autojunk=False)
+    for tag, left_start, left_end, right_start, right_end in matcher.get_opcodes():
+        for source, value, start, end in (
+            ("mySTV", mystv_value, left_start, left_end),
+            ("Fairgate", fairgate_value, right_start, right_end),
+        ):
+            fragment = escape(show_invisible_characters(value[start:end]))
+            if tag != "equal" and start != end:
+                fragment = f"<mark>{fragment}</mark>"
+                for position in range(start, end):
+                    character = value[position]
+                    characters.append(
+                        {
+                            "Quelle": source,
+                            "Position": position + 1,
+                            "Zeichen": show_invisible_characters(character),
+                            "Unicode": f"U+{ord(character):04X}",
+                            "Name": unicodedata.name(character, "UNNAMED"),
+                        }
+                    )
+            fragments[source].append(fragment)
+    st.caption(
+        "Abweichungen sind markiert. Leerzeichen: ·; geschütztes Leerzeichen: [NBSP]."
+    )
+    for column, (source, value) in zip(
+        st.columns(2),
+        (("mySTV", mystv_value), ("Fairgate", fairgate_value)),
+        strict=True,
+    ):
+        with column:
+            st.markdown(f"**{source} · {len(value)} Zeichen**")
+            content = "".join(fragments[source]) if value else "[LEER]"
+            st.html(f'<div class="character-diff">{content}</div>')
+    if characters:
+        with st.expander("Unicode-Details der abweichenden Zeichen"):
+            st.caption("Positionen beginnen bei 1; gezählt werden Unicode-Codepoints.")
+            st.dataframe(pd.DataFrame(characters), hide_index=True, width="stretch")
+    else:
+        st.info(
+            "Die Textdarstellungen sind identisch. Der Unterschied kann in den "
+            "ursprünglichen Datentypen liegen."
+        )
+
+
 def clear_fairgate_comparison() -> None:
     st.session_state.pop("fairgate_comparison_task", None)
+    st.session_state.pop("fairgate_diff_table", None)
 
 
 def configure_fairgate_comparison() -> None:
-    st.markdown("## Fairgate Vergleich")
+    st.header("Fairgate Vergleich", anchor=False)
     with st.container(border=True):
         st.caption(
             "Vergleiche einen Fairgate-Excel-Export mit den geladenen mySTV-Daten."
@@ -619,11 +700,13 @@ def configure_fairgate_comparison() -> None:
             st.button(
                 "Vergleichen",
                 key="btn_fairgate_comparison",
+                type="primary",
                 icon=":material/compare_arrows:",
                 disabled=upload is None or is_background_task_running(),
             )
             and upload is not None
         ):
+            clear_fairgate_comparison()
             start_background_task(
                 "Fairgate Comparison",
                 st.session_state.orch.compare_to_fairgate_export,
@@ -670,13 +753,40 @@ def configure_fairgate_comparison() -> None:
                     "Keine Unterschiede in den verglichenen Feldern gemeinsamer Mitglieder."
                 )
             else:
-                st.dataframe(
-                    differences,
+                show_invisible = st.toggle(
+                    "Unsichtbare Zeichen anzeigen",
+                    key="fairgate_show_invisible",
+                    help="Zeigt Leerzeichen und Unicode-Sonderzeichen, ohne die Daten zu ändern.",
+                )
+                displayed_differences = differences.copy()
+                if show_invisible:
+                    for source in ("mySTV", "Fairgate"):
+                        displayed_differences[source] = displayed_differences[
+                            source
+                        ].map(show_invisible_characters)
+                st.caption(
+                    "Wähle eine Zeile aus, um die Zeichen im Detail zu vergleichen."
+                )
+                selection = st.dataframe(
+                    displayed_differences,
+                    key="fairgate_diff_table",
+                    on_select="rerun",
+                    selection_mode="single-row",
                     hide_index=True,
                     width="stretch",
                     height=min(600, (len(differences) + 1) * 35 + 3),
-                    column_config={col: st.column_config.TextColumn(width="small") for col in differences.columns},
+                    column_config={
+                        col: st.column_config.TextColumn(width="small")
+                        for col in differences.columns
+                    },
                 )
+                if selection.selection.rows:
+                    row = differences.iloc[selection.selection.rows[0]]
+                    st.markdown("#### Zeichendetails")
+                    st.text(
+                        f"{row['STV-Nummer']} · {row['Vorname']} {row['Nachname']} · {row['Feld']}"
+                    )
+                    configure_difference_details(row["mySTV"], row["Fairgate"])
         for tab, members in (
             (mystv_tab, missing_in_mystv),
             (fairgate_tab, missing_in_fairgate),
@@ -702,11 +812,16 @@ def run_home() -> None:
     if "members_refresh_running" not in st.session_state:
         start_members_refresh_task()
     configure_title()
-    configure_members_refresh_status()
+    with st.container(horizontal=True, horizontal_alignment="right"):
+        configure_members_refresh_status()
     configure_statistics()
+    st.divider()
     configure_export_buttons()
+    st.divider()
     configure_console()
+    st.divider()
     configure_application_actions()
+    st.divider()
     configure_fairgate_comparison()
 
 
