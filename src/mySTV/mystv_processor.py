@@ -150,6 +150,35 @@ class MembersColumns(StrEnum):
     _GETS_NEWSLETTER = "getsNewsletter"
 
 
+def _load_mapper(filename: str) -> dict[str, Any]:
+    """Load a JSON file from the same directory as this source file."""
+    path = Path(__file__).parent / filename
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            data: object = json.load(f)
+    except OSError, UnicodeDecodeError, json.JSONDecodeError:
+        raise MySTVConfigurationError(f"Could not load mapper file {path}.") from None
+    if not isinstance(data, dict):
+        raise MySTVConfigurationError(f"Mapper file {path} must contain an object.")
+    mapper: dict[str, str] = {}
+    for code, name in data.items():
+        if not isinstance(code, str) or not isinstance(name, str):
+            raise MySTVConfigurationError(
+                f"Mapper file {path} must contain string codes and names."
+            )
+        mapper[code] = name
+    return mapper
+
+
+MAPPER_INSTITUTE_CODE_TO_NAME: dict[str, str] = {
+    code: name
+    for code, name in _load_mapper("mySTV_mapper_institute_code_to_name.json").items()
+}
+MAPPER_FUNCTION_CODE_TO_NAME: dict[str, str] = {
+    code: name
+    for code, name in _load_mapper("mySTV_mapper_function_code_to_name.json").items()
+}
+
 YOUTH_INSTITUTE_CODES = ["3", "4", "8", "9", "10", "24", "25", "26"]
 INFOHEFT_DIGITAL_INSTITUTE_CODE = "29"
 ADMIN_INSTITUTE_CODES = [
@@ -164,6 +193,8 @@ EXPECTED_DATE_FORMAT_PER_COL = {
     MembersColumns.MEMBERSHIP_ENTRY_DATES: "%d.%m.%Y",
 }
 EMPTY_DATE_STR = "-"
+
+INSTITUTES_TYPE = dict[str, dict[str, list[str]]]
 
 
 class MySTVProcessor:
@@ -198,27 +229,6 @@ class MySTVProcessor:
         self.__dict__.pop("_institutes_cached", None)
         logger.info("Cleared cached MySTV member and institute data")
 
-    def _load_mapper(self, filename: str) -> dict[str, Any]:
-        """Load a JSON file from the same directory as this source file."""
-        path = Path(__file__).parent / filename
-        try:
-            with path.open("r", encoding="utf-8") as f:
-                data: object = json.load(f)
-        except OSError, UnicodeDecodeError, json.JSONDecodeError:
-            raise MySTVConfigurationError(
-                f"Could not load mapper file {path}."
-            ) from None
-        if not isinstance(data, dict):
-            raise MySTVConfigurationError(f"Mapper file {path} must contain an object.")
-        mapper: dict[str, str] = {}
-        for code, name in data.items():
-            if not isinstance(code, str) or not isinstance(name, str):
-                raise MySTVConfigurationError(
-                    f"Mapper file {path} must contain string codes and names."
-                )
-            mapper[code] = name
-        return mapper
-
     # Cache on this processor instance; public properties return defensive copies.
     @cached_property
     def _members_cached(self) -> pd.DataFrame:
@@ -237,13 +247,13 @@ class MySTVProcessor:
         return copy.deepcopy(self._members_cached)
 
     @cached_property
-    def _institutes_cached(self) -> dict[str, dict[str, list[str]]]:
+    def _institutes_cached(self) -> INSTITUTES_TYPE:
         raw_groups = self.mystv_client.get_institute_members_raw()
         if not isinstance(raw_groups, list):
             raise MySTVConfigurationError(
                 "MySTV institute response must contain a list of assignments."
             )
-        groups: dict[str, dict[str, list[str]]] = {}
+        groups: INSTITUTES_TYPE = {}
         for group in raw_groups:
             if not isinstance(group, dict):
                 raise MySTVConfigurationError(
@@ -271,7 +281,7 @@ class MySTVProcessor:
         return groups
 
     @property
-    def institutes(self) -> dict[str, dict[str, list[str]]]:
+    def institutes(self) -> INSTITUTES_TYPE:
         return copy.deepcopy(self._institutes_cached)
 
     def get_member(self, member_id: str) -> pd.Series[Any]:
@@ -284,6 +294,24 @@ class MySTVProcessor:
                 f"Expected one member for ID {member_id}, got multiple rows."
             )
         return copy.deepcopy(member)
+
+    def get_functions_for_member(self, member_id: str) -> list[str]:
+        if member_id not in self._members_cached.index:
+            raise ValueError(f"Could not find member with id {member_id}")
+        return self.get_functions_for_member_unguarded(
+            member_number=member_id, institutes=self._institutes_cached
+        )
+
+    @staticmethod
+    def get_functions_for_member_unguarded(
+        member_number: str, institutes: INSTITUTES_TYPE
+    ) -> list[str]:
+        functions = []
+        for institute in institutes.values():  # avoid deepcopy for faster processing
+            for function_code, members in institute.items():
+                if member_number in members:
+                    functions.append(function_code)
+        return functions
 
     def _apply_member_data_enrichment(self, members_df: pd.DataFrame) -> pd.DataFrame:
         """Add any additional columns or transformations to the members DataFrame."""
@@ -389,31 +417,17 @@ class MySTVProcessor:
         ].isin(emails_on_blacklist)
         return members_df
 
-    @cached_property
-    def mapper_institute_code_to_name(self) -> dict[str, str]:
-        mapper_institute_code_to_name = self._load_mapper(
-            "mySTV_mapper_institute_code_to_name.json"
-        )
-        return {code: name for code, name in mapper_institute_code_to_name.items()}
-
-    @cached_property
-    def mapper_function_code_to_name(self) -> dict[str, str]:
-        mapper_function_code_to_name = self._load_mapper(
-            "mySTV_mapper_function_code_to_name.json"
-        )
-        return {code: name for code, name in mapper_function_code_to_name.items()}
-
     def institute_id_to_name(self, institute_code: str) -> str:
-        return self.mapper_institute_code_to_name.get(
+        return MAPPER_INSTITUTE_CODE_TO_NAME.get(
             institute_code, f"Unknown Institute Code {institute_code}"
         )
 
     def function_id_to_name(self, function_code: str) -> str:
-        return self.mapper_function_code_to_name.get(
+        return MAPPER_FUNCTION_CODE_TO_NAME.get(
             function_code, f"Unknown Function Code {function_code}"
         )
 
-    def pretty_print_institutes(self, groups: dict[str, dict[str, list[str]]]) -> None:
+    def pretty_print_institutes(self, groups: INSTITUTES_TYPE) -> None:
         for institute_code, functions in groups.items():
             institute_name = self.institute_id_to_name(institute_code)
             print(f"Institute: {institute_name} (Code: {institute_code})")
@@ -448,8 +462,8 @@ class MySTVProcessor:
         """Add an institute assignment and return response.json() unchanged."""
         if (
             not member_id
-            or institute_code not in self.mapper_institute_code_to_name
-            or function_code not in self.mapper_function_code_to_name
+            or institute_code not in MAPPER_INSTITUTE_CODE_TO_NAME
+            or function_code not in MAPPER_FUNCTION_CODE_TO_NAME
         ):
             raise ValueError(
                 "member_id, institute_code and function_code are required."

@@ -9,7 +9,6 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from datetime import datetime
 from difflib import SequenceMatcher
 from html import escape
-from io import BytesIO
 from threading import Lock
 from typing import Any
 
@@ -532,14 +531,17 @@ def configure_console() -> None:
     task_label = st.session_state.get("background_task_label")
     if isinstance(task, Future):
         if not task.done():
+            st.toast(f"{task_label} in progress…")
             st.info(f"{task_label} in progress…")
         else:
             if not st.session_state.get("background_task_completion_rerun", False):
                 st.session_state.background_task_completion_rerun = True
                 st.rerun(scope="app")
             if task.exception() is not None:
+                st.toast(f"{task_label} failed: {task.exception()}")
                 st.error(f"{task_label} failed: {task.exception()}")
             else:
+                st.toast(f"{task_label} completed.")
                 st.success(f"{task_label} completed.")
 
     log_messages = get_console_log_handler().get_messages()
@@ -686,31 +688,18 @@ def clear_fairgate_comparison() -> None:
 def configure_fairgate_comparison() -> None:
     st.header("Fairgate Vergleich", anchor=False)
     with st.container(border=True):
-        st.caption(
-            "Vergleiche einen Fairgate-Excel-Export mit den geladenen mySTV-Daten."
-        )
-        upload = st.file_uploader(
-            "Fairgate-Excel-Datei",
-            type=["xlsx"],
-            key="fairgate_upload",
-            on_change=clear_fairgate_comparison,
+        st.caption("Lade und vergleiche die Fairgate-Daten mit den mySTV-Daten.")
+        if st.button(
+            "Vergleichen",
+            key="btn_fairgate_comparison",
+            type="primary",
+            icon=":material/compare_arrows:",
             disabled=is_background_task_running(),
-        )
-        if (
-            st.button(
-                "Vergleichen",
-                key="btn_fairgate_comparison",
-                type="primary",
-                icon=":material/compare_arrows:",
-                disabled=upload is None or is_background_task_running(),
-            )
-            and upload is not None
         ):
             clear_fairgate_comparison()
             start_background_task(
                 "Fairgate Comparison",
                 st.session_state.orch.compare_to_fairgate_export,
-                BytesIO(upload.getvalue()),
             )
             # Retain the result when other actions replace the shared background task.
             st.session_state.fairgate_comparison_task = st.session_state.background_task

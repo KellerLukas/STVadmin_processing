@@ -1,14 +1,20 @@
 from enum import StrEnum
 from functools import cached_property
+from io import BytesIO
 from pathlib import Path
 from typing import Any, BinaryIO
 
 import pandas as pd
 
+from src.config.constants import FAIRGATE_CLUB_SLUG
+from src.fairgate.fairgate_client import FairgateClient
 from src.mySTV.mystv_processor import (
     EMPTY_DATE_STR,
+    INSTITUTES_TYPE,
+    MAPPER_FUNCTION_CODE_TO_NAME,
     InternalCategory,
     MembersColumns,
+    MySTVProcessor,
 )
 from src.utils.utils import index_members
 
@@ -138,12 +144,26 @@ MAP_WEBSITE_TO_INTERNAL_CAT = {
     "http://Knaben.tvw": InternalCategory.JUGENDMITGLIED,
     "http://Aktiver_Turner.tvw": InternalCategory.AKTIVMITGLIED,
     "http://Aktive_Turnerin.tvw": InternalCategory.AKTIVMITGLIED,
-    "http://Kitu_Kinder.tvw": InternalCategory.JUGENDMITGLIED,
     "http://Freimitg._Turnend__1.tvw": InternalCategory.FREIMITGLIED,
     "http://Ehrenmitg._turnend.tvw": InternalCategory.EHRENMITGLIED,
     "http://Ehrenmitg._nturnend.tvw": InternalCategory.EHRENMITGLIED_NT,
     "http://Freimitg._nturnend__10.tvw": InternalCategory.FREIMITGLIED_NT,
+    "https://ELKI.tvw": InternalCategory.JUGENDMITGLIED,
+    "https://ELKI": InternalCategory.JUGENDMITGLIED,
+    "http://ELKI.tvw": InternalCategory.JUGENDMITGLIED,
 }
+FUNCTION_CODE_MUKIELKI = "10540"
+FUNCTION_CODE_KITU = "10541"
+MAP_WEBSITES_TO_YOUTH_FUNCTION_CODE = {
+    "https://ELKI.tvw": FUNCTION_CODE_MUKIELKI,
+    "https://ELKI": FUNCTION_CODE_MUKIELKI,
+    "http://ELKI.tvw": FUNCTION_CODE_MUKIELKI,
+    "http://Kitu_Kinder.tvw": FUNCTION_CODE_KITU,
+}
+MAP_WEBSITE_TO_INTERNAL_CAT.update(
+    {k: InternalCategory.JUGENDMITGLIED for k in MAP_WEBSITES_TO_YOUTH_FUNCTION_CODE}
+)
+
 EXPECTED_DATE_FORMAT_PER_COL = {
     MembersColumns.BIRTHDAY: "%Y-%m-%d",
     MembersColumns.MEMBERSHIP_ENTRY_DATES: "%d.%m.%Y",
@@ -151,8 +171,29 @@ EXPECTED_DATE_FORMAT_PER_COL = {
 
 
 class FairgateProcessor:
-    def __init__(self, fg_data: pd.DataFrame) -> None:
-        self.fg_data = self._preprocess_data(fg_data)
+    def __init__(
+        self,
+        *,
+        filename: str | Path | BinaryIO | None = None,
+        club_slug: str | None = None,
+    ) -> None:
+        if filename is not None and club_slug is not None:
+            raise ValueError("Choose filename or club_slug, not both.")
+        if club_slug is not None and not club_slug:
+            raise ValueError("club_slug must not be empty.")
+        self.filename = filename
+        self.club_slug = club_slug if club_slug is not None else FAIRGATE_CLUB_SLUG
+
+    @cached_property
+    def fg_data(self) -> pd.DataFrame:
+        """Load and preprocess the selected source once, on first access."""
+        if self.filename is not None:
+            fg_data = self._read_excel(self.filename)
+        else:
+            with FairgateClient(club_slug=self.club_slug) as fg_client:
+                fg_client.login()
+                fg_data = self._read_excel(BytesIO(fg_client.export_contacts()))
+        return self._preprocess_data(fg_data)
 
     def _preprocess_data(self, fg_data: pd.DataFrame) -> pd.DataFrame:
         expected_date_formats = ["%d.%m.%Y", "%Y-%m-%d %H:%M:%S"]
@@ -175,9 +216,24 @@ class FairgateProcessor:
 
     @classmethod
     def from_excel(cls, filename: str | Path | BinaryIO) -> FairgateProcessor:
+        """Select a manual export; reading is deferred until data is accessed."""
+        return cls(filename=filename)
+
+    @staticmethod
+    def _read_excel(filename: str | Path | BinaryIO) -> pd.DataFrame:
+        if not isinstance(filename, (str, Path)):
+            filename.seek(0)
         # Keep identifiers as strings to preserve leading zeros.
         fg_data = pd.read_excel(filename, dtype=str)
-        return cls(fg_data)
+        required_columns = set(FAIRGATE_DATE_COLS) | set(
+            MAP_MYSTV_TO_FAIRGATE_COLUMN.values()
+        )
+        missing_columns = required_columns.difference(fg_data.columns)
+        if missing_columns:
+            raise FairgateConfigurationError(
+                f"Fairgate export is missing required columns: {', '.join(sorted(missing_columns))}."
+            )
+        return fg_data
 
     @cached_property
     def _members_cached(self) -> pd.DataFrame:
@@ -194,8 +250,9 @@ class FairgateProcessor:
         return self._members_cached.copy()
 
     def clear_cached_data(self) -> None:
-        """Discard the member snapshot after editing or replacing fg_data."""
+        """Reload the selected Excel or online source on the next data access."""
         self.__dict__.pop("_members_cached", None)
+        self.__dict__.pop("fg_data", None)
 
     @property
     def former_members(self) -> pd.DataFrame:
@@ -262,9 +319,30 @@ def find_db_row_diffs(
     return diffs
 
 
+def do_functions_match_website(
+    member_function_codes: list[str], member_website: str
+) -> bool:
+    fg_function_code = MAP_WEBSITES_TO_YOUTH_FUNCTION_CODE.get(member_website)
+    if fg_function_code and fg_function_code not in member_function_codes:
+        return False
+        
+    for mystv_function_code in member_function_codes:
+        if (
+            mystv_function_code in MAP_WEBSITES_TO_YOUTH_FUNCTION_CODE.values()
+            and MAP_WEBSITES_TO_YOUTH_FUNCTION_CODE.get(member_website) != mystv_function_code
+        ):
+            return False
+    return True
+
+
 def compare_dbs(
-    mystv_members: pd.DataFrame, fg_members: pd.DataFrame
-) -> tuple[dict[str, list[MembersColumns]], list[str], list[str]]:
+    mystv_members: pd.DataFrame, fg_members: pd.DataFrame, institutes: INSTITUTES_TYPE
+) -> tuple[
+    dict[str, list[MembersColumns]],
+    dict[str, list[str]],
+    list[str],
+    list[str],
+]:
     mystv_ids = set(mystv_members.index)
     fg_ids = set(fg_members.index)
     # Preserve source order in both missing-member lists.
@@ -274,7 +352,8 @@ def compare_dbs(
     ids_missing_in_fg = [
         member_id for member_id in mystv_members.index if member_id not in fg_ids
     ]
-    diffs = {}
+    diff_columns = {}
+    diff_functions = {}
     for member_number, mystv_row in mystv_members.iterrows():
         if not isinstance(member_number, str):
             raise TypeError("Member IDs in the index must be strings.")
@@ -286,20 +365,29 @@ def compare_dbs(
                 f"Expected one member for ID {member_number}, got multiple rows."
             )
         member_diffs = find_db_row_diffs(mystv_row=mystv_row, fg_row=fg_row)
+        member_function_codes = MySTVProcessor.get_functions_for_member_unguarded(
+            member_number=member_number, institutes=institutes
+        )
+        if not do_functions_match_website(
+            member_function_codes=member_function_codes,
+            member_website=fg_row[FairgateColumns.WEBSITE],
+        ):
+            diff_functions[member_number] = member_function_codes
         if member_diffs:
-            diffs[member_number] = member_diffs
-    return diffs, ids_missing_in_mystv, ids_missing_in_fg
+            diff_columns[member_number] = member_diffs
+    return diff_columns, diff_functions, ids_missing_in_mystv, ids_missing_in_fg
 
 
 def get_diff_summary(
-    diffs: dict[str, list[MembersColumns]],
+    diff_columns: dict[str, list[MembersColumns]],
+    diff_functions: dict[str, list[str]],
     mystv_members: pd.DataFrame,
     fg_members: pd.DataFrame,
 ) -> pd.DataFrame:
     """Return one row per differing field, keeping both source values visible."""
     columns = ["STV-Nummer", "Vorname", "Nachname", "Feld", "mySTV", "Fairgate"]
     rows = []
-    for member_id, cols in diffs.items():
+    for member_id, cols in diff_columns.items():
         mystv_row = mystv_members.loc[member_id]
         fg_row = fg_members.loc[member_id]
         for col in cols:
@@ -314,4 +402,20 @@ def get_diff_summary(
                     "Fairgate": str(fg_row[fg_col]),
                 }
             )
+    for member_id, member_function_codes in diff_functions.items():
+        mystv_row = mystv_members.loc[member_id]
+        fg_row = fg_members.loc[member_id]
+        functions = [
+            MAPPER_FUNCTION_CODE_TO_NAME[code] for code in member_function_codes
+        ]
+        rows.append(
+            {
+                "STV-Nummer": member_id,
+                "Vorname": mystv_row[MembersColumns.FIRST_NAME],
+                "Nachname": mystv_row[MembersColumns.SURNAME],
+                "Feld": f"Riegen / {FairgateColumns.WEBSITE}",
+                "mySTV": ", ".join(functions),
+                "Fairgate": str(fg_row[FairgateColumns.WEBSITE]),
+            }
+        )
     return pd.DataFrame(rows, columns=columns)
