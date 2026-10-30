@@ -1,7 +1,8 @@
 import itertools
 from collections.abc import Sequence
 from functools import cached_property
-from typing import Any
+from pathlib import Path
+from typing import Any, BinaryIO
 
 import pandas as pd
 
@@ -15,6 +16,13 @@ from src.config.paths import (
     FILENAME_NO_MAIL,
     FILENAME_RIEGENMATRIX,
     FOLDERNAME_RIEGENLISTEN,
+)
+from src.fairgate.fairgate_processor import (
+    MAP_MYSTV_TO_FAIRGATE_COLUMN,
+    FairgateColumns,
+    FairgateProcessor,
+    compare_dbs,
+    get_diff_summary,
 )
 from src.mySTV.mystv_processor import (
     ADMIN_INSTITUTE_CODES,
@@ -39,22 +47,22 @@ class Orchestrator:
         self.cr_processor = CleverreachProcessor()
 
     @cached_property
-    def mystv_client(self) -> MySTVProcessor:
-        client = MySTVProcessor(MYSTV_CLUB_ID)
-        return client
+    def mystv(self) -> MySTVProcessor:
+        mystv = MySTVProcessor(MYSTV_CLUB_ID)
+        return mystv
 
     def is_members_refresh_running(self) -> bool:
         """Read server status without changing the local data cache."""
-        return self.mystv_client.mystv_client.is_members_refresh_running()
+        return self.mystv.mystv_client.is_members_refresh_running()
 
     def start_members_refresh(self) -> bool:
         """Confirm a running server refresh without changing the local data cache."""
-        self.mystv_client.mystv_client.start_members_refresh()
+        self.mystv.mystv_client.start_members_refresh()
         return True
 
     def clear_mystv_cache(self) -> None:
         """Clear local data without starting a server refresh or another login."""
-        self.mystv_client.clear_cached_data()
+        self.mystv.clear_cached_data()
 
     def export_each_institute_to_excel(self) -> None:
         required_columns = [
@@ -67,16 +75,15 @@ class Orchestrator:
         ]
 
         today = pd.Timestamp.now()
+        members = self.mystv.members
 
-        for institute_id, functions in self.mystv_client.institutes.items():
-            institute_name = self.mystv_client.institute_id_to_name(institute_id)
+        for institute_id, functions in self.mystv.institutes.items():
+            institute_name = self.mystv.institute_id_to_name(institute_id)
             filename = f"{institute_name}_export_{today.strftime('%d.%m.%Y')}.xlsx"
             institute_members = [pd.DataFrame()]
             for function_id, member_ids in functions.items():
-                function_name = self.mystv_client.function_id_to_name(function_id)
-                function_members = self.mystv_client.members.loc[
-                    self.mystv_client.members[MembersColumns.MEMBER_ID].isin(member_ids)
-                ].copy()
+                function_name = self.mystv.function_id_to_name(function_id)
+                function_members = members.loc[members.index.isin(member_ids)].copy()
                 function_members[FUNCTION_COLUMN_NAME] = function_name
                 institute_members.append(function_members)
             institute_members_df = pd.concat(institute_members, ignore_index=True)
@@ -94,10 +101,10 @@ class Orchestrator:
         self._export_function_list_to_excel(COACH_FUNCTION_IDS, filename)
 
     def sync_to_cleverreach(self) -> tuple[list[str], list[str]]:
-        return self.cr_processor.sync_members_to_cleverreach(self.mystv_client.members)
+        return self.cr_processor.sync_members_to_cleverreach(self.mystv.members)
 
     def export_cleverreach_csv(self) -> None:
-        self.cr_processor.export_cleverreach_data_to_csv(self.mystv_client.members)
+        self.cr_processor.export_cleverreach_data_to_csv(self.mystv.members)
 
     def export_no_mail_excel(self) -> None:
         required_columns = [
@@ -111,12 +118,9 @@ class Orchestrator:
             MembersColumns.POST_CODE,
             MembersColumns.CITY,
         ]
-        no_mail = self.mystv_client.members.loc[
-            pd.isna(self.mystv_client.members[MembersColumns._PRIMARY_EMAIL])
-        ]
-        no_newsletter = self.mystv_client.members.loc[
-            ~self.mystv_client.members[MembersColumns._GETS_NEWSLETTER]
-        ]
+        members = self.mystv.members
+        no_mail = members.loc[pd.isna(members[MembersColumns._PRIMARY_EMAIL])]
+        no_newsletter = members.loc[~members[MembersColumns._GETS_NEWSLETTER]]
 
         result_df = pd.concat([no_mail, no_newsletter])
         self._export_members_to_excel(
@@ -147,8 +151,9 @@ class Orchestrator:
                 return False
             return pd.Timestamp(row[MembersColumns.MEMBERSHIP_ENTRY_DATES]).year == year
 
-        adults = self.mystv_client.members.loc[
-            self.mystv_client.members[MembersColumns._INTERNAL_CATEGORY]
+        members = self.mystv.members
+        adults = members.loc[
+            members[MembersColumns._INTERNAL_CATEGORY]
             != InternalCategory.JUGENDMITGLIED
         ]
         adults_joined_this_year = adults.loc[
@@ -163,9 +168,7 @@ class Orchestrator:
         milestones = [25, 30, 40, 50, 60, 70, 80, 90, 100]
         for milestone in milestones:
             year = gv_year - milestone
-            milestoners = self.mystv_client.members.loc[
-                self.mystv_client.members.apply(joined_in_year, axis=1, year=year)
-            ]
+            milestoners = members.loc[members.apply(joined_in_year, axis=1, year=year)]
             self._export_members_to_excel(
                 members_df=milestoners,
                 filename=FILENAME_JUBILARE.format(year=milestone),
@@ -176,8 +179,8 @@ class Orchestrator:
             return pd.Timestamp(row[MembersColumns.BIRTHDAY]).year <= year
 
         conversion_year = gv_year - 17
-        youth = self.mystv_client.members.loc[
-            self.mystv_client.members[MembersColumns._INTERNAL_CATEGORY]
+        youth = members.loc[
+            members[MembersColumns._INTERNAL_CATEGORY]
             == InternalCategory.JUGENDMITGLIED
         ]
         youth_born_in_or_after_conversion_year = youth.loc[
@@ -200,18 +203,18 @@ class Orchestrator:
             PEOPLE_COLUMN,
         ]
         function_codes = list(
-            self.mystv_client.institutes[INFOHEFT_DIGITAL_INSTITUTE_CODE].keys()
+            self.mystv.institutes[INFOHEFT_DIGITAL_INSTITUTE_CODE].keys()
         )
         if len(function_codes) != 1:
             raise MySTVConfigurationError(
                 f"Expected only one function code in Infoheft Digital institute but got: {function_codes}"
             )
         function_code = function_codes[0]
-        members_without_printed_infoheft = self.mystv_client.institutes[
+        members_without_printed_infoheft = self.mystv.institutes[
             INFOHEFT_DIGITAL_INSTITUTE_CODE
         ][function_code]
 
-        members = self.mystv_client.members
+        members = self.mystv.members
         members = members.loc[
             ~members[MembersColumns.MEMBER_ID].isin(members_without_printed_infoheft)
         ]
@@ -275,7 +278,7 @@ class Orchestrator:
     def create_riegenmatrix(self) -> None:
         adult_institutes = {
             k: v
-            for k, v in self.mystv_client.institutes.items()
+            for k, v in self.mystv.institutes.items()
             if k not in YOUTH_INSTITUTE_CODES + ADMIN_INSTITUTE_CODES
         }
         riegen = {}
@@ -287,7 +290,7 @@ class Orchestrator:
             for function_code, members in institute.items():
                 if function_code in COACH_FUNCTION_CODES:
                     continue
-                name = self.mystv_client.mapper_function_code_to_name[function_code]
+                name = self.mystv.mapper_function_code_to_name[function_code]
                 riegen[name] = members + coach_members
         categories = list(riegen)
         matrix = pd.DataFrame(columns=categories, index=categories)
@@ -298,12 +301,16 @@ class Orchestrator:
                 matrix.loc[x_riege, y_riege] = len(common_members)
         matrix.to_excel(OUTPUT_FOLDER_PATH / FILENAME_RIEGENMATRIX, index=False)
 
-    def get_statistics(self) -> str:
-        members = self.mystv_client.members
+    def get_statistics(
+        self,
+    ) -> tuple[dict[str, int | None], pd.DataFrame, pd.DataFrame]:
+        """Return headline metrics, gender counts, and membership category counts."""
+        members = self.mystv.members
         num_of_members = len(members)
 
-        max_age = max(members[MembersColumns._AGE])
-        min_age = min(members[MembersColumns._AGE])
+        ages = members[MembersColumns._AGE].dropna()
+        max_age = int(ages.max()) if not ages.empty else None
+        min_age = int(ages.min()) if not ages.empty else None
 
         adults = members.loc[
             members[MembersColumns._INTERNAL_CATEGORY]
@@ -327,29 +334,39 @@ class Orchestrator:
             kids.loc[kids[MembersColumns.SALUTATION] == FEMALE_SALUTATION]
         )
 
-        stats = [
-            f"**Total Number of Members:** {num_of_members}",
-            "",
-            f"**Number of Adults:** {num_of_adults}",
-            f"- Men: {num_of_men}",
-            f"- Women: {num_of_women}",
-            "",
-            f"**Number of Children:** {num_of_kids}",
-            f"- Boys: {num_of_boys}",
-            f"- Girls: {num_of_girls}",
-            "",
-            f"**Oldest Member:** {max_age} years old",
-            "",
-            f"**Youngest Member:** {min_age} years old",
-            "",
-            "**Categories:**",
-        ]
-
-        stats.extend(
-            f"- {cat}: {len(members.loc[members[MembersColumns._INTERNAL_CATEGORY] == cat])}"
-            for cat in InternalCategory
+        metrics = {
+            "Mitglieder gesamt": num_of_members,
+            "Erwachsene": num_of_adults,
+            "Kinder & Jugend": num_of_kids,
+            "Jüngstes Mitglied (Jahre)": min_age,
+            "Ältestes Mitglied (Jahre)": max_age,
+        }
+        demographics = pd.DataFrame(
+            [
+                {
+                    "Gruppe": "Erwachsene",
+                    "Männlich": num_of_men,
+                    "Weiblich": num_of_women,
+                },
+                {
+                    "Gruppe": "Kinder & Jugend",
+                    "Männlich": num_of_boys,
+                    "Weiblich": num_of_girls,
+                },
+            ]
         )
-        return "\n".join(stats)
+        categories = pd.DataFrame(
+            [
+                {
+                    "Kategorie": cat.value,
+                    "Mitglieder": int(
+                        members[MembersColumns._INTERNAL_CATEGORY].eq(cat).sum()
+                    ),
+                }
+                for cat in InternalCategory
+            ]
+        )
+        return metrics, demographics, categories
 
     def _export_function_list_to_excel(
         self, function_ids: list[str], output_filename: str
@@ -366,7 +383,7 @@ class Orchestrator:
         ]
 
         candidate_ids: dict[str, list[tuple[str, str]]] = {}
-        for institute_id, functions in self.mystv_client.institutes.items():
+        for institute_id, functions in self.mystv.institutes.items():
             for function_id, member_ids in functions.items():
                 if function_id in function_ids:
                     for member_id in member_ids:
@@ -379,21 +396,13 @@ class Orchestrator:
             institute_ids = {id for id, _ in function_tuples}
             member_function_ids = {id for _, id in function_tuples}
             function_names = [
-                self.mystv_client.function_id_to_name(func_id)
+                self.mystv.function_id_to_name(func_id)
                 for func_id in member_function_ids
             ]
             institute_names = [
-                self.mystv_client.institute_id_to_name(inst_id)
-                for inst_id in institute_ids
+                self.mystv.institute_id_to_name(inst_id) for inst_id in institute_ids
             ]
-            member_data = self.mystv_client.members.loc[
-                self.mystv_client.members[MembersColumns.MEMBER_ID] == member_id
-            ]
-            if not len(member_data) == 1:
-                raise ValueError(
-                    f"Member ID {member_id} not found or not unique in members DataFrame."
-                )
-            raw_record = member_data.iloc[0].to_dict()
+            raw_record = self.mystv.get_member(member_id).to_dict()
             member_record: dict[str, Any] = {}
             for key, value in raw_record.items():
                 if not isinstance(key, str):
@@ -424,3 +433,37 @@ class Orchestrator:
             path = path / subfolder
             path.mkdir(parents=True, exist_ok=True)
         members_df.to_excel(path / filename, index=False)
+
+    def compare_to_fairgate_export(
+        self, filename: str | Path | BinaryIO
+    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """Return difference rows and members missing in MySTV and Fairgate."""
+        fg = FairgateProcessor.from_excel(filename)
+        mystv_members = self.mystv.members
+        fg_members = fg.members
+        diffs, ids_missing_in_mystv, ids_missing_in_fg = compare_dbs(
+            mystv_members=mystv_members, fg_members=fg_members
+        )
+        missing_in_mystv = fg_members.loc[
+            ids_missing_in_mystv,
+            [
+                FairgateColumns.STV_NUMBER,
+                FairgateColumns.FIRST_NAME,
+                FairgateColumns.SURNAME,
+                FairgateColumns.ASSOCIATION_ENTRY_DATE,
+            ],
+        ]
+        missing_in_fg = mystv_members.loc[
+            ids_missing_in_fg,
+            [
+                MembersColumns.MEMBER_ID,
+                MembersColumns.FIRST_NAME,
+                MembersColumns.SURNAME,
+                MembersColumns.MEMBERSHIP_ENTRY_DATES,
+            ],
+        ]
+        return (
+            get_diff_summary(diffs, mystv_members=mystv_members, fg_members=fg_members),
+            missing_in_mystv,
+            missing_in_fg,
+        )

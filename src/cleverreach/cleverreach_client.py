@@ -273,10 +273,15 @@ class CleverreachClient:
             raise CleverReachError(
                 f"Failed to update filter {filter_id}, got status {res.status_code}: {res.text}"
             )
-        logger.info(f"Successfully updated filter {filter_id}")
         success = _response_object(res, "filter update response").get("success")
         if not isinstance(success, bool):
             raise TypeError("CleverReach returned an invalid filter update response.")
+        if not success:
+            logger.error(f"Failed to update filter {filter_id}: success=false")
+            raise CleverReachError(
+                f"Failed to update filter {filter_id}: success=false"
+            )
+        logger.info(f"Successfully updated filter {filter_id}")
         return success
 
     def delete_receivers(self, group_id: int, receivers: list[str | int]) -> bool:

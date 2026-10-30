@@ -14,7 +14,6 @@ from typing import (
     Any,
     Literal,
     Self,
-    cast,
 )
 from urllib.parse import parse_qsl, unquote, urlencode, urljoin, urlsplit, urlunsplit
 
@@ -22,7 +21,7 @@ import requests
 from authlib.integrations.requests_client import OAuth2Session
 from authlib.oidc.core import CodeIDToken
 from joserfc import jwt
-from joserfc.jwk import KeySet, KeySetSerialization
+from joserfc.jwk import KeySet
 from joserfc.jws import JWSRegistry
 
 from src.config.constants import OP_MYSTV_ITEM_UUID
@@ -527,8 +526,10 @@ class MySTVClientV2:
 
         if not isinstance(key_data, dict) or not isinstance(key_data.get("keys"), list):
             raise MySTVAuthenticationError("MySTV returned invalid signing keys.")
+        if not all(isinstance(key, dict) for key in key_data["keys"]):
+            raise MySTVAuthenticationError("MySTV returned invalid signing keys.")
         try:
-            key_set = KeySet.import_key_set(cast(KeySetSerialization, key_data))
+            key_set = KeySet.import_key_set({"keys": key_data["keys"]})
             decoded = jwt.decode(
                 token["id_token"],
                 key=key_set,
