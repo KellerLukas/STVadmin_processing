@@ -295,16 +295,23 @@ def get_diff_summary(
     diffs: dict[str, list[MembersColumns]],
     mystv_members: pd.DataFrame,
     fg_members: pd.DataFrame,
-) -> str:
-    summary = []
+) -> pd.DataFrame:
+    """Return one row per differing field, keeping both source values visible."""
+    columns = ["STV-Nummer", "Vorname", "Nachname", "Feld", "mySTV", "Fairgate"]
+    rows = []
     for member_id, cols in diffs.items():
         mystv_row = mystv_members.loc[member_id]
-        summary.append(
-            f"**{member_id}** {mystv_row[MembersColumns.FIRST_NAME]} {mystv_row[MembersColumns.SURNAME]}:"
-        )
         fg_row = fg_members.loc[member_id]
         for col in cols:
             fg_col = MAP_MYSTV_TO_FAIRGATE_COLUMN[col]
-            summary.append(f"- {col}: {mystv_row[col]}  -  {fg_row[fg_col]}")
-        summary.append("")
-    return "\n".join(summary)
+            rows.append(
+                {
+                    "STV-Nummer": member_id,
+                    "Vorname": mystv_row[MembersColumns.FIRST_NAME],
+                    "Nachname": mystv_row[MembersColumns.SURNAME],
+                    "Feld": f"{col} / {fg_col}",
+                    "mySTV": str(mystv_row[col]),
+                    "Fairgate": str(fg_row[fg_col]),
+                }
+            )
+    return pd.DataFrame(rows, columns=columns)

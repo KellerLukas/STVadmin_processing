@@ -301,12 +301,16 @@ class Orchestrator:
                 matrix.loc[x_riege, y_riege] = len(common_members)
         matrix.to_excel(OUTPUT_FOLDER_PATH / FILENAME_RIEGENMATRIX, index=False)
 
-    def get_statistics(self) -> str:
+    def get_statistics(
+        self,
+    ) -> tuple[dict[str, int | None], pd.DataFrame, pd.DataFrame]:
+        """Return headline metrics, gender counts, and membership category counts."""
         members = self.mystv.members
         num_of_members = len(members)
 
-        max_age = max(members[MembersColumns._AGE])
-        min_age = min(members[MembersColumns._AGE])
+        ages = members[MembersColumns._AGE].dropna()
+        max_age = int(ages.max()) if not ages.empty else None
+        min_age = int(ages.min()) if not ages.empty else None
 
         adults = members.loc[
             members[MembersColumns._INTERNAL_CATEGORY]
@@ -330,29 +334,39 @@ class Orchestrator:
             kids.loc[kids[MembersColumns.SALUTATION] == FEMALE_SALUTATION]
         )
 
-        stats = [
-            f"**Total Number of Members:** {num_of_members}",
-            "",
-            f"**Number of Adults:** {num_of_adults}",
-            f"- Men: {num_of_men}",
-            f"- Women: {num_of_women}",
-            "",
-            f"**Number of Children:** {num_of_kids}",
-            f"- Boys: {num_of_boys}",
-            f"- Girls: {num_of_girls}",
-            "",
-            f"**Oldest Member:** {max_age} years old",
-            "",
-            f"**Youngest Member:** {min_age} years old",
-            "",
-            "**Categories:**",
-        ]
-
-        stats.extend(
-            f"- {cat}: {len(members.loc[members[MembersColumns._INTERNAL_CATEGORY] == cat])}"
-            for cat in InternalCategory
+        metrics = {
+            "Mitglieder gesamt": num_of_members,
+            "Erwachsene": num_of_adults,
+            "Kinder & Jugend": num_of_kids,
+            "Jüngstes Mitglied (Jahre)": min_age,
+            "Ältestes Mitglied (Jahre)": max_age,
+        }
+        demographics = pd.DataFrame(
+            [
+                {
+                    "Gruppe": "Erwachsene",
+                    "Männlich": num_of_men,
+                    "Weiblich": num_of_women,
+                },
+                {
+                    "Gruppe": "Kinder & Jugend",
+                    "Männlich": num_of_boys,
+                    "Weiblich": num_of_girls,
+                },
+            ]
         )
-        return "\n".join(stats)
+        categories = pd.DataFrame(
+            [
+                {
+                    "Kategorie": cat.value,
+                    "Mitglieder": int(
+                        members[MembersColumns._INTERNAL_CATEGORY].eq(cat).sum()
+                    ),
+                }
+                for cat in InternalCategory
+            ]
+        )
+        return metrics, demographics, categories
 
     def _export_function_list_to_excel(
         self, function_ids: list[str], output_filename: str
@@ -422,8 +436,8 @@ class Orchestrator:
 
     def compare_to_fairgate_export(
         self, filename: str | Path | BinaryIO
-    ) -> tuple[str, pd.DataFrame, pd.DataFrame]:
-        """Return the diff summary and members missing in MySTV and Fairgate."""
+    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """Return difference rows and members missing in MySTV and Fairgate."""
         fg = FairgateProcessor.from_excel(filename)
         mystv_members = self.mystv.members
         fg_members = fg.members

@@ -312,22 +312,18 @@ def configure_statistics() -> None:
         st.markdown("### Mitgliederstatistik")
         st.caption("Aktuelle Kennzahlen aus mySTV auf Abruf.")
         statistics_output = st.empty()
-        button_col, _ = st.columns([1, 3])
-        with button_col:
-            if st.button(
-                "Statistik abrufen",
-                key="btn_statistics",
-                disabled=is_background_task_running(),
-            ):
-                start_background_task(
-                    "Mitgliederstatistik",
-                    st.session_state.orch.get_statistics,
-                )
-        future = st.session_state.get("background_task")
-        is_statistics_task = st.session_state.get(
-            "background_task_label"
-        ) == "Mitgliederstatistik" and isinstance(future, Future)
-        if is_statistics_task and isinstance(future, Future):
+        if st.button(
+            "Statistik abrufen",
+            key="btn_statistics",
+            disabled=is_background_task_running(),
+        ):
+            start_background_task(
+                "Mitgliederstatistik",
+                st.session_state.orch.get_statistics,
+            )
+            st.session_state.statistics_task = st.session_state.background_task
+        future = st.session_state.get("statistics_task")
+        if isinstance(future, Future):
             if not future.done():
                 statistics_output.info("Statistik wird abgerufen …")
             elif (error := future.exception()) is not None:
@@ -335,7 +331,35 @@ def configure_statistics() -> None:
                     f"Statistik konnte nicht abgerufen werden: {error}"
                 )
             else:
-                statistics_output.markdown(future.result())
+                metrics, demographics, categories = future.result()
+                with statistics_output.container():
+                    metric_columns = st.columns(len(metrics))
+                    for column, (label, value) in zip(
+                        metric_columns, metrics.items(), strict=True
+                    ):
+                        column.metric(label, value if value is not None else "—")
+                    demographics_col, categories_col = st.columns([1, 1.4])
+                    with demographics_col:
+                        st.markdown("#### Geschlechterverteilung")
+                        st.dataframe(demographics, hide_index=True, width="stretch")
+                    with categories_col:
+                        st.markdown("#### Mitgliedskategorien")
+                        st.dataframe(
+                            categories,
+                            hide_index=True,
+                            width="stretch",
+                            height="content",
+                            column_config={
+                                "Mitglieder": st.column_config.ProgressColumn(
+                                    "Mitglieder",
+                                    format="%d",
+                                    min_value=0,
+                                    max_value=max(
+                                        1, int(categories["Mitglieder"].max())
+                                    ),
+                                )
+                            },
+                        )
 
 
 def configure_export_buttons() -> None:
@@ -619,27 +643,54 @@ def configure_fairgate_comparison() -> None:
             st.error(f"Vergleich konnte nicht durchgeführt werden: {error}")
             return
 
-        summary, missing_in_mystv, missing_in_fairgate = task.result()
-        st.markdown("### Unterschiede")
-        st.caption("Werte je Feld: mySTV – Fairgate. Es werden keine Daten verändert.")
-        if summary:
-            st.markdown(summary)
-        else:
-            st.success(
-                "Keine Unterschiede in den verglichenen Feldern gemeinsamer Mitglieder."
-            )
-
-        mystv_col, fairgate_col = st.columns(2)
-        for column, title, members in (
-            (mystv_col, "Fehlt in mySTV", missing_in_mystv),
-            (fairgate_col, "Fehlt in Fairgate", missing_in_fairgate),
+        differences, missing_in_mystv, missing_in_fairgate = task.result()
+        metrics = {
+            "Mitglieder mit Unterschieden": differences["STV-Nummer"].nunique(),
+            "Abweichende Felder": len(differences),
+            "Fehlt in mySTV": len(missing_in_mystv),
+            "Fehlt in Fairgate": len(missing_in_fairgate),
+        }
+        for column, (label, value) in zip(
+            st.columns(len(metrics)), metrics.items(), strict=True
         ):
-            with column:
-                st.markdown(f"### {title} ({len(members)})")
+            column.metric(label, value)
+        st.caption(
+            "Werte je Feld im direkten Vergleich. Es werden keine Daten verändert."
+        )
+        diff_tab, mystv_tab, fairgate_tab = st.tabs(
+            [
+                f"Unterschiede ({len(differences)})",
+                f"Fehlt in mySTV ({len(missing_in_mystv)})",
+                f"Fehlt in Fairgate ({len(missing_in_fairgate)})",
+            ]
+        )
+        with diff_tab:
+            if differences.empty:
+                st.success(
+                    "Keine Unterschiede in den verglichenen Feldern gemeinsamer Mitglieder."
+                )
+            else:
+                st.dataframe(
+                    differences,
+                    hide_index=True,
+                    width="stretch",
+                    height=min(600, (len(differences) + 1) * 35 + 3),
+                    column_config={col: st.column_config.TextColumn(width="small") for col in differences.columns},
+                )
+        for tab, members in (
+            (mystv_tab, missing_in_mystv),
+            (fairgate_tab, missing_in_fairgate),
+        ):
+            with tab:
                 if members.empty:
                     st.caption("Keine fehlenden Mitglieder.")
                 else:
-                    st.dataframe(members, hide_index=True, width="stretch")
+                    st.dataframe(
+                        members,
+                        hide_index=True,
+                        width="stretch",
+                        height=min(600, (len(members) + 1) * 35 + 3),
+                    )
 
 
 def run_home() -> None:
