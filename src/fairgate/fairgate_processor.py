@@ -1,4 +1,5 @@
 from enum import StrEnum
+from functools import cached_property
 from pathlib import Path
 from typing import Any, BinaryIO
 
@@ -8,8 +9,8 @@ from src.mySTV.mystv_processor import (
     EMPTY_DATE_STR,
     InternalCategory,
     MembersColumns,
-    MySTVProcessor,
 )
+from src.utils.utils import index_members
 
 
 class FairgateConfigurationError(RuntimeError):
@@ -154,21 +155,22 @@ class FairgateProcessor:
         self.fg_data = self._preprocess_data(fg_data)
 
     def _preprocess_data(self, fg_data: pd.DataFrame) -> pd.DataFrame:
-        def _to_datetime(date: Any) -> pd.Timestamp | None:
-            expected_date_formats = ["%d.%m.%Y", "%Y-%m-%d %H:%M:%S"]
-            if pd.isna(date) or date == EMPTY_DATE_STR or date == "":
-                return None
-            for expected_date_format in expected_date_formats:
-                try:
-                    return pd.Timestamp(
-                        pd.to_datetime(date, format=expected_date_format)
-                    )
-                except ValueError:
-                    pass
-            raise FairgateConfigurationError(f"Unknown date format: {date}")
-
+        expected_date_formats = ["%d.%m.%Y", "%Y-%m-%d %H:%M:%S"]
         for date_col in FAIRGATE_DATE_COLS:
-            fg_data[date_col] = fg_data[date_col].apply(_to_datetime)
+            dates = fg_data[date_col].replace(["", EMPTY_DATE_STR], None)
+            parsed_dates = pd.Series(pd.NaT, index=dates.index, dtype="datetime64[ns]")
+            for expected_format in expected_date_formats:
+                remaining = dates.notna() & parsed_dates.isna()
+                if not remaining.any():
+                    break
+                parsed_dates.loc[remaining] = pd.to_datetime(
+                    dates.loc[remaining], format=expected_format, errors="coerce"
+                )
+            if (dates.notna() & parsed_dates.isna()).any():
+                raise FairgateConfigurationError(
+                    f"Invalid date in {date_col}; expected one of {expected_date_formats}."
+                )
+            fg_data[date_col] = parsed_dates
         return fg_data
 
     @classmethod
@@ -177,15 +179,23 @@ class FairgateProcessor:
         fg_data = pd.read_excel(filename, dtype=str)
         return cls(fg_data)
 
-    @property
-    def members(self) -> pd.DataFrame:
+    @cached_property
+    def _members_cached(self) -> pd.DataFrame:
         excluded = self.former_members.index.union(self.other_members.index)
         members = self.fg_data.drop(index=excluded).copy()
 
         if not members[FairgateColumns.WEBSITE].isin(MAP_WEBSITE_TO_INTERNAL_CAT).all():
             raise FairgateConfigurationError("Not all Websites are mapped.")
 
-        return members
+        return index_members(members, FairgateColumns.STV_NUMBER)
+
+    @property
+    def members(self) -> pd.DataFrame:
+        return self._members_cached.copy()
+
+    def clear_cached_data(self) -> None:
+        """Discard the member snapshot after editing or replacing fg_data."""
+        self.__dict__.pop("_members_cached", None)
 
     @property
     def former_members(self) -> pd.DataFrame:
@@ -198,16 +208,15 @@ class FairgateProcessor:
         return self.fg_data.loc[pd.isna(self.fg_data[FairgateColumns.WEBSITE])]
 
     def get_member(self, member_id: str) -> pd.Series[Any]:
-        matches = self.members.loc[
-            self.members[FairgateColumns.STV_NUMBER] == member_id
-        ]
-        if len(matches) > 1:
-            raise FairgateConfigurationError(
-                f"Found multiple members with id {member_id}!"
-            )
-        if len(matches) == 0:
+        members = self._members_cached
+        if member_id not in members.index:
             raise ValueError(f"Could not find member with id {member_id}")
-        return matches.iloc[0]
+        member = members.loc[member_id]
+        if isinstance(member, pd.DataFrame):
+            raise TypeError(
+                f"Expected one member for ID {member_id}, got multiple rows."
+            )
+        return member.copy()
 
 
 def _values_equal(mystv_val: Any, fg_value: Any) -> bool:
@@ -254,38 +263,46 @@ def find_db_row_diffs(
 
 
 def compare_dbs(
-    mystv: MySTVProcessor, fg: FairgateProcessor
+    mystv_members: pd.DataFrame, fg_members: pd.DataFrame
 ) -> tuple[dict[str, list[MembersColumns]], list[str], list[str]]:
-    diffs = {}
-    ids_missing_in_fg = []
+    mystv_ids = set(mystv_members.index)
+    fg_ids = set(fg_members.index)
+    # Preserve source order in both missing-member lists.
     ids_missing_in_mystv = [
-        member_number
-        for member_number in fg.members[FairgateColumns.STV_NUMBER]
-        if member_number not in mystv.members[MembersColumns.MEMBER_ID].values
+        member_id for member_id in fg_members.index if member_id not in mystv_ids
     ]
-    for _, mystv_row in mystv.members.iterrows():
-        member_number = mystv_row[MembersColumns.MEMBER_ID]
-        try:
-            fg_row = fg.get_member(member_number)
-        except ValueError:
-            ids_missing_in_fg.append(member_number)
+    ids_missing_in_fg = [
+        member_id for member_id in mystv_members.index if member_id not in fg_ids
+    ]
+    diffs = {}
+    for member_number, mystv_row in mystv_members.iterrows():
+        if not isinstance(member_number, str):
+            raise TypeError("Member IDs in the index must be strings.")
+        if member_number not in fg_ids:
             continue
+        fg_row = fg_members.loc[member_number]
+        if isinstance(fg_row, pd.DataFrame):
+            raise TypeError(
+                f"Expected one member for ID {member_number}, got multiple rows."
+            )
         member_diffs = find_db_row_diffs(mystv_row=mystv_row, fg_row=fg_row)
-        if len(member_diffs) != 0:
+        if member_diffs:
             diffs[member_number] = member_diffs
     return diffs, ids_missing_in_mystv, ids_missing_in_fg
 
 
 def get_diff_summary(
-    diffs: dict[str, list[MembersColumns]], mystv: MySTVProcessor, fg: FairgateProcessor
+    diffs: dict[str, list[MembersColumns]],
+    mystv_members: pd.DataFrame,
+    fg_members: pd.DataFrame,
 ) -> str:
     summary = []
     for member_id, cols in diffs.items():
-        mystv_row = mystv.get_member(member_id)
+        mystv_row = mystv_members.loc[member_id]
         summary.append(
             f"**{member_id}** {mystv_row[MembersColumns.FIRST_NAME]} {mystv_row[MembersColumns.SURNAME]}:"
         )
-        fg_row = fg.get_member(member_id)
+        fg_row = fg_members.loc[member_id]
         for col in cols:
             fg_col = MAP_MYSTV_TO_FAIRGATE_COLUMN[col]
             summary.append(f"- {col}: {mystv_row[col]}  -  {fg_row[fg_col]}")

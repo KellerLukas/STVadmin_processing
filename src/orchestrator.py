@@ -75,6 +75,7 @@ class Orchestrator:
         ]
 
         today = pd.Timestamp.now()
+        members = self.mystv.members
 
         for institute_id, functions in self.mystv.institutes.items():
             institute_name = self.mystv.institute_id_to_name(institute_id)
@@ -82,9 +83,7 @@ class Orchestrator:
             institute_members = [pd.DataFrame()]
             for function_id, member_ids in functions.items():
                 function_name = self.mystv.function_id_to_name(function_id)
-                function_members = self.mystv.members.loc[
-                    self.mystv.members[MembersColumns.MEMBER_ID].isin(member_ids)
-                ].copy()
+                function_members = members.loc[members.index.isin(member_ids)].copy()
                 function_members[FUNCTION_COLUMN_NAME] = function_name
                 institute_members.append(function_members)
             institute_members_df = pd.concat(institute_members, ignore_index=True)
@@ -119,12 +118,9 @@ class Orchestrator:
             MembersColumns.POST_CODE,
             MembersColumns.CITY,
         ]
-        no_mail = self.mystv.members.loc[
-            pd.isna(self.mystv.members[MembersColumns._PRIMARY_EMAIL])
-        ]
-        no_newsletter = self.mystv.members.loc[
-            ~self.mystv.members[MembersColumns._GETS_NEWSLETTER]
-        ]
+        members = self.mystv.members
+        no_mail = members.loc[pd.isna(members[MembersColumns._PRIMARY_EMAIL])]
+        no_newsletter = members.loc[~members[MembersColumns._GETS_NEWSLETTER]]
 
         result_df = pd.concat([no_mail, no_newsletter])
         self._export_members_to_excel(
@@ -155,8 +151,9 @@ class Orchestrator:
                 return False
             return pd.Timestamp(row[MembersColumns.MEMBERSHIP_ENTRY_DATES]).year == year
 
-        adults = self.mystv.members.loc[
-            self.mystv.members[MembersColumns._INTERNAL_CATEGORY]
+        members = self.mystv.members
+        adults = members.loc[
+            members[MembersColumns._INTERNAL_CATEGORY]
             != InternalCategory.JUGENDMITGLIED
         ]
         adults_joined_this_year = adults.loc[
@@ -171,9 +168,7 @@ class Orchestrator:
         milestones = [25, 30, 40, 50, 60, 70, 80, 90, 100]
         for milestone in milestones:
             year = gv_year - milestone
-            milestoners = self.mystv.members.loc[
-                self.mystv.members.apply(joined_in_year, axis=1, year=year)
-            ]
+            milestoners = members.loc[members.apply(joined_in_year, axis=1, year=year)]
             self._export_members_to_excel(
                 members_df=milestoners,
                 filename=FILENAME_JUBILARE.format(year=milestone),
@@ -184,8 +179,8 @@ class Orchestrator:
             return pd.Timestamp(row[MembersColumns.BIRTHDAY]).year <= year
 
         conversion_year = gv_year - 17
-        youth = self.mystv.members.loc[
-            self.mystv.members[MembersColumns._INTERNAL_CATEGORY]
+        youth = members.loc[
+            members[MembersColumns._INTERNAL_CATEGORY]
             == InternalCategory.JUGENDMITGLIED
         ]
         youth_born_in_or_after_conversion_year = youth.loc[
@@ -393,14 +388,7 @@ class Orchestrator:
             institute_names = [
                 self.mystv.institute_id_to_name(inst_id) for inst_id in institute_ids
             ]
-            member_data = self.mystv.members.loc[
-                self.mystv.members[MembersColumns.MEMBER_ID] == member_id
-            ]
-            if not len(member_data) == 1:
-                raise ValueError(
-                    f"Member ID {member_id} not found or not unique in members DataFrame."
-                )
-            raw_record = member_data.iloc[0].to_dict()
+            raw_record = self.mystv.get_member(member_id).to_dict()
             member_record: dict[str, Any] = {}
             for key, value in raw_record.items():
                 if not isinstance(key, str):
@@ -437,11 +425,13 @@ class Orchestrator:
     ) -> tuple[str, pd.DataFrame, pd.DataFrame]:
         """Return the diff summary and members missing in MySTV and Fairgate."""
         fg = FairgateProcessor.from_excel(filename)
+        mystv_members = self.mystv.members
+        fg_members = fg.members
         diffs, ids_missing_in_mystv, ids_missing_in_fg = compare_dbs(
-            mystv=self.mystv, fg=fg
+            mystv_members=mystv_members, fg_members=fg_members
         )
-        missing_in_mystv = fg.members.loc[
-            fg.members[FairgateColumns.STV_NUMBER].isin(ids_missing_in_mystv),
+        missing_in_mystv = fg_members.loc[
+            ids_missing_in_mystv,
             [
                 FairgateColumns.STV_NUMBER,
                 FairgateColumns.FIRST_NAME,
@@ -449,17 +439,17 @@ class Orchestrator:
                 FairgateColumns.ASSOCIATION_ENTRY_DATE,
             ],
         ]
-        missing_in_fg = self.mystv.members.loc[
-            self.mystv.members[MembersColumns.MEMBER_ID].isin(ids_missing_in_fg),
+        missing_in_fg = mystv_members.loc[
+            ids_missing_in_fg,
             [
                 MembersColumns.MEMBER_ID,
                 MembersColumns.FIRST_NAME,
                 MembersColumns.SURNAME,
                 MembersColumns.MEMBERSHIP_ENTRY_DATES,
             ],
-        ].rename(columns=MAP_MYSTV_TO_FAIRGATE_COLUMN)
+        ]
         return (
-            get_diff_summary(diffs, mystv=self.mystv, fg=fg),
+            get_diff_summary(diffs, mystv_members=mystv_members, fg_members=fg_members),
             missing_in_mystv,
             missing_in_fg,
         )

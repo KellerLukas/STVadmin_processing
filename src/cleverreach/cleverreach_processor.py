@@ -178,7 +178,9 @@ class CleverreachProcessor:
 
             for cat in InternalCategory:
                 key = cat.lower().replace(" ", "_")
-                global_attributes[key] = cat in group[MembersColumns._INTERNAL_CATEGORY]
+                global_attributes[key] = (
+                    cat in group[MembersColumns._INTERNAL_CATEGORY].unique()
+                )
 
             receiver = Receiver(email=email, global_attributes=global_attributes)
             receivers.append(receiver)

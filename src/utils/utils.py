@@ -60,3 +60,20 @@ def calculate_age_at_ts(birthday: pd.Timestamp, ts: pd.Timestamp) -> int:
     age = ts.year - birthday.year
     age -= (ts.month, ts.day) < (birthday.month, birthday.day)
     return age
+
+
+def index_members(members: pd.DataFrame, id_column: str) -> pd.DataFrame:
+    """Index a member snapshot once; reject missing or ambiguous member IDs."""
+    member_ids = members[id_column]
+    if (
+        member_ids.isna().any()
+        or member_ids.map(
+            lambda value: isinstance(value, str) and not value.strip()
+        ).any()
+    ):
+        raise ValueError(f"Missing or blank member IDs in {id_column}.")
+    if members.index.name != id_column:
+        members = members.set_index(id_column, drop=False)
+    if not members.index.is_unique:
+        raise ValueError(f"Duplicate member IDs in {id_column}.")
+    return members
