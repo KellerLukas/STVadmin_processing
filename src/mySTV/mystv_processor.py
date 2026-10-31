@@ -1,169 +1,31 @@
 import copy
-import json
 import logging
-from enum import StrEnum
 from functools import cached_property
-from pathlib import Path
-from typing import Any, Self
+from typing import Any
 
 import pandas as pd
 
-from src.config.paths import FILENAME_NEWSLETTER_BLACKLIST, WORKING_DIR_PATH
+from src.config.paths import (
+    FILENAME_NEWSLETTER_BLACKLIST,
+    WORKING_DIR_PATH,
+)
+from src.mySTV.institute_functions import build_member_institute_functions
 from src.mySTV.mystv_client_v2 import MySTVClientV2
+from src.mySTV.mystv_config import (
+    EMPTY_DATE_STR,
+    EXPECTED_DATE_FORMAT_PER_COL,
+    INSTITUTES_TYPE,
+    MAP_CATEGORY_TO_INTERNAL,
+    MAPPER_FUNCTION_CODE_TO_NAME,
+    MAPPER_INSTITUTE_CODE_TO_NAME,
+    InternalCategory,
+    MembersColumns,
+    MembershipCategory,
+    MySTVConfigurationError,
+)
 from src.utils.utils import calculate_age_at_ts, index_members
 
 logger = logging.getLogger(__name__)
-
-
-class MySTVConfigurationError(RuntimeError):
-    """Errors caused by misconfiguration / metadata issues"""
-
-
-class InternalCategory(StrEnum):
-    JUGENDMITGLIED = "Jugendmitglied"
-    AKTIVMITGLIED = "Aktivmitglied"
-    PASSIVMITGLIED = "Passivmitglied"
-    EHRENMITGLIED = "Ehrenmitglied"
-    EHRENMITGLIED_NT = "Ehrenmitglied nturnend"
-    FREIMITGLIED = "Freimitglied"
-    FREIMITGLIED_NT = "Freimitglied nturnend"
-
-
-class MembershipCategory(StrEnum):
-    code: str | None
-
-    def __new__(cls, label: str, code: str | None) -> Self:
-        member = str.__new__(cls, label)
-        member._value_ = label
-        member.code = code
-        return member
-
-    ERWACHSENE_STANDARD = ("Erwachsene Standard", "101")
-    ERWACHSENE_LIGHT = ("Erwachsene Light", "102")
-    ERWACHSENE_INKLUSION = ("Erwachsene Inklusion", "110")
-    PASSIVMITGLIEDER = ("Passivmitglieder", "120")
-    EHRENMIGLIED_NT = ("Ehrenmitg. nturnend", "11")
-    KINDER_JUGEND = ("Kinder & Jugend", "105")
-    KINDER_JUGEND_INKLUSION = ("Kinder & Jugend Inklusion", "115")
-
-
-class MembershipAddition(StrEnum):
-    EMPTY = "-"
-    FREIMITGLIED_T = "Freimitg. turnend"
-    FREIMITGLIED_NT = "Freimitg. turnend"  # unverified #ToDo: discuss this
-    EHRENMITGLIED_T = "Ehrenmitg. turnend"
-
-
-MAP_CATEGORY_TO_INTERNAL = {
-    (
-        MembershipCategory.KINDER_JUGEND,
-        MembershipAddition.EMPTY,
-    ): InternalCategory.JUGENDMITGLIED,
-    (
-        MembershipCategory.ERWACHSENE_STANDARD,
-        MembershipAddition.EMPTY,
-    ): InternalCategory.AKTIVMITGLIED,
-    (
-        MembershipCategory.ERWACHSENE_LIGHT,
-        MembershipAddition.EMPTY,
-    ): InternalCategory.AKTIVMITGLIED,
-    (
-        MembershipCategory.PASSIVMITGLIEDER,
-        MembershipAddition.EMPTY,
-    ): InternalCategory.PASSIVMITGLIED,
-    (
-        MembershipCategory.ERWACHSENE_STANDARD,
-        MembershipAddition.EHRENMITGLIED_T,
-    ): InternalCategory.EHRENMITGLIED,
-    (
-        MembershipCategory.ERWACHSENE_LIGHT,
-        MembershipAddition.EHRENMITGLIED_T,
-    ): InternalCategory.EHRENMITGLIED,
-    (
-        MembershipCategory.EHRENMIGLIED_NT,
-        MembershipAddition.EMPTY,
-    ): InternalCategory.EHRENMITGLIED_NT,
-    (
-        MembershipCategory.ERWACHSENE_STANDARD,
-        MembershipAddition.FREIMITGLIED_T,
-    ): InternalCategory.FREIMITGLIED,
-    (
-        MembershipCategory.ERWACHSENE_LIGHT,
-        MembershipAddition.FREIMITGLIED_T,
-    ): InternalCategory.FREIMITGLIED,
-    (
-        MembershipCategory.PASSIVMITGLIEDER,
-        MembershipAddition.FREIMITGLIED_NT,
-    ): InternalCategory.FREIMITGLIED_NT,
-}
-
-
-class MembersColumns(StrEnum):
-    MEMBER_ID = "memberId"
-    SOCIAL_INSURANCE_NR = "socialInsuranceNr"
-    SWISS_ATHLETICS_NR = "swissAthleticsNr"
-    SALUTATION = "salutation"
-    LANGUAGE = "language"
-    SURNAME = "surname"
-    FIRST_NAME = "firstName"
-    ADDRESS = "address"
-    ADDITION = "addition"
-    ADDITION_2 = "addition2"
-    POST_CODE = "postCode"
-    CITY = "city"
-    EMAIL_PRIVATE = "emailPrivate"
-    EMAIL_ALTERNATIVE = "emailAlternative"
-    EMAIL_VEREIN = "emailVerein"
-    EMAIL_VERBAND = "emailVerband"
-    PHONE_PRIVATE = "phonePrivate"
-    PHONE_BUSINESS = "phoneBusiness"
-    PHONE_MOBILE = "phoneMobile"
-    MY_STV_COMMENT = "mySTVComment"
-    BIRTHDAY = "birthday"
-    ADVERTISING = "advertising"
-    GYM_LIVE_ABO = "gymLiveAbo"
-    REGIONAL_ABO = "regionalAbo"
-    ADDRESS_RELEASE = "addressRelease"
-    REGIONAL_ABO_NO = "regionalAboNo"
-    MEMBERSHIP_CATEGORIES = "membershipCategories"
-    MEMBERSHIP_ENTRY_DATES = "membershipEntryDates"
-    MEMBERSHIP_ADDITIONS = "membershipAdditions"
-    SQUADS = "squads"
-    VERBANDS_ANSICHT_MEMBERSHIP_TEXT = "verbandsAnsichtMembershipText"
-    VERBANDS_ANSICHT_MEMBERSHIP_NUMBER = "verbandsAnsichtMembershipNumber"
-    HAS_DIRECT_VERBAND_MEMBERSHIP = "hasDirectVerbandMembership"
-    HAS_INDIRECT_VERBAND_MEMBERSHIP = "hasIndirectVerbandMembership"
-    MEMBERSHIPS = "memberships"
-    HONORS = "honors"
-    STATUS_MY_STV = "statusMySTV"
-    RELEASE_MY_STV = "releaseMySTV"
-    TYPE_OF_SPORT_LSA = "typeOfSportLSA"
-    YEAR_VALID_LSA = "yearValidLSA"
-    CLUB_NAME_LSA = "clubNameLSA"
-    # Own additions to the MySTV export, not part of the official API.
-    _COMBINED_EMAILS = (
-        "combinedEmails"  # all emails combined into one string, separated by semicolons
-    )
-    _PRIMARY_EMAIL = "primaryEmail"  # the first non-empty email
-    _INTERNAL_CATEGORY = "internalCategory"  # the internal category of the member
-    _AGE = "age"
-    _GETS_NEWSLETTER = "getsNewsletter"
-
-
-YOUTH_INSTITUTE_CODES = ["3", "4", "8", "9", "10", "24", "25", "26"]
-INFOHEFT_DIGITAL_INSTITUTE_CODE = "29"
-ADMIN_INSTITUTE_CODES = [
-    INFOHEFT_DIGITAL_INSTITUTE_CODE
-]  # institutes that do not represent actual groups
-COACH_FUNCTION_CODES = ["3", "4"]
-
-MALE_SALUTATION = "MR"
-FEMALE_SALUTATION = "MS"
-EXPECTED_DATE_FORMAT_PER_COL = {
-    MembersColumns.BIRTHDAY: "%Y-%m-%d",
-    MembersColumns.MEMBERSHIP_ENTRY_DATES: "%d.%m.%Y",
-}
-EMPTY_DATE_STR = "-"
 
 
 class MySTVProcessor:
@@ -198,27 +60,6 @@ class MySTVProcessor:
         self.__dict__.pop("_institutes_cached", None)
         logger.info("Cleared cached MySTV member and institute data")
 
-    def _load_mapper(self, filename: str) -> dict[str, Any]:
-        """Load a JSON file from the same directory as this source file."""
-        path = Path(__file__).parent / filename
-        try:
-            with path.open("r", encoding="utf-8") as f:
-                data: object = json.load(f)
-        except OSError, UnicodeDecodeError, json.JSONDecodeError:
-            raise MySTVConfigurationError(
-                f"Could not load mapper file {path}."
-            ) from None
-        if not isinstance(data, dict):
-            raise MySTVConfigurationError(f"Mapper file {path} must contain an object.")
-        mapper: dict[str, str] = {}
-        for code, name in data.items():
-            if not isinstance(code, str) or not isinstance(name, str):
-                raise MySTVConfigurationError(
-                    f"Mapper file {path} must contain string codes and names."
-                )
-            mapper[code] = name
-        return mapper
-
     # Cache on this processor instance; public properties return defensive copies.
     @cached_property
     def _members_cached(self) -> pd.DataFrame:
@@ -237,41 +78,41 @@ class MySTVProcessor:
         return copy.deepcopy(self._members_cached)
 
     @cached_property
-    def _institutes_cached(self) -> dict[str, dict[str, list[str]]]:
+    def _institutes_cached(self) -> INSTITUTES_TYPE:
         raw_groups = self.mystv_client.get_institute_members_raw()
         if not isinstance(raw_groups, list):
             raise MySTVConfigurationError(
-                "MySTV institute response must contain a list of assignments."
+                "MySTV institute response must contain a list of institute members."
             )
-        groups: dict[str, dict[str, list[str]]] = {}
+        groups: INSTITUTES_TYPE = {}
         for group in raw_groups:
             if not isinstance(group, dict):
                 raise MySTVConfigurationError(
-                    "MySTV institute response contains an invalid assignment."
+                    "MySTV institute response contains an invalid institute member."
                 )
             institute_code = group.get("instituteCode")
             function_code = group.get("instituteFunctionCode")
             member_id = group.get("memberId")
             if not isinstance(institute_code, str):
                 raise MySTVConfigurationError(
-                    "MySTV institute assignment has an invalid institute code."
+                    "MySTV institute member has an invalid institute code."
                 )
             if not isinstance(function_code, str):
                 raise MySTVConfigurationError(
-                    "MySTV institute assignment has an invalid function code."
+                    "MySTV institute member has an invalid function code."
                 )
             if not isinstance(member_id, str):
                 raise MySTVConfigurationError(
-                    "MySTV institute assignment has an invalid member ID."
+                    "MySTV institute member has an invalid member ID."
                 )
-            assignments = groups.setdefault(institute_code, {})
-            if function_code not in assignments:
-                assignments[function_code] = []
-            assignments[function_code].append(member_id)
+            functions = groups.setdefault(institute_code, {})
+            if function_code not in functions:
+                functions[function_code] = []
+            functions[function_code].append(member_id)
         return groups
 
     @property
-    def institutes(self) -> dict[str, dict[str, list[str]]]:
+    def institutes(self) -> INSTITUTES_TYPE:
         return copy.deepcopy(self._institutes_cached)
 
     def get_member(self, member_id: str) -> pd.Series[Any]:
@@ -284,6 +125,22 @@ class MySTVProcessor:
                 f"Expected one member for ID {member_id}, got multiple rows."
             )
         return copy.deepcopy(member)
+
+    def get_functions_for_member(self, member_id: str) -> list[str]:
+        if member_id not in self._members_cached.index:
+            raise ValueError(f"Could not find member with id {member_id}")
+        return self.get_functions_for_member_unguarded(
+            member_id=member_id, institutes=self._institutes_cached
+        )
+
+    @staticmethod
+    def get_functions_for_member_unguarded(
+        member_id: str, institutes: INSTITUTES_TYPE
+    ) -> list[str]:
+        institute_functions = build_member_institute_functions(institutes).get(
+            member_id, set()
+        )
+        return sorted({function_code for _, function_code in institute_functions})
 
     def _apply_member_data_enrichment(self, members_df: pd.DataFrame) -> pd.DataFrame:
         """Add any additional columns or transformations to the members DataFrame."""
@@ -389,31 +246,17 @@ class MySTVProcessor:
         ].isin(emails_on_blacklist)
         return members_df
 
-    @cached_property
-    def mapper_institute_code_to_name(self) -> dict[str, str]:
-        mapper_institute_code_to_name = self._load_mapper(
-            "mySTV_mapper_institute_code_to_name.json"
-        )
-        return {code: name for code, name in mapper_institute_code_to_name.items()}
-
-    @cached_property
-    def mapper_function_code_to_name(self) -> dict[str, str]:
-        mapper_function_code_to_name = self._load_mapper(
-            "mySTV_mapper_function_code_to_name.json"
-        )
-        return {code: name for code, name in mapper_function_code_to_name.items()}
-
     def institute_id_to_name(self, institute_code: str) -> str:
-        return self.mapper_institute_code_to_name.get(
+        return MAPPER_INSTITUTE_CODE_TO_NAME.get(
             institute_code, f"Unknown Institute Code {institute_code}"
         )
 
     def function_id_to_name(self, function_code: str) -> str:
-        return self.mapper_function_code_to_name.get(
+        return MAPPER_FUNCTION_CODE_TO_NAME.get(
             function_code, f"Unknown Function Code {function_code}"
         )
 
-    def pretty_print_institutes(self, groups: dict[str, dict[str, list[str]]]) -> None:
+    def pretty_print_institutes(self, groups: INSTITUTES_TYPE) -> None:
         for institute_code, functions in groups.items():
             institute_name = self.institute_id_to_name(institute_code)
             print(f"Institute: {institute_name} (Code: {institute_code})")
@@ -445,11 +288,11 @@ class MySTVProcessor:
         function_code: str,
         clear_cache: bool = True,
     ) -> dict[str, Any]:
-        """Add an institute assignment and return response.json() unchanged."""
+        """Add a member to an institute with a function; return the unchanged JSON."""
         if (
             not member_id
-            or institute_code not in self.mapper_institute_code_to_name
-            or function_code not in self.mapper_function_code_to_name
+            or institute_code not in MAPPER_INSTITUTE_CODE_TO_NAME
+            or function_code not in MAPPER_FUNCTION_CODE_TO_NAME
         ):
             raise ValueError(
                 "member_id, institute_code and function_code are required."

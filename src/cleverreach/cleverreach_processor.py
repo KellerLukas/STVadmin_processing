@@ -6,7 +6,7 @@ import pandas as pd
 from src.cleverreach.cleverreach_client import CleverreachClient, Receiver
 from src.config.constants import CR_ALLE_MITGLIEDER_GROUP_ID, CR_AUSGETRETEN_FILTER_ID
 from src.config.paths import FILENAME_CLEVERREACH_DATA
-from src.mySTV.mystv_processor import (
+from src.mySTV.mystv_config import (
     FEMALE_SALUTATION,
     MALE_SALUTATION,
     InternalCategory,

@@ -1,13 +1,21 @@
 import itertools
 from collections.abc import Sequence
 from functools import cached_property
-from pathlib import Path
-from typing import Any, BinaryIO
+from typing import Any
 
 import pandas as pd
 
 from src.cleverreach.cleverreach_processor import CleverreachProcessor
-from src.config.constants import HARDCODED_HOUSEMATES, MYSTV_CLUB_ID
+from src.comparison.compare_dbs import (
+    compare_current_to_snapshot,
+    compare_mystv_to_fairgate,
+)
+from src.comparison.comparison_models import (
+    ComparisonResult,
+    DBSnapshot,
+    DBSnapshotType,
+)
+from src.config.constants import FAIRGATE_CLUB_SLUG, HARDCODED_HOUSEMATES, MYSTV_CLUB_ID
 from src.config.paths import (
     FILENAME_INFOHEFT,
     FILENAME_JUBILARE,
@@ -17,25 +25,21 @@ from src.config.paths import (
     FILENAME_RIEGENMATRIX,
     FOLDERNAME_RIEGENLISTEN,
 )
-from src.fairgate.fairgate_processor import (
-    MAP_MYSTV_TO_FAIRGATE_COLUMN,
-    FairgateColumns,
-    FairgateProcessor,
-    compare_dbs,
-    get_diff_summary,
-)
-from src.mySTV.mystv_processor import (
+from src.fairgate.fairgate_processor import FairgateProcessor
+from src.mySTV.mystv_config import (
     ADMIN_INSTITUTE_CODES,
     COACH_FUNCTION_CODES,
     FEMALE_SALUTATION,
     INFOHEFT_DIGITAL_INSTITUTE_CODE,
     MALE_SALUTATION,
+    MAPPER_FUNCTION_CODE_TO_NAME,
     YOUTH_INSTITUTE_CODES,
     InternalCategory,
     MembersColumns,
     MySTVConfigurationError,
-    MySTVProcessor,
 )
+from src.mySTV.mystv_processor import MySTVProcessor
+from src.mySTV.mystv_snapshot import MySTVSnapshot, MySTVSnapshotMeta
 from src.utils.utils import OUTPUT_FOLDER_PATH, sanitize_filename
 
 FUNCTION_COLUMN_NAME = "Function"
@@ -51,6 +55,11 @@ class Orchestrator:
         mystv = MySTVProcessor(MYSTV_CLUB_ID)
         return mystv
 
+    @cached_property
+    def fairgate(self) -> FairgateProcessor:
+        fg = FairgateProcessor(club_slug=FAIRGATE_CLUB_SLUG)
+        return fg
+
     def is_members_refresh_running(self) -> bool:
         """Read server status without changing the local data cache."""
         return self.mystv.mystv_client.is_members_refresh_running()
@@ -60,9 +69,10 @@ class Orchestrator:
         self.mystv.mystv_client.start_members_refresh()
         return True
 
-    def clear_mystv_cache(self) -> None:
+    def clear_cache(self) -> None:
         """Clear local data without starting a server refresh or another login."""
         self.mystv.clear_cached_data()
+        self.fairgate.clear_cached_data()
 
     def export_each_institute_to_excel(self) -> None:
         required_columns = [
@@ -290,7 +300,7 @@ class Orchestrator:
             for function_code, members in institute.items():
                 if function_code in COACH_FUNCTION_CODES:
                     continue
-                name = self.mystv.mapper_function_code_to_name[function_code]
+                name = MAPPER_FUNCTION_CODE_TO_NAME[function_code]
                 riegen[name] = members + coach_members
         categories = list(riegen)
         matrix = pd.DataFrame(columns=categories, index=categories)
@@ -434,36 +444,25 @@ class Orchestrator:
             path.mkdir(parents=True, exist_ok=True)
         members_df.to_excel(path / filename, index=False)
 
-    def compare_to_fairgate_export(
-        self, filename: str | Path | BinaryIO
-    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        """Return difference rows and members missing in MySTV and Fairgate."""
-        fg = FairgateProcessor.from_excel(filename)
-        mystv_members = self.mystv.members
-        fg_members = fg.members
-        diffs, ids_missing_in_mystv, ids_missing_in_fg = compare_dbs(
-            mystv_members=mystv_members, fg_members=fg_members
+    def compare_to_fairgate_export(self) -> ComparisonResult:
+        """Compare freshly downloaded MySTV and Fairgate data."""
+        mystv_snapshot = MySTVSnapshot.from_processor(self.mystv)
+        self.fairgate.clear_cached_data()
+        fg_snapshot = DBSnapshot(
+            type=DBSnapshotType.FAIRGATE, members=self.fairgate.members
         )
-        missing_in_mystv = fg_members.loc[
-            ids_missing_in_mystv,
-            [
-                FairgateColumns.STV_NUMBER,
-                FairgateColumns.FIRST_NAME,
-                FairgateColumns.SURNAME,
-                FairgateColumns.ASSOCIATION_ENTRY_DATE,
-            ],
-        ]
-        missing_in_fg = mystv_members.loc[
-            ids_missing_in_fg,
-            [
-                MembersColumns.MEMBER_ID,
-                MembersColumns.FIRST_NAME,
-                MembersColumns.SURNAME,
-                MembersColumns.MEMBERSHIP_ENTRY_DATES,
-            ],
-        ]
-        return (
-            get_diff_summary(diffs, mystv_members=mystv_members, fg_members=fg_members),
-            missing_in_mystv,
-            missing_in_fg,
-        )
+        return compare_mystv_to_fairgate(mystv=mystv_snapshot, fairgate=fg_snapshot)
+
+    def take_and_dump_snapshot(self) -> MySTVSnapshotMeta:
+        snapshot = MySTVSnapshot.from_processor(self.mystv)
+        snapshot.dump()
+        return snapshot.meta
+
+    def list_snapshots(self) -> list[MySTVSnapshotMeta]:
+        return MySTVSnapshot.list_snapshots()
+
+    def compare_to_snapshot(self, uuid: str) -> ComparisonResult:
+        """Compare fresh current data (left) with a stored snapshot (right)."""
+        snapshot = MySTVSnapshot.load(uuid)
+        current = MySTVSnapshot.from_processor(self.mystv)
+        return compare_current_to_snapshot(current=current, snapshot=snapshot)
