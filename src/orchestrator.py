@@ -6,6 +6,8 @@ from typing import Any
 import pandas as pd
 
 from src.cleverreach.cleverreach_processor import CleverreachProcessor
+from src.comparison.compare_dbs import compare_db_snapshots, get_diff_summary_mystv_fg
+from src.comparison.comparison_config import DBSnapshot, DBSnapshotType
 from src.config.constants import FAIRGATE_CLUB_SLUG, HARDCODED_HOUSEMATES, MYSTV_CLUB_ID
 from src.config.paths import (
     FILENAME_INFOHEFT,
@@ -19,7 +21,6 @@ from src.config.paths import (
 from src.fairgate.fairgate_processor import (
     FairgateColumns,
     FairgateProcessor,
-    compare_dbs,
     get_diff_summary,
 )
 from src.mySTV.mystv_processor import (
@@ -35,6 +36,7 @@ from src.mySTV.mystv_processor import (
     MySTVConfigurationError,
     MySTVProcessor,
 )
+from src.mySTV.mystv_snapshot import MySTVSnapshotMeta, MySTVSnapshots
 from src.utils.utils import OUTPUT_FOLDER_PATH, sanitize_filename
 
 FUNCTION_COLUMN_NAME = "Function"
@@ -445,11 +447,10 @@ class Orchestrator:
         """Return difference rows and members missing in MySTV and Fairgate."""
         mystv_members = self.mystv.members
         fg_members = self.fairgate.members
-        diff_columns, diff_functions, ids_missing_in_mystv, ids_missing_in_fg = (
-            compare_dbs(
-                mystv_members=mystv_members,
-                fg_members=fg_members,
-                institutes=self.mystv.institutes,
+        diff_columns, diff_functions, ids_missing_in_fg, ids_missing_in_mystv = (
+            compare_db_snapshots(
+                snapshot_a=MySTVSnapshots.create_snapshot(self.mystv),
+                snapshot_b=DBSnapshot(type=DBSnapshotType.FAIRGATE, members=fg_members),
             )
         )
         missing_in_mystv = fg_members.loc[
@@ -463,6 +464,53 @@ class Orchestrator:
         ]
         missing_in_fg = mystv_members.loc[
             ids_missing_in_fg,
+            [
+                MembersColumns.MEMBER_ID,
+                MembersColumns.FIRST_NAME,
+                MembersColumns.SURNAME,
+                MembersColumns.MEMBERSHIP_ENTRY_DATES,
+            ],
+        ]
+        return (
+            get_diff_summary_mystv_fg(
+                diff_columns=diff_columns,
+                diff_functions=diff_functions,
+                mystv_members=mystv_members,
+                fg_members=fg_members,
+            ),
+            missing_in_mystv,
+            missing_in_fg,
+        )
+
+    def take_and_dump_snapshot(self) -> None:
+        MySTVSnapshots.create_snapshot(self.mystv).dump()
+
+    def list_snapshots(self) -> list[MySTVSnapshotMeta]:
+        return MySTVSnapshots.list_snapshots()
+
+    def compare_to_snapshot(
+        self, uuid: str
+    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        """Return difference rows and members missing in MySTV and a snapshot."""
+        current = MySTVSnapshots.create_snapshot(self.mystv)
+        historic = MySTVSnapshots.load_snapshot(uuid)
+        (
+            diff_columns,
+            diff_functions,
+            ids_missing_in_historic,
+            ids_missing_in_current,
+        ) = compare_db_snapshots(snapshot_a=current, snapshot_b=historic)
+        missing_in_current = historic.members.loc[
+            ids_missing_in_current,
+            [
+                MembersColumns.MEMBER_ID,
+                MembersColumns.FIRST_NAME,
+                MembersColumns.SURNAME,
+                MembersColumns.MEMBERSHIP_ENTRY_DATES,
+            ],
+        ]
+        missing_in_fg = current.loc[
+            ids_missing_in_current,
             [
                 MembersColumns.MEMBER_ID,
                 MembersColumns.FIRST_NAME,
