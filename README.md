@@ -29,7 +29,7 @@ ignored by Git and are not included in this repository. They contain club and
 integration identifiers, local/shared-folder paths, and export filenames; use
 the club's secure configuration rather than committing these values.
 
-Install the Python dependencies and Chromium:
+Install the Python dependencies:
 
 ```bash
 uv sync
@@ -111,3 +111,75 @@ Requests have timeouts and do not follow redirects automatically. Expired sessio
 raise `FairgateAuthenticationError`; call `login()` again explicitly. Requests and
 credential submissions are not retried automatically. Logs omit credentials,
 tokens, response bodies, and member data.
+
+## Snapshots and comparisons
+
+The Streamlit **Snapshot Vergleich** section sits above **Fairgate Vergleich**.
+Use **Snapshot erstellen** to capture and save the current data. Saved snapshots
+are listed newest first by their timestamp in the Europe/Zurich timezone; a newly
+saved snapshot is selected automatically. Select a snapshot and choose
+**Mit aktuellem Stand vergleichen** to load fresh current data and compare it.
+The result uses the same statistics, missing-member tables, and Unicode detail
+view as the Fairgate comparison. **Liste aktualisieren** rereads local storage;
+there is no periodic catalog or server-status polling. A running server refresh
+does not disable these actions; only another local background task does.
+
+MySTV snapshots contain processed members and their institutes and functions.
+Capture always clears the local MySTV member/institute caches and downloads both
+datasets again. It does **not** trigger the server's database refresh. Cross-system
+comparison also clears the Fairgate cache before downloading its data.
+
+Configure `MYSTV_SNAPSHOT_FOLDER` in `src/config/paths.py`; it is resolved under
+`WORKING_DIR_PATH`. Each snapshot is a single `.pkl` file. Pickle preserves indexes,
+leading zeros, dates, missing values, nested values, and pandas data types without
+a new dependency. Only load trusted files created by this application: unpickling
+untrusted files can execute code. Snapshots are private data and must not be committed.
+
+```python
+from src.orchestrator import Orchestrator
+
+orch = Orchestrator()
+saved = orch.take_and_dump_snapshot()  # Downloads fresh data and returns metadata.
+snapshots = orch.list_snapshots()  # Newest first; metadata has uuid and UTC date.
+result = orch.compare_to_snapshot(saved.uuid)  # Downloads current data again.
+result.differences
+result.missing_in_left  # In the saved snapshot, absent from current data.
+result.missing_in_right  # In current data, absent from the saved snapshot.
+```
+
+`compare_to_fairgate_export()` returns the same `ComparisonResult`; left is MySTV
+and right is Fairgate. The Streamlit view uses the named result fields rather than
+a positional tuple. Differences keep the original values for Unicode inspection.
+
+For comparisons entirely from already-loaded data, use
+`compare_db_snapshots(left, right)`. It does not download anything. MySTV inputs
+must be `MySTVSnapshot` instances so institutes and functions are included. A Fairgate
+input is a `DBSnapshot(type=DBSnapshotType.FAIRGATE, members=fg.members)`;
+persistent Fairgate snapshots are not implemented yet. Models live in
+`src.comparison.comparison_models` and the comparator in `src.comparison.compare_dbs`.
+
+Snapshot capture/loading/listing lives on `MySTVSnapshot` (`from_processor`,
+`load`, `list_snapshots`); the former `MySTVSnapshots` wrapper is removed.
+Serialization automatically includes dataclass constructor fields. New fields with
+defaults can be omitted from older snapshots. Adding required fields or renaming
+fields/classes may require migration; pandas upgrades can also affect pickle
+compatibility. The unfinished CSV/JSON snapshot format is not loaded automatically.
+
+Same-system comparisons ignore MySTV's derived fields (enum names prefixed `_`)
+and the opaque `memberships`, `honors`, and `squads` fields. Fairgate's age, birth
+year, and both membership-year counters are ignored. Other scalars, lists, tuples,
+and dictionaries are compared structurally; missing scalar values and empty strings
+are treated alike. Ignored fields remain stored in snapshots. Fields absent from
+both snapshots are skipped; a comparable field absent on only one side raises a
+schema-mismatch error instead of silently disappearing.
+
+MySTV historical comparisons check complete institute/function pairs. Fairgate
+comparison only checks the youth functions represented by its website field; it
+does not treat other MySTV groups as missing. Category and gender mapping remains
+enabled for cross-system comparisons. Comparison policy is defined in
+`src/comparison/comparison_config.py`.
+
+Storage deliberately remains simple: direct writes, no automatic migrations,
+atomic publication, or club/schema-version validation. These are deferred; retain
+backups of reference snapshots. Loading a snapshot never logs in or recomputes
+historical derived fields.

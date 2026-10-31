@@ -1,10 +1,10 @@
-from dataclasses import dataclass
-from enum import StrEnum
-
-import pandas as pd
-
 from src.fairgate.fairgate_config import FairgateColumns
-from src.mySTV.mystv_config import InternalCategory, MembersColumns
+from src.mySTV.mystv_config import (
+    FEMALE_SALUTATION,
+    MALE_SALUTATION,
+    InternalCategory,
+    MembersColumns,
+)
 
 MAP_MYSTV_TO_FAIRGATE_COLUMN = {
     MembersColumns.MEMBER_ID: FairgateColumns.STV_NUMBER,
@@ -28,15 +28,11 @@ MAP_MYSTV_TO_FAIRGATE_COLUMN = {
     MembersColumns.SALUTATION: FairgateColumns.GENDER,
     MembersColumns._INTERNAL_CATEGORY: FairgateColumns.WEBSITE,
 }
-if (
-    not len(MAP_MYSTV_TO_FAIRGATE_COLUMN.keys())
-    == len(set(MAP_MYSTV_TO_FAIRGATE_COLUMN.keys()))
-    == len(set(MAP_MYSTV_TO_FAIRGATE_COLUMN.values()))
-):
-    raise ("MAP_MYSTV_TO_FAIRGATE_COLUMN is not bijective!")
-MAP_FAIRGATE_TO_MYSTV_COLUMN = {v: k for k, v in MAP_MYSTV_TO_FAIRGATE_COLUMN}
+if len(MAP_MYSTV_TO_FAIRGATE_COLUMN) != len(set(MAP_MYSTV_TO_FAIRGATE_COLUMN.values())):
+    raise ValueError("MAP_MYSTV_TO_FAIRGATE_COLUMN is not bijective!")
+MAP_FAIRGATE_TO_MYSTV_COLUMN = {v: k for k, v in MAP_MYSTV_TO_FAIRGATE_COLUMN.items()}
 
-MAP_GENDER_TO_SALUTATION = {"Männlich": "MR", "Weiblich": "MS"}
+MAP_GENDER_TO_SALUTATION = {"Männlich": MALE_SALUTATION, "Weiblich": FEMALE_SALUTATION}
 
 MAP_WEBSITE_TO_INTERNAL_CAT = {
     "http://Passivmitglieder.tvw": InternalCategory.PASSIVMITGLIED,
@@ -48,9 +44,6 @@ MAP_WEBSITE_TO_INTERNAL_CAT = {
     "http://Ehrenmitg._turnend.tvw": InternalCategory.EHRENMITGLIED,
     "http://Ehrenmitg._nturnend.tvw": InternalCategory.EHRENMITGLIED_NT,
     "http://Freimitg._nturnend__10.tvw": InternalCategory.FREIMITGLIED_NT,
-    "https://ELKI.tvw": InternalCategory.JUGENDMITGLIED,
-    "https://ELKI": InternalCategory.JUGENDMITGLIED,
-    "http://ELKI.tvw": InternalCategory.JUGENDMITGLIED,
 }
 FUNCTION_CODE_MUKIELKI = "10540"
 FUNCTION_CODE_KITU = "10541"
@@ -65,13 +58,34 @@ MAP_WEBSITE_TO_INTERNAL_CAT.update(
 )
 
 
-@dataclass
-class DBSnapshotType(StrEnum):
-    MYSTV = "mySTV"
-    FAIRGATE = "Fairgate"
+# Cross-system fields whose meanings/representations are not directly comparable.
+CROSS_SYSTEM_IGNORED_COLUMNS = {
+    MembersColumns.REGIONAL_ABO,
+    MembersColumns.GYM_LIVE_ABO,
+    MembersColumns.LANGUAGE,
+    MembersColumns.ADDRESS_RELEASE,
+    MembersColumns.MY_STV_COMMENT,
+    MembersColumns.MEMBERSHIP_ENTRY_DATES,
+}
 
+# Keep derived data in snapshots, but do not report it as a source-data change.
+MYSTV_IGNORED_COLUMNS = {col for col in MembersColumns if col.name.startswith("_")} | {
+    # Opaque nested API records; categories/dates, institutes and functions are
+    # compared through their explicit fields instead.
+    MembersColumns.MEMBERSHIPS,
+    MembersColumns.HONORS,
+    MembersColumns.SQUADS,
+}
+FAIRGATE_IGNORED_COLUMNS = {
+    FairgateColumns.AGE,
+    FairgateColumns.BIRTH_YEAR,
+    FairgateColumns.MEMBERSHIP_YEARS,
+    FairgateColumns.ASSOCIATION_MEMBERSHIP_YEARS,
+}
 
-@dataclass
-class DBSnapshot:
-    type: DBSnapshotType
-    members: pd.DataFrame
+DIFF_ID_COLUMN = "STV-Nummer"
+DIFF_FIRST_NAME_COLUMN = "Vorname"
+DIFF_SURNAME_COLUMN = "Nachname"
+DIFF_FIELD_COLUMN = "Feld"
+DIFF_IDENTITY_COLUMNS = [DIFF_ID_COLUMN, DIFF_FIRST_NAME_COLUMN, DIFF_SURNAME_COLUMN]
+INSTITUTES_FIELD = "Riegen"

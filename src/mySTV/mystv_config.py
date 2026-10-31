@@ -1,7 +1,7 @@
 import json
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Self
+from typing import Self
 
 
 class MySTVConfigurationError(RuntimeError):
@@ -139,7 +139,7 @@ class MembersColumns(StrEnum):
     _GETS_NEWSLETTER = "getsNewsletter"
 
 
-def _load_mapper(filename: str) -> dict[str, Any]:
+def _load_mapper(filename: str) -> dict[str, str]:
     """Load a JSON file from the same directory as this source file."""
     path = Path(__file__).parent / filename
     try:
@@ -159,14 +159,8 @@ def _load_mapper(filename: str) -> dict[str, Any]:
     return mapper
 
 
-MAPPER_INSTITUTE_CODE_TO_NAME: dict[str, str] = {
-    code: name
-    for code, name in _load_mapper("mySTV_mapper_institute_code_to_name.json").items()
-}
-MAPPER_FUNCTION_CODE_TO_NAME: dict[str, str] = {
-    code: name
-    for code, name in _load_mapper("mySTV_mapper_function_code_to_name.json").items()
-}
+MAPPER_INSTITUTE_CODE_TO_NAME = _load_mapper("mySTV_mapper_institute_code_to_name.json")
+MAPPER_FUNCTION_CODE_TO_NAME = _load_mapper("mySTV_mapper_function_code_to_name.json")
 
 YOUTH_INSTITUTE_CODES = ["3", "4", "8", "9", "10", "24", "25", "26"]
 INFOHEFT_DIGITAL_INSTITUTE_CODE = "29"

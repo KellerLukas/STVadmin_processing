@@ -9,11 +9,18 @@ from src.config.paths import (
     FILENAME_NEWSLETTER_BLACKLIST,
     WORKING_DIR_PATH,
 )
+from src.mySTV.institute_functions import build_member_institute_functions
 from src.mySTV.mystv_client_v2 import MySTVClientV2
 from src.mySTV.mystv_config import (
+    EMPTY_DATE_STR,
+    EXPECTED_DATE_FORMAT_PER_COL,
     INSTITUTES_TYPE,
     MAP_CATEGORY_TO_INTERNAL,
+    MAPPER_FUNCTION_CODE_TO_NAME,
+    MAPPER_INSTITUTE_CODE_TO_NAME,
+    InternalCategory,
     MembersColumns,
+    MembershipCategory,
     MySTVConfigurationError,
 )
 from src.utils.utils import calculate_age_at_ts, index_members
@@ -75,33 +82,33 @@ class MySTVProcessor:
         raw_groups = self.mystv_client.get_institute_members_raw()
         if not isinstance(raw_groups, list):
             raise MySTVConfigurationError(
-                "MySTV institute response must contain a list of assignments."
+                "MySTV institute response must contain a list of institute members."
             )
         groups: INSTITUTES_TYPE = {}
         for group in raw_groups:
             if not isinstance(group, dict):
                 raise MySTVConfigurationError(
-                    "MySTV institute response contains an invalid assignment."
+                    "MySTV institute response contains an invalid institute member."
                 )
             institute_code = group.get("instituteCode")
             function_code = group.get("instituteFunctionCode")
             member_id = group.get("memberId")
             if not isinstance(institute_code, str):
                 raise MySTVConfigurationError(
-                    "MySTV institute assignment has an invalid institute code."
+                    "MySTV institute member has an invalid institute code."
                 )
             if not isinstance(function_code, str):
                 raise MySTVConfigurationError(
-                    "MySTV institute assignment has an invalid function code."
+                    "MySTV institute member has an invalid function code."
                 )
             if not isinstance(member_id, str):
                 raise MySTVConfigurationError(
-                    "MySTV institute assignment has an invalid member ID."
+                    "MySTV institute member has an invalid member ID."
                 )
-            assignments = groups.setdefault(institute_code, {})
-            if function_code not in assignments:
-                assignments[function_code] = []
-            assignments[function_code].append(member_id)
+            functions = groups.setdefault(institute_code, {})
+            if function_code not in functions:
+                functions[function_code] = []
+            functions[function_code].append(member_id)
         return groups
 
     @property
@@ -130,12 +137,10 @@ class MySTVProcessor:
     def get_functions_for_member_unguarded(
         member_id: str, institutes: INSTITUTES_TYPE
     ) -> list[str]:
-        functions = []
-        for institute in institutes.values():  # avoid deepcopy for faster processing
-            for function_code, members in institute.items():
-                if member_id in members:
-                    functions.append(function_code)
-        return functions
+        institute_functions = build_member_institute_functions(institutes).get(
+            member_id, set()
+        )
+        return sorted({function_code for _, function_code in institute_functions})
 
     def _apply_member_data_enrichment(self, members_df: pd.DataFrame) -> pd.DataFrame:
         """Add any additional columns or transformations to the members DataFrame."""
@@ -283,7 +288,7 @@ class MySTVProcessor:
         function_code: str,
         clear_cache: bool = True,
     ) -> dict[str, Any]:
-        """Add an institute assignment and return response.json() unchanged."""
+        """Add a member to an institute with a function; return the unchanged JSON."""
         if (
             not member_id
             or institute_code not in MAPPER_INSTITUTE_CODE_TO_NAME

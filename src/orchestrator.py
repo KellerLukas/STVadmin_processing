@@ -6,8 +6,12 @@ from typing import Any
 import pandas as pd
 
 from src.cleverreach.cleverreach_processor import CleverreachProcessor
-from src.comparison.compare_dbs import compare_db_snapshots, get_diff_summary_mystv_fg
-from src.comparison.comparison_config import DBSnapshot, DBSnapshotType
+from src.comparison.compare_dbs import compare_db_snapshots
+from src.comparison.comparison_models import (
+    ComparisonResult,
+    DBSnapshot,
+    DBSnapshotType,
+)
 from src.config.constants import FAIRGATE_CLUB_SLUG, HARDCODED_HOUSEMATES, MYSTV_CLUB_ID
 from src.config.paths import (
     FILENAME_INFOHEFT,
@@ -18,12 +22,8 @@ from src.config.paths import (
     FILENAME_RIEGENMATRIX,
     FOLDERNAME_RIEGENLISTEN,
 )
-from src.fairgate.fairgate_processor import (
-    FairgateColumns,
-    FairgateProcessor,
-    get_diff_summary,
-)
-from src.mySTV.mystv_processor import (
+from src.fairgate.fairgate_processor import FairgateProcessor
+from src.mySTV.mystv_config import (
     ADMIN_INSTITUTE_CODES,
     COACH_FUNCTION_CODES,
     FEMALE_SALUTATION,
@@ -34,9 +34,9 @@ from src.mySTV.mystv_processor import (
     InternalCategory,
     MembersColumns,
     MySTVConfigurationError,
-    MySTVProcessor,
 )
-from src.mySTV.mystv_snapshot import MySTVSnapshotMeta, MySTVSnapshots
+from src.mySTV.mystv_processor import MySTVProcessor
+from src.mySTV.mystv_snapshot import MySTVSnapshot, MySTVSnapshotMeta
 from src.utils.utils import OUTPUT_FOLDER_PATH, sanitize_filename
 
 FUNCTION_COLUMN_NAME = "Function"
@@ -441,90 +441,25 @@ class Orchestrator:
             path.mkdir(parents=True, exist_ok=True)
         members_df.to_excel(path / filename, index=False)
 
-    def compare_to_fairgate_export(
-        self,
-    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        """Return difference rows and members missing in MySTV and Fairgate."""
-        mystv_members = self.mystv.members
-        fg_members = self.fairgate.members
-        diff_columns, diff_functions, ids_missing_in_fg, ids_missing_in_mystv = (
-            compare_db_snapshots(
-                snapshot_a=MySTVSnapshots.create_snapshot(self.mystv),
-                snapshot_b=DBSnapshot(type=DBSnapshotType.FAIRGATE, members=fg_members),
-            )
+    def compare_to_fairgate_export(self) -> ComparisonResult:
+        """Compare freshly downloaded MySTV and Fairgate data."""
+        mystv_snapshot = MySTVSnapshot.from_processor(self.mystv)
+        self.fairgate.clear_cached_data()
+        fg_snapshot = DBSnapshot(
+            type=DBSnapshotType.FAIRGATE, members=self.fairgate.members
         )
-        missing_in_mystv = fg_members.loc[
-            ids_missing_in_mystv,
-            [
-                FairgateColumns.STV_NUMBER,
-                FairgateColumns.FIRST_NAME,
-                FairgateColumns.SURNAME,
-                FairgateColumns.ASSOCIATION_ENTRY_DATE,
-            ],
-        ]
-        missing_in_fg = mystv_members.loc[
-            ids_missing_in_fg,
-            [
-                MembersColumns.MEMBER_ID,
-                MembersColumns.FIRST_NAME,
-                MembersColumns.SURNAME,
-                MembersColumns.MEMBERSHIP_ENTRY_DATES,
-            ],
-        ]
-        return (
-            get_diff_summary_mystv_fg(
-                diff_columns=diff_columns,
-                diff_functions=diff_functions,
-                mystv_members=mystv_members,
-                fg_members=fg_members,
-            ),
-            missing_in_mystv,
-            missing_in_fg,
-        )
+        return compare_db_snapshots(mystv_snapshot, fg_snapshot)
 
-    def take_and_dump_snapshot(self) -> None:
-        MySTVSnapshots.create_snapshot(self.mystv).dump()
+    def take_and_dump_snapshot(self) -> MySTVSnapshotMeta:
+        snapshot = MySTVSnapshot.from_processor(self.mystv)
+        snapshot.dump()
+        return snapshot.meta
 
     def list_snapshots(self) -> list[MySTVSnapshotMeta]:
-        return MySTVSnapshots.list_snapshots()
+        return MySTVSnapshot.list_snapshots()
 
-    def compare_to_snapshot(
-        self, uuid: str
-    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-        """Return difference rows and members missing in MySTV and a snapshot."""
-        current = MySTVSnapshots.create_snapshot(self.mystv)
-        historic = MySTVSnapshots.load_snapshot(uuid)
-        (
-            diff_columns,
-            diff_functions,
-            ids_missing_in_historic,
-            ids_missing_in_current,
-        ) = compare_db_snapshots(snapshot_a=current, snapshot_b=historic)
-        missing_in_current = historic.members.loc[
-            ids_missing_in_current,
-            [
-                MembersColumns.MEMBER_ID,
-                MembersColumns.FIRST_NAME,
-                MembersColumns.SURNAME,
-                MembersColumns.MEMBERSHIP_ENTRY_DATES,
-            ],
-        ]
-        missing_in_fg = current.loc[
-            ids_missing_in_current,
-            [
-                MembersColumns.MEMBER_ID,
-                MembersColumns.FIRST_NAME,
-                MembersColumns.SURNAME,
-                MembersColumns.MEMBERSHIP_ENTRY_DATES,
-            ],
-        ]
-        return (
-            get_diff_summary(
-                diff_columns=diff_columns,
-                diff_functions=diff_functions,
-                mystv_members=mystv_members,
-                fg_members=fg_members,
-            ),
-            missing_in_mystv,
-            missing_in_fg,
-        )
+    def compare_to_snapshot(self, uuid: str) -> ComparisonResult:
+        """Compare fresh current data (left) with a stored snapshot (right)."""
+        historic = MySTVSnapshot.load(uuid)
+        current = MySTVSnapshot.from_processor(self.mystv)
+        return compare_db_snapshots(current, historic)

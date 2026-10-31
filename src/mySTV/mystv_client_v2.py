@@ -1062,7 +1062,7 @@ class MySTVClientV2:
     def add_member_to_institute_with_function(
         self, member_id: str, institute_code: str, function_code: str
     ) -> dict[str, Any]:
-        """Add an institute assignment and return response.json() unchanged."""
+        """Add a member to an institute with a function; return the unchanged JSON."""
         if not member_id or not institute_code or not function_code:
             raise ValueError(
                 "member_id, institute_code and function_code are required."
@@ -1096,12 +1096,12 @@ class MySTVClientV2:
             except ValueError:
                 raise MySTVAPIError(
                     "MySTV returned success but the response was not valid JSON. "
-                    "Check the institute assignment before retrying."
+                    "Check the member's institute and function before retrying."
                 ) from None
 
             if not isinstance(result, dict):
                 raise MySTVAPIError(
-                    "MySTV institute assignment response was not a JSON object."
+                    "MySTV institute member response was not a JSON object."
                 )
             if all(value is None for value in result.values()):
                 raise MySTVAPIError(

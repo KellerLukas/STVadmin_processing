@@ -1,7 +1,5 @@
 from enum import StrEnum
 
-from src.mySTV.mystv_config import MembersColumns
-
 
 class FairgateConfigurationError(RuntimeError):
     """Errors caused by misconfiguration / metadata issues"""
@@ -100,8 +98,3 @@ FAIRGATE_DATE_COLS = [
 
 
 FORMER_MEMBER_WEBSITE = "http://Ehemaliges_Mitglied.tvw"
-
-EXPECTED_DATE_FORMAT_PER_COL = {
-    MembersColumns.BIRTHDAY: "%Y-%m-%d",
-    MembersColumns.MEMBERSHIP_ENTRY_DATES: "%d.%m.%Y",
-}

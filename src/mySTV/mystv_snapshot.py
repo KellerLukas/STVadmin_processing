@@ -1,17 +1,23 @@
-import json
-import os
-import uuid
-from dataclasses import dataclass
+import logging
+import pickle
+from dataclasses import dataclass, field, fields
 from pathlib import Path
+from typing import TYPE_CHECKING, Self
+from uuid import UUID, uuid4
 
 import pandas as pd
 
-from src.comparison.comparison_config import DBSnapshot, DBSnapshotType
+from src.comparison.comparison_models import DBSnapshot, DBSnapshotType
 from src.config.paths import MYSTV_SNAPSHOT_FOLDER, WORKING_DIR_PATH
-from src.mySTV.mystv_processor import INSTITUTES_TYPE, MySTVProcessor
+from src.mySTV.mystv_config import INSTITUTES_TYPE
 
-MYSTV_SNAPSHOT_PATH = Path(os.path.join(WORKING_DIR_PATH, MYSTV_SNAPSHOT_FOLDER))
-MYSTV_SNAPSHOT_PATH.mkdir(parents=True, exist_ok=True)
+if TYPE_CHECKING:
+    from src.mySTV.mystv_processor import MySTVProcessor
+
+logger = logging.getLogger(__name__)
+
+MYSTV_SNAPSHOT_PATH = Path(WORKING_DIR_PATH) / MYSTV_SNAPSHOT_FOLDER
+SNAPSHOT_SUFFIX = ".pkl"
 
 
 @dataclass
@@ -19,67 +25,55 @@ class MySTVSnapshotMeta:
     uuid: str
     date: pd.Timestamp
 
-    @classmethod
-    def load(cls, filename) -> MySTVSnapshotMeta:
-        with open(filename, "r") as f:
-            meta = MySTVSnapshotMeta(**json.load(f))
-        return meta
 
-
-@dataclass
+@dataclass(eq=False)
 class MySTVSnapshot(DBSnapshot):
     institutes: INSTITUTES_TYPE
     meta: MySTVSnapshotMeta
-
-    def dump(self):
-        uuid = self.meta
-        self.members.to_csv(self._members_name(uuid))
-        with open(self._institutes_name(uuid), "w") as f:
-            json.dump(self.institutes, f)
-        with open(self._meta_name(uuid), "w") as f:
-            json.dump(self.meta, f)
+    type: DBSnapshotType = field(default=DBSnapshotType.MYSTV, init=False)
 
     @classmethod
-    def load(cls, uuid: str) -> MySTVSnapshot:
-        members = pd.read_csv(cls._members_name(uuid))
-        with open(cls._institutes_name(uuid), "r") as f:
-            institutes = json.load(f)
-        meta = MySTVSnapshotMeta.load(cls._meta_name(uuid))
-        return cls(
-            members=members, institutes=institutes, meta=meta, type=DBSnapshotType.MYSTV
+    def from_processor(cls, processor: MySTVProcessor) -> Self:
+        processor.clear_cached_data()
+        members = processor.members
+        institutes = processor.institutes
+        meta = MySTVSnapshotMeta(uuid=str(uuid4()), date=pd.Timestamp.now(tz="UTC"))
+        logger.info("Captured MySTV snapshot %s (%s members)", meta.uuid, len(members))
+        return cls(members=members, institutes=institutes, meta=meta)
+
+    def dump(self) -> None:
+        data = {
+            item.name: getattr(self, item.name) for item in fields(self) if item.init
+        }
+        MYSTV_SNAPSHOT_PATH.mkdir(parents=True, exist_ok=True)
+        with self._path(self.meta.uuid).open("wb") as file:
+            pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
+        logger.info(
+            "Saved MySTV snapshot %s (%s members)", self.meta.uuid, len(self.members)
         )
 
-    @staticmethod
-    def _members_name(uuid: str) -> str:
-        return MYSTV_SNAPSHOT_FOLDER / f"{uuid}_members.csv"
-
-    @staticmethod
-    def _institutes_name(uuid: str) -> str:
-        return MYSTV_SNAPSHOT_FOLDER / f"{uuid}_institutes.json"
-
-    @staticmethod
-    def _meta_name(uuid: str) -> str:
-        return MYSTV_SNAPSHOT_FOLDER / f"{uuid}_meta.json"
-
-    @staticmethod
-    def is_meta_name(filename: str) -> str:
-        return filename.endswith("_meta.json")
-
-
-class MySTVSnapshots:
-    @staticmethod
-    def create_snapshot(processor: MySTVProcessor) -> MySTVSnapshot:
-        meta = MySTVSnapshotMeta(uuid=uuid.uuid4(), date=pd.Timestamp.now())
-        return MySTVSnapshot(
-            members=processor.members, institutes=processor.institutes, meta=meta
+    @classmethod
+    def load(cls, snapshot_id: str) -> Self:
+        with cls._path(snapshot_id).open("rb") as file:
+            data: object = pickle.load(file)
+        if not isinstance(data, dict) or not all(isinstance(key, str) for key in data):
+            raise TypeError("The snapshot must contain dataclass fields.")
+        snapshot = cls(**data)
+        logger.info(
+            "Loaded MySTV snapshot %s (%s members)",
+            snapshot.meta.uuid,
+            len(snapshot.members),
         )
+        return snapshot
+
+    @classmethod
+    def list_snapshots(cls) -> list[MySTVSnapshotMeta]:
+        snapshots = [
+            cls.load(path.stem).meta
+            for path in MYSTV_SNAPSHOT_PATH.glob(f"*{SNAPSHOT_SUFFIX}")
+        ]
+        return sorted(snapshots, key=lambda meta: meta.date, reverse=True)
 
     @staticmethod
-    def load_snapshot(uuid: str) -> MySTVSnapshot:
-        return MySTVSnapshot.load(uuid)
-
-    @staticmethod
-    def list_snapshots() -> list[MySTVSnapshotMeta]:
-        files = os.listdir(MYSTV_SNAPSHOT_FOLDER)
-        meta_files = [f for f in files if MySTVSnapshot.is_meta_name(f)]
-        return [MySTVSnapshotMeta.load(meta_files)]
+    def _path(snapshot_id: str) -> Path:
+        return MYSTV_SNAPSHOT_PATH / f"{UUID(snapshot_id)}{SNAPSHOT_SUFFIX}"

@@ -65,6 +65,10 @@ def calculate_age_at_ts(birthday: pd.Timestamp, ts: pd.Timestamp) -> int:
 def index_members(members: pd.DataFrame, id_column: str) -> pd.DataFrame:
     """Index a member snapshot once; reject missing or ambiguous member IDs."""
     member_ids = members[id_column]
+    if isinstance(member_ids, pd.DataFrame):
+        raise TypeError(
+            f"Expected one ID column named {id_column}, got multiple columns."
+        )
     if (
         member_ids.isna().any()
         or member_ids.map(
@@ -72,7 +76,11 @@ def index_members(members: pd.DataFrame, id_column: str) -> pd.DataFrame:
         ).any()
     ):
         raise ValueError(f"Missing or blank member IDs in {id_column}.")
-    if members.index.name != id_column:
+    if not member_ids.map(lambda value: isinstance(value, str)).all():
+        raise TypeError(f"Member IDs in {id_column} must be strings.")
+    if members.index.name != id_column or not members.index.equals(
+        pd.Index(member_ids)
+    ):
         members = members.set_index(id_column, drop=False)
     if not members.index.is_unique:
         raise ValueError(f"Duplicate member IDs in {id_column}.")
