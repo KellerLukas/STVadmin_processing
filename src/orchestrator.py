@@ -6,7 +6,10 @@ from typing import Any
 import pandas as pd
 
 from src.cleverreach.cleverreach_processor import CleverreachProcessor
-from src.comparison.compare_dbs import compare_db_snapshots
+from src.comparison.compare_dbs import (
+    compare_current_to_snapshot,
+    compare_mystv_to_fairgate,
+)
 from src.comparison.comparison_models import (
     ComparisonResult,
     DBSnapshot,
@@ -448,7 +451,7 @@ class Orchestrator:
         fg_snapshot = DBSnapshot(
             type=DBSnapshotType.FAIRGATE, members=self.fairgate.members
         )
-        return compare_db_snapshots(mystv_snapshot, fg_snapshot)
+        return compare_mystv_to_fairgate(mystv=mystv_snapshot, fairgate=fg_snapshot)
 
     def take_and_dump_snapshot(self) -> MySTVSnapshotMeta:
         snapshot = MySTVSnapshot.from_processor(self.mystv)
@@ -460,6 +463,6 @@ class Orchestrator:
 
     def compare_to_snapshot(self, uuid: str) -> ComparisonResult:
         """Compare fresh current data (left) with a stored snapshot (right)."""
-        historic = MySTVSnapshot.load(uuid)
+        snapshot = MySTVSnapshot.load(uuid)
         current = MySTVSnapshot.from_processor(self.mystv)
-        return compare_db_snapshots(current, historic)
+        return compare_current_to_snapshot(current=current, snapshot=snapshot)

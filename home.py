@@ -546,7 +546,7 @@ def configure_console() -> None:
     if isinstance(refresh_task, Future) and refresh_task.done():
         # Redraw the completed result only; this never polls the MySTV API.
         st.rerun(scope="app")
-    st.header("Console", anchor=False)
+    st.header("Logs", anchor=False)
     task = st.session_state.get("background_task")
     task_label = st.session_state.get("background_task_label")
     if isinstance(task, Future):
@@ -841,6 +841,18 @@ def configure_snapshot_comparison() -> None:
         st.caption(
             "Lädt die aktuellen Mitgliederdaten, Riegen und Funktionen und speichert sie als Snapshot."
         )
+        saved = get_background_result(
+            "snapshot_save_task", "Aktueller Stand wird geladen und gespeichert …"
+        )
+        if saved is not None:
+            if not isinstance(saved, MySTVSnapshotMeta):
+                raise TypeError("Saving the snapshot returned an unexpected result.")
+            if not st.session_state.get("snapshot_save_applied", False):
+                st.session_state.pop("snapshot_catalog", None)
+                st.session_state.snapshot_selection = saved.uuid
+                clear_comparison("snapshot")
+                st.session_state.snapshot_save_applied = True
+            st.success(f"Snapshot gespeichert: {format_snapshot_timestamp(saved)}")
         st.space("stretch")
         if st.button(
             "Snapshot erstellen",
@@ -856,18 +868,6 @@ def configure_snapshot_comparison() -> None:
             st.session_state.snapshot_save_task = st.session_state.background_task
             st.session_state.snapshot_save_applied = False
             st.rerun()
-        saved = get_background_result(
-            "snapshot_save_task", "Aktueller Stand wird geladen und gespeichert …"
-        )
-        if saved is not None:
-            if not isinstance(saved, MySTVSnapshotMeta):
-                raise TypeError("Saving the snapshot returned an unexpected result.")
-            if not st.session_state.get("snapshot_save_applied", False):
-                st.session_state.pop("snapshot_catalog", None)
-                st.session_state.snapshot_selection = saved.uuid
-                clear_comparison("snapshot")
-                st.session_state.snapshot_save_applied = True
-            st.success(f"Snapshot gespeichert: {format_snapshot_timestamp(saved)}")
 
     with compare_col, st.container(border=True, height="stretch"):
         st.markdown("### Gespeicherte Snapshots")
